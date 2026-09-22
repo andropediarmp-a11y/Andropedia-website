@@ -1,0 +1,100 @@
+// This is the Prisma schema file for Andropedia.
+// Compatible with PostgreSQL (Supabase, Neon, Railway, or local Postgres)
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  MEMBER
+  DOMAIN_ADMIN
+  SUPER_ADMIN
+}
+
+enum Domain {
+  TECHNICAL
+  WEB
+  PR
+  RD
+  DESIGN
+  MEDIA
+}
+
+enum TaskStatus {
+  SUBMITTED
+  EVALUATED
+}
+
+model User {
+  id              String         @id @default(cuid())
+  name            String
+  email           String         @unique
+  role            Role           @default(MEMBER)
+  domain          Domain
+  avatar          String?
+  bio             String?
+  github          String?
+  linkedin        String?
+  points          Int            @default(0)
+  tasksCompleted  Int            @default(0)
+  streakWeeks     Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  tasks           Task[]         @relation("UserTasks")
+  evaluationsDone Evaluation[]   @relation("AdminEvaluations")
+}
+
+model Week {
+  id                String       @id @default(cuid())
+  weekNumber        Int          @unique
+  title             String
+  theme             String
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean      @default(false)
+  promptDescription String?
+  createdAt         DateTime     @default(now())
+
+  tasks             Task[]
+}
+
+model Task {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation("UserTasks", fields: [userId], references: [id], onDelete: Cascade)
+  weekId        String
+  week          Week         @relation(fields: [weekId], references: [id])
+  domain        Domain
+  title         String
+  description   String
+  githubUrl     String?
+  liveUrl       String?
+  figmaUrl      String?
+  notes         String?
+  status        TaskStatus   @default(SUBMITTED)
+  submittedAt   DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  evaluation    Evaluation?
+}
+
+model Evaluation {
+  id              String       @id @default(cuid())
+  taskId          String       @unique
+  task            Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  adminId         String
+  admin           User         @relation("AdminEvaluations", fields: [adminId], references: [id])
+  score           Int          // 0 to 100
+  technicalDepth  Int?         // 0 to 25
+  innovation      Int?         // 0 to 25
+  completion      Int?         // 0 to 25
+  documentation   Int?         // 0 to 25
+  feedback        String
+  evaluatedAt     DateTime     @default(now())
+}
