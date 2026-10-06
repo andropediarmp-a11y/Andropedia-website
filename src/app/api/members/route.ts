@@ -8,7 +8,7 @@ export async function GET() {
   try {
     return NextResponse.json(
       { success: true, members: await getPublicMembers() },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+      { headers: { "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300" } }
     );
   } catch (error) {
     log.error("Members load failed", error);

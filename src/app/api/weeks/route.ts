@@ -8,7 +8,7 @@ export async function GET() {
     const weeks = await getWeeks();
     return NextResponse.json(
       { success: true, weeks },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+      { headers: { "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300" } }
     );
   } catch (err) {
     log.error("Weeks load failed", err);

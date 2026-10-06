@@ -3,12 +3,17 @@ import { prisma } from "./prisma";
 import {
   User, Week, Task, Evaluation, LeaderboardEntry, DomainType, RoleType, ClubPosition,
 } from "./types";
+import { recordAudit } from "./audit";
+import { computeLeaderboard, type BoardPeriod } from "./leaderboard";
+import { checkMemberChange, checkWeekDates, decideSubmission, type MemberPatch } from "./rules";
 
 // Database-backed data layer. Return shapes match the types in ./types so the
 // pages and API responses are unchanged; Prisma enums are mapped at the edge.
 
 export class NotFoundError extends Error {}
 export class ForbiddenError extends Error {}
+/** The request is valid but conflicts with the current state (closed week, duplicate, locked). */
+export class ConflictError extends Error {}
 
 const DOMAIN_TO_DB = {
   Technical: "TECHNICAL", Web: "WEB", PR: "PR", "R&D": "RD", Design: "DESIGN", Media: "MEDIA",
@@ -19,6 +24,7 @@ const DOMAIN_FROM_DB: Record<string, DomainType> = {
 const ROLE_FROM_DB: Record<string, RoleType> = {
   MEMBER: "member", DOMAIN_ADMIN: "domain_admin", SUPER_ADMIN: "super_admin",
 };
+const ROLE_TO_DB = { member: "MEMBER", domain_admin: "DOMAIN_ADMIN", super_admin: "SUPER_ADMIN" } as const;
 
 const POSITION_FROM_DB: Record<string, ClubPosition> = {
   PRESIDENT: "president", VICE_PRESIDENT: "vice_president", CHIEF: "chief",
@@ -185,32 +191,52 @@ export interface NewTask {
   notes?: string;
 }
 
-export async function addTask(taskData: NewTask): Promise<Task> {
+/**
+ * One submission per member per week. While the week is open it can be edited; once graded it is
+ * locked; closed weeks accept nothing. Returns whether a new task was created or an existing one updated.
+ */
+export async function submitTask(taskData: NewTask): Promise<{ task: Task; created: boolean }> {
   const domain = toDbDomain(taskData.domain);
   if (!domain) throw new NotFoundError(`Unknown domain: ${taskData.domain}`);
 
-  const [user, week] = await Promise.all([
+  const [user, week, existing] = await Promise.all([
     prisma.user.findUnique({ where: { id: taskData.userId }, select: { id: true } }),
-    prisma.week.findUnique({ where: { id: taskData.weekId }, select: { id: true } }),
+    prisma.week.findUnique({ where: { id: taskData.weekId }, select: { isActive: true } }),
+    prisma.task.findUnique({
+      where: { userId_weekId: { userId: taskData.userId, weekId: taskData.weekId } },
+      select: { id: true, status: true },
+    }),
   ]);
   if (!user) throw new NotFoundError("Member account not found");
-  if (!week) throw new NotFoundError("Sprint week not found");
 
-  const created = await prisma.task.create({
-    data: {
-      userId: taskData.userId,
-      weekId: taskData.weekId,
-      domain,
-      title: taskData.title,
-      description: taskData.description,
-      githubUrl: taskData.githubUrl || null,
-      liveUrl: taskData.liveUrl || null,
-      figmaUrl: taskData.figmaUrl || null,
-      notes: taskData.notes || null,
-    },
-    include: taskInclude,
-  });
-  return mapTask(created);
+  const decision = decideSubmission(week, existing);
+  if (!decision.ok) {
+    throw decision.status === 404 ? new NotFoundError(decision.error) : new ConflictError(decision.error);
+  }
+
+  const fields = {
+    domain,
+    title: taskData.title,
+    description: taskData.description,
+    githubUrl: taskData.githubUrl || null,
+    liveUrl: taskData.liveUrl || null,
+    figmaUrl: taskData.figmaUrl || null,
+    notes: taskData.notes || null,
+  };
+
+  try {
+    const saved =
+      decision.action === "update" && existing
+        ? await prisma.task.update({ where: { id: existing.id }, data: fields, include: taskInclude })
+        : await prisma.task.create({ data: { userId: taskData.userId, weekId: taskData.weekId, ...fields }, include: taskInclude });
+    return { task: mapTask(saved), created: decision.action === "create" };
+  } catch (err) {
+    // Two simultaneous first submissions: the unique (userId, weekId) rule rejects the second.
+    if ((err as { code?: string }).code === "P2002") {
+      throw new ConflictError("You already submitted for this week. Refresh and edit your submission instead.");
+    }
+    throw err;
+  }
 }
 
 export interface EvaluationInput {
@@ -264,58 +290,159 @@ export async function evaluateTask({
       },
     });
 
+    await recordAudit(
+      { actorId: adminId, action: previous ? "evaluation.update" : "evaluation.create", target: taskId, meta: { score, previousScore: previous?.score ?? null, memberId: task.userId } },
+      tx
+    );
+
     const updated = await tx.task.findUniqueOrThrow({ where: { id: taskId }, include: taskInclude });
     return mapTask(updated);
   });
 }
 
 export async function getLeaderboard(domain?: string, period?: string): Promise<LeaderboardEntry[]> {
-  void period; // TODO(PRD R10): real period filters and rank change
+  const domainFilter = !domain || domain === "All" ? "All" : (Object.values(DOMAIN_FROM_DB).find((d) => d === domain) ?? null);
+  if (domainFilter === null) return []; // unknown domain -> no results
 
-  const filterByDomain = !!domain && domain !== "All";
-  const dbDomain = filterByDomain ? toDbDomain(domain) : undefined;
-  if (filterByDomain && !dbDomain) return []; // unknown domain -> no results
+  const [users, evaluations, activeWeek] = await Promise.all([
+    prisma.user.findMany({ where: { role: "MEMBER", isActive: true }, select: { id: true, name: true, avatar: true, domain: true } }),
+    prisma.evaluation.findMany({
+      select: { score: true, evaluatedAt: true, task: { select: { userId: true, weekId: true, week: { select: { weekNumber: true } } } } },
+    }),
+    prisma.week.findFirst({ where: { isActive: true }, select: { id: true } }),
+  ]);
 
-  const users = await prisma.user.findMany({
-    where: { role: "MEMBER", ...(dbDomain ? { domain: dbDomain } : {}) },
-    include: { tasks: { where: { status: "EVALUATED" }, include: { evaluation: true } } },
+  return computeLeaderboard(
+    {
+      users: users.map((u) => ({ id: u.id, name: u.name, avatar: u.avatar ?? "", domain: DOMAIN_FROM_DB[u.domain] })),
+      evaluations: evaluations.map((e) => ({
+        userId: e.task.userId,
+        weekId: e.task.weekId,
+        weekNumber: e.task.week.weekNumber,
+        score: e.score,
+        evaluatedAt: e.evaluatedAt,
+      })),
+      activeWeekId: activeWeek?.id ?? null,
+    },
+    domainFilter,
+    (period === "weekly" || period === "monthly" ? period : "all-time") as BoardPeriod
+  );
+}
+
+// ---------------------------------------------------------------- sprint weeks (super admin)
+
+export interface WeekInput {
+  weekNumber?: number;
+  title?: string;
+  theme?: string;
+  startDate?: string;
+  endDate?: string;
+  promptDescription?: string | null;
+  isActive?: boolean;
+}
+
+export async function createWeek(
+  input: Required<Pick<WeekInput, "weekNumber" | "title" | "theme" | "startDate" | "endDate">> & Pick<WeekInput, "promptDescription" | "isActive">,
+  actorId: string
+): Promise<Week> {
+  const start = new Date(input.startDate);
+  const end = new Date(input.endDate);
+  const problem = checkWeekDates(start, end);
+  if (problem) throw new ConflictError(problem);
+
+  try {
+    const week = await prisma.$transaction(async (tx) => {
+      if (input.isActive) await tx.week.updateMany({ where: { isActive: true }, data: { isActive: false } });
+      const created = await tx.week.create({
+        data: {
+          weekNumber: input.weekNumber, title: input.title, theme: input.theme, startDate: start, endDate: end,
+          promptDescription: input.promptDescription ?? null, isActive: input.isActive ?? false,
+        },
+      });
+      await recordAudit({ actorId, action: "week.create", target: created.id, meta: { weekNumber: created.weekNumber, isActive: created.isActive } }, tx);
+      return created;
+    });
+    return mapWeek(week);
+  } catch (err) {
+    if ((err as { code?: string }).code === "P2002") throw new ConflictError(`Week ${input.weekNumber} already exists.`);
+    throw err;
+  }
+}
+
+/** Edits a week. Opening a week closes any other open week, so only one is ever open. */
+export async function updateWeek(id: string, patch: WeekInput, actorId: string): Promise<Week> {
+  const current = await prisma.week.findUnique({ where: { id } });
+  if (!current) throw new NotFoundError("Sprint week not found");
+
+  const start = patch.startDate ? new Date(patch.startDate) : current.startDate;
+  const end = patch.endDate ? new Date(patch.endDate) : current.endDate;
+  const problem = checkWeekDates(start, end);
+  if (problem) throw new ConflictError(problem);
+
+  try {
+    const week = await prisma.$transaction(async (tx) => {
+      if (patch.isActive) await tx.week.updateMany({ where: { isActive: true, NOT: { id } }, data: { isActive: false } });
+      const updated = await tx.week.update({
+        where: { id },
+        data: {
+          ...(patch.weekNumber !== undefined ? { weekNumber: patch.weekNumber } : {}),
+          ...(patch.title !== undefined ? { title: patch.title } : {}),
+          ...(patch.theme !== undefined ? { theme: patch.theme } : {}),
+          ...(patch.promptDescription !== undefined ? { promptDescription: patch.promptDescription } : {}),
+          ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
+          startDate: start,
+          endDate: end,
+        },
+      });
+      await recordAudit({ actorId, action: "week.update", target: id, meta: { changed: Object.keys(patch), isActive: updated.isActive } }, tx);
+      return updated;
+    });
+    return mapWeek(week);
+  } catch (err) {
+    if ((err as { code?: string }).code === "P2002") throw new ConflictError(`Week ${patch.weekNumber} already exists.`);
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------- member management (super admin)
+
+/** Changes a member's permission role, team position, domain or active status, with safety rules. */
+export async function updateMember(actorId: string, id: string, patch: MemberPatch): Promise<User> {
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) throw new NotFoundError("Member not found");
+
+  const activeSuperAdmins = await prisma.user.count({ where: { role: "SUPER_ADMIN", isActive: true } });
+  const reason = checkMemberChange({
+    actorId,
+    target: { id: target.id, role: ROLE_FROM_DB[target.role], isActive: target.isActive },
+    patch,
+    activeSuperAdmins,
   });
+  if (reason) throw new ForbiddenError(reason);
 
-  const entries: LeaderboardEntry[] = users.map((user) => {
-    const evaluated = user.tasks.filter((t) => t.evaluation);
-    const totalScore =
-      evaluated.reduce((sum, t) => sum + (t.evaluation?.score || 0), 0) +
-      (user.points ? Math.floor(user.points * 0.7) : 0);
-    const count = evaluated.length || user.tasksCompleted || 1;
-    const avgScore = Math.round(totalScore / count);
-    const userDomain = DOMAIN_FROM_DB[user.domain];
+  const position = patch.position ? toDbPosition(patch.position) : undefined;
+  const domain = patch.domain ? toDbDomain(patch.domain) : undefined;
+  if ((patch.position && !position) || (patch.domain && !domain)) throw new NotFoundError("Unknown position or domain");
 
-    const badges: string[] = [];
-    if (totalScore >= 350) badges.push("Grandmaster");
-    if (user.streakWeeks >= 4) badges.push("Streak Fire");
-    if (userDomain === "Web") badges.push("Fullstack Pioneer");
-    if (userDomain === "Technical") badges.push("Algo Titan");
-    if (userDomain === "R&D") badges.push("Deep Innovator");
-    if (userDomain === "Design") badges.push("Visual Architect");
-
-    return {
-      rank: 1,
-      userId: user.id,
-      name: user.name,
-      avatar: user.avatar ?? "",
-      domain: userDomain,
-      totalScore,
-      avgScore,
-      tasksCompleted: count,
-      streakWeeks: user.streakWeeks || 1,
-      rankChange: Math.floor(Math.random() * 3) - 1, // placeholder until PRD R10
-      badges,
-    };
+  const updated = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id },
+      data: {
+        ...(patch.role ? { role: ROLE_TO_DB[patch.role] } : {}),
+        ...(position ? { position } : {}),
+        ...(domain ? { domain } : {}),
+        ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
+      },
+    });
+    if (patch.isActive === false) await tx.session.deleteMany({ where: { userId: id } }); // sign them out everywhere
+    await recordAudit(
+      {
+        actorId, action: "member.update", target: id,
+        meta: { before: { role: ROLE_FROM_DB[target.role], position: POSITION_FROM_DB[target.position], domain: DOMAIN_FROM_DB[target.domain], isActive: target.isActive }, patch },
+      },
+      tx
+    );
+    return user;
   });
-
-  entries.sort((a, b) => b.totalScore - a.totalScore);
-  entries.forEach((entry, idx) => {
-    entry.rank = idx + 1;
-  });
-  return entries;
+  return mapUser(updated);
 }
