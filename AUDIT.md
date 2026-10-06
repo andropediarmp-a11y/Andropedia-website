@@ -42,6 +42,7 @@ Now: build passes, `eslint` reports 0 errors and 13 warnings, 85 tests pass.
 ## Performance
 - [x] medium: `/join` is a server component; only the form is a client component. The FAQ uses native `<details>`.
 - [ ] medium: Avatars are still raw `<img>` (now `loading="lazy"` and `decoding="async"`). Moving to `next/image` needs the remote hosts (Google Drive proxy, Unsplash demo images) configured.
+- [x] medium: The home page embedded the full Domains, Team, Projects and Events pages (about 9,600 px for the team alone, loaded up front). It is now a short overview (about 4,700 px) with a core-team preview and links to the real pages; the navbar and footer link to those pages.
 - [x] low: Cache headers on `/api/members`, `/api/weeks`, `/api/leaderboard` and `/api/recruitment/status`.
 - [x] low: Removed 16 unused imports/variables and a wasted `/api/tasks` request on the admin page.
 

@@ -20,11 +20,8 @@ import {
   ExternalLink,
   ChevronRight,
   Zap,} from "lucide-react";
+import { CoreTeamPreview } from "@/components/home/CoreTeamPreview";
 import { ParticleHeroCanvas } from "@/components/home/ParticleHeroCanvas";
-import DomainsPage from "@/app/domains/page";
-import TeamPage from "@/app/team/page";
-import ProjectsPage from "@/app/projects/page";
-import EventsPage from "@/app/events/page";
 
 export default function HomePage() {
   const fadeUp = {
@@ -454,7 +451,7 @@ export default function HomePage() {
 
                   <div className="pt-6">
                     <Link
-                      href="/#domains-detail"
+                      href={`/domains?tab=${encodeURIComponent(domain.id === "RD" ? "R&D" : domain.id)}`}
                       className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 group-hover:text-emerald-300 group-hover:translate-x-1 transition-all"
                     >
                       <span>Explore Domain Track</span>
@@ -492,13 +489,16 @@ export default function HomePage() {
                 Upcoming Hackathons & Active Projects
               </h2>
             </div>
-            <Link
-              href="/#events"
-              className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
-            >
-              <span>View All Events & Projects</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Link href="/events" className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                <span>All events</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link href="/projects" className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                <span>All projects</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -537,55 +537,8 @@ export default function HomePage() {
         </div>
       </motion.section>
 
-      <motion.section id="domains-detail" {...fadeUp} className="scroll-mt-20">
-        <DomainsPage />
-      </motion.section>
-
-      <motion.section id="team" {...fadeUp} className="scroll-mt-20">
-        <TeamPage />
-      </motion.section>
-
-      <motion.section id="projects" {...fadeUp} className="scroll-mt-20">
-        <ProjectsPage />
-      </motion.section>
-
-      <motion.section id="events" {...fadeUp} className="scroll-mt-20">
-        <EventsPage />
-      </motion.section>
-
-      {/* ================= TESTIMONIALS ================= */}
-      <motion.section {...fadeUp} className="py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-[#0c121e]/50 border-t border-white/[0.06]">
-        <div className="max-w-7xl mx-auto space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-3xl font-extrabold text-white">Voices From the Forge</h2>
-            <p className="text-slate-400 text-sm">
-              Hear from our student members and leads on how the weekly evaluation system elevates engineering standards.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, idx) => (
-              <div key={idx} className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4 flex flex-col justify-between">
-                <p className="text-sm text-slate-300 italic leading-relaxed">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
-                  <img loading="lazy" decoding="async"
-                    src={t.avatar}
-                    alt={t.author}
-                    className="w-11 h-11 rounded-full object-cover border border-emerald-400/40"
-                  />
-                  <div>
-                    <div className="font-semibold text-white text-sm">{t.author}</div>
-                    <div className="text-xs text-slate-400 font-mono">{t.role}</div>
-                    <div className="text-[11px] text-emerald-400 font-semibold">{t.rank}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
+      {/* ================= CORE TEAM PREVIEW (full roster lives on /team) ================= */}
+      <CoreTeamPreview />
     </div>
   );
 }

@@ -4,18 +4,18 @@ import { GithubIcon, LinkedinIcon, DiscordIcon, TwitterIcon } from "@/components
 
 export function Footer() {
   const domains = [
-    { name: "Technical", href: "/#domains" },
-    { name: "Web Development", href: "/#domains" },
-    { name: "R&D / AI Labs", href: "/#domains" },
-    { name: "Design & UX", href: "/#domains" },
-    { name: "Media & VFX", href: "/#domains" },
-    { name: "Public Relations", href: "/#domains" },
+    { name: "Technical", href: "/domains?tab=Technical" },
+    { name: "Web Development", href: "/domains?tab=Web" },
+    { name: "R&D / AI Labs", href: "/domains?tab=R%26D" },
+    { name: "Design & UX", href: "/domains?tab=Design" },
+    { name: "Media & VFX", href: "/domains?tab=Media" },
+    { name: "Public Relations", href: "/domains?tab=PR" },
   ];
 
   const quickLinks = [
-    { name: "Projects Showcase", href: "/#projects" },
-    { name: "Club Hackathons", href: "/#events" },
-    { name: "Meet the Team", href: "/#team" },
+    { name: "Projects Showcase", href: "/projects" },
+    { name: "Club Hackathons", href: "/events" },
+    { name: "Meet the Team", href: "/team" },
     { name: "Join Recruitment", href: "/join" },
     { name: "Member Portal", href: "/portal/dashboard" },
     { name: "Member Login", href: "/portal/login" },

@@ -28,9 +28,9 @@ export function Navbar() {
   const navLinks = [
     { name: "About", href: "/#about" },
     { name: "Domains", href: "/#domains" },
-    { name: "Team", href: "/#team" },
-    { name: "Projects", href: "/#projects" },
-    { name: "Events", href: "/#events" },
+    { name: "Team", href: "/team" },
+    { name: "Projects", href: "/projects" },
+    { name: "Events", href: "/events" },
     ...(currentUser ? [{ name: "Member Portal", href: getPortalDestinationForUser(currentUser), highlight: true }] : []),
   ];
 
