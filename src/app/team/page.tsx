@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, ExternalLink, Trophy, Shield } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/SocialIcons";
-import { initialUsers } from "@/lib/data-store";
+import { initialUsers } from "@/lib/seed-data";
 import { User } from "@/lib/types";
 
 export default function TeamPage() {

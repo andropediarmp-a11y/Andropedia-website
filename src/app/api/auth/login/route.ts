@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUsers } from "@/lib/data-store";
+import { getUserByEmail } from "@/lib/data-store";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, role } = body;
 
-    const users = getUsers();
-    
-    // If specific email is provided, find that user
-    let user = users.find((u) => u.email.toLowerCase() === email?.toLowerCase());
+    const user = typeof email === "string" ? await getUserByEmail(email) : null;
 
     if (!user) {
       return NextResponse.json({ success: false, error: "Club member account not found" }, { status: 401 });

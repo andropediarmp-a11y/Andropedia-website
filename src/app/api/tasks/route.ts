@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTasks, addTask } from "@/lib/data-store";
+import { getTasks, addTask, NotFoundError } from "@/lib/data-store";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -8,22 +8,13 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get("userId");
   const status = searchParams.get("status");
 
-  let tasks = getTasks();
-
-  if (weekId && weekId !== "all") {
-    tasks = tasks.filter((t) => t.weekId === weekId);
+  try {
+    const tasks = await getTasks({ weekId, domain, userId, status });
+    return NextResponse.json({ success: true, tasks });
+  } catch (error) {
+    console.error("Error loading tasks:", error);
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
-  if (domain && domain !== "All") {
-    tasks = tasks.filter((t) => t.domain.toLowerCase() === domain.toLowerCase());
-  }
-  if (userId) {
-    tasks = tasks.filter((t) => t.userId === userId);
-  }
-  if (status) {
-    tasks = tasks.filter((t) => t.status === status);
-  }
-
-  return NextResponse.json({ success: true, tasks });
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newTask = addTask({
+    const newTask = await addTask({
       userId,
       userName: userName || "Club Member",
       userAvatar: userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
@@ -55,6 +46,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, task: newTask }, { status: 201 });
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 404 });
+    }
     console.error("Error creating task:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }

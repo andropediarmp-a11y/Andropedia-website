@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { evaluateTask } from "@/lib/data-store";
+import { evaluateTask, NotFoundError } from "@/lib/data-store";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updatedTask = evaluateTask(
+    const updatedTask = await evaluateTask(
       taskId,
       adminId,
       adminName || "Domain Lead",
@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, task: updatedTask });
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 404 });
+    }
     console.error("Error evaluating task:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }

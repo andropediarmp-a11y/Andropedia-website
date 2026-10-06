@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft v2 |
+| **Status** | Draft v2 - Phase 1 (recruitment) and Phase 2 (database, R1/R2) implemented on branches `backend/phase-1-recruitment` / `backend/phase-2-database` |
 | **Date** | 2026-10-06 |
 | **v2 change** | Recruitment applications go to a Google Sheet (via Google Form or the Sheets API) with CSV export, **not** the app database. Admins build the recruitment dashboard separately. Every applicant gets a confirmation email. See §2.7.1. |
 | **Scope** | Backend: data storage, auth, API routes, forms, admin tooling |

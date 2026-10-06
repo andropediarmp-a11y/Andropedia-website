@@ -96,16 +96,18 @@ The platform features an instant role switcher in the header for effortless revi
 3. Keep default settings (`Framework Preset: Next.js`).
 4. Click **Deploy**. Both frontend pages and `/api/...` routes will be immediately live on the edge!
 
-### Optional: Connecting to Managed PostgreSQL (Supabase / Neon)
-1. Create a free database on [Supabase](https://supabase.com) or [Neon](https://neon.tech).
-2. Set the connection string in your environment variables:
-   ```env
-   DATABASE_URL="postgresql://postgres:password@your-host:5432/andropedia?schema=public"
-   ```
-3. Run Prisma migration:
+### Database setup (Supabase Postgres + Prisma)
+The API reads and writes a Postgres database through Prisma.
+1. Create a Supabase project and copy `.env.example` to `.env`.
+2. Fill `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) from Supabase -> Connect.
+3. Create the tables and load the demo data:
    ```bash
-   npx prisma db push
+   npm run db:deploy   # applies prisma/migrations
+   npm run db:seed     # demo users/weeks/tasks; safe to re-run, never overwrites
    ```
+4. For schema changes during development use `npm run db:migrate`.
+
+Set the same `DATABASE_URL` in your hosting provider's environment variables (e.g. Vercel).
 
 ---
 

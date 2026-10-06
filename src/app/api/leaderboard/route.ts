@@ -6,6 +6,6 @@ export async function GET(request: NextRequest) {
   const domain = searchParams.get("domain") || "All";
   const period = searchParams.get("period") || "all-time";
 
-  const leaderboard = getLeaderboard(domain, period);
+  const leaderboard = await getLeaderboard(domain, period);
   return NextResponse.json({ success: true, leaderboard });
 }
