@@ -22,7 +22,7 @@ export default function AdminPage() {
     try {
       const [resWeeks, resMembers, resTasks] = await Promise.all([
         fetch("/api/weeks"),
-        fetch("/api/members"),
+        fetch("/api/admin/members"),
         fetch("/api/tasks"),
       ]);
 

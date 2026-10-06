@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
-import { getUsers } from "@/lib/data-store";
-import { getLiveMembers } from "@/lib/live-members";
+import { getPublicMembers } from "@/lib/data-store";
 
+// Public directory: profile fields only, never emails.
 export async function GET() {
   try {
-    const staff = (await getUsers()).filter((user) => user.role !== "member");
-    const liveMembers = await getLiveMembers();
-    return NextResponse.json({ success: true, members: [...staff, ...liveMembers] });
+    return NextResponse.json({ success: true, members: await getPublicMembers() });
   } catch (error) {
-    console.error("Live member sheet error:", error);
-    return NextResponse.json({
-      success: true,
-      members: await getUsers(),
-      source: "seed-fallback",
-    });
+    console.error("Members load error:", error);
+    return NextResponse.json({ success: false, error: "Could not load members" }, { status: 500 });
   }
 }

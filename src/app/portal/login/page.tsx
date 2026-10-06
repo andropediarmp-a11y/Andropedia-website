@@ -8,22 +8,40 @@ import { getPortalDestinationForUser, useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { requestCode, verifyCode } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("password123");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [infoMsg, setInfoMsg] = useState("");
 
-  const handleStandardLogin = async (e: React.FormEvent) => {
+  const handleSendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+    setInfoMsg("");
+
+    const result = await requestCode(email);
+    if (result.ok) {
+      setStep("code");
+      setInfoMsg("If that email belongs to a club member, we've sent a 6-digit code. It expires in 10 minutes.");
+    } else {
+      setErrorMsg(result.error);
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
-    const user = await login(email);
-    if (user) {
-      router.push(getPortalDestinationForUser(user));
+    const result = await verifyCode(email, code);
+    if ("user" in result) {
+      router.push(getPortalDestinationForUser(result.user));
     } else {
-      setErrorMsg("The email or access key is not valid for a club account.");
+      setErrorMsg(result.error);
       setLoading(false);
     }
   };
@@ -118,40 +136,83 @@ export default function LoginPage() {
               </motion.div>
             )}
 
-            <form onSubmit={handleStandardLogin} className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-400">College Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
-                  placeholder="name@andropedia.club"
-                  required
-                />
+            {infoMsg && (
+              <div className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
+                {infoMsg}
               </div>
+            )}
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-400">Access Key</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
-                  placeholder="Enter access key"
-                  required
-                />
-              </div>
+            {step === "email" ? (
+              <form onSubmit={handleSendCode} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-400">College Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+                    placeholder="name@college.edu"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 px-5 py-3.5 text-sm font-bold text-slate-950 shadow-[0_16px_30px_rgba(34,211,238,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-60"
-              >
-                <span>{loading ? "Authenticating..." : "Enter Member Portal"}</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 px-5 py-3.5 text-sm font-bold text-slate-950 shadow-[0_16px_30px_rgba(34,211,238,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-60"
+                >
+                  <span>{loading ? "Sending code..." : "Email me a login code"}</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyCode} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-400">6-digit code sent to {email}</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\d{6}"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-center text-xl font-mono tracking-[0.5em] text-white placeholder:text-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+                    placeholder="------"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || code.length !== 6}
+                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 px-5 py-3.5 text-sm font-bold text-slate-950 shadow-[0_16px_30px_rgba(34,211,238,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-60"
+                >
+                  <span>{loading ? "Verifying..." : "Enter Member Portal"}</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </button>
+
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("email");
+                      setCode("");
+                      setErrorMsg("");
+                      setInfoMsg("");
+                    }}
+                    className="hover:text-cyan-300"
+                  >
+                    Use a different email
+                  </button>
+                  <button type="button" onClick={() => handleSendCode()} disabled={loading} className="hover:text-cyan-300 disabled:opacity-60">
+                    Resend code
+                  </button>
+                </div>
+              </form>
+            )}
           </motion.div>
         </div>
       </motion.div>

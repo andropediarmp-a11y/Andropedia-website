@@ -43,7 +43,7 @@ The platform is designed with a **frontend-heavy, zero-friction backend architec
 - **Recruitment Application (`/join`)**: Interactive candidate application form with domain preference selector and FAQ accordion.
 
 ### 🏆 Member & Admin Evaluation Portal
-- **Instant Role Switcher**: Quick-test buttons in navigation and login (`Member`, `Domain Lead`, `Super Admin`) for friction-free demonstration.
+- **Email-code login** with server-side sessions; every portal API checks the session and role on the server.
 - **Member Dashboard (`/portal/dashboard`)**: Personal score radar, active sprint prompt, streak flame counter, and recent task review feedback.
 - **Weekly Task Submission (`/portal/submit-task`)**: Form allowing members to submit code repositories, live demo URLs, Figma files, and architectural notes.
 - **Domain Lead Evaluation Queue (`/portal/evaluations`)**: Inspect submitted code, score deliverables using a 4-rubric slider (0-100 total score), and provide constructive feedback.
@@ -79,12 +79,15 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🔑 Quick Demo Credentials
+## 🔑 Logging in
 
-The platform features an instant role switcher in the header for effortless reviewer testing:
-- **Member**: Aarav Sharma (`Web Domain`)
-- **Domain Lead**: Vikramaditya Rao (`Web Domain Lead`)
-- **Super Admin**: Dr. Siddharth Sen (`Faculty Advisor / Super Admin`)
+Members log in with their email: the site emails a 6-digit code (valid 10 minutes), which starts a secure session. Only emails that exist in the database can log in.
+
+- **Local development:** if SMTP isn't configured, the code is printed in the terminal running `npm run dev` (`[dev] Login code for ...`). `npm run db:seed` creates demo accounts such as `aarav.sharma@andropedia.club` (member), `lead.web@andropedia.club` (domain lead) and `admin@andropedia.club` (super admin).
+- **Real members:** `npm run db:import-members` copies members from the club's Google Sheet into the database (safe to re-run).
+- **First super admin:** `npm run user:set-role -- you@college.edu super_admin Technical "Your Name"`
+- **Change a role / switch someone off:** `npm run user:set-role -- email member|domain_admin|super_admin [domain]` and `npm run user:deactivate -- email`
+- **Production:** set `AUTH_SECRET` (see `.env.example`) and the SMTP variables; without SMTP no codes can be delivered.
 
 ---
 

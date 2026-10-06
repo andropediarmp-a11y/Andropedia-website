@@ -8,6 +8,7 @@ import {
 // pages and API responses are unchanged; Prisma enums are mapped at the edge.
 
 export class NotFoundError extends Error {}
+export class ForbiddenError extends Error {}
 
 const DOMAIN_TO_DB = {
   Technical: "TECHNICAL", Web: "WEB", PR: "PR", "R&D": "RD", Design: "DESIGN", Media: "MEDIA",
@@ -29,7 +30,7 @@ type DbTask = Prisma.TaskGetPayload<{
 
 const taskInclude = { user: true, week: true, evaluation: { include: { admin: true } } } as const;
 
-function mapUser(u: DbUser): User {
+export function mapUser(u: DbUser): User {
   return {
     id: u.id,
     name: u.name,
@@ -44,6 +45,7 @@ function mapUser(u: DbUser): User {
     points: u.points,
     tasksCompleted: u.tasksCompleted,
     streakWeeks: u.streakWeeks,
+    isActive: u.isActive,
   };
 }
 
@@ -110,6 +112,22 @@ export async function getUsers(): Promise<User[]> {
   return users.map(mapUser);
 }
 
+/** Public profile fields only: never exposes email or account status. */
+export type PublicMember = Omit<User, "email" | "isActive">;
+
+export async function getPublicMembers(): Promise<PublicMember[]> {
+  const users = await prisma.user.findMany({
+    where: { isActive: true },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
+  return users.map((u) => {
+    const { email: _email, isActive: _isActive, ...publicFields } = mapUser(u);
+    void _email;
+    void _isActive;
+    return publicFields;
+  });
+}
+
 export async function getUserByEmail(email: string): Promise<User | null> {
   const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
   return user ? mapUser(user) : null;
@@ -145,10 +163,19 @@ export async function getTasks(filters: TaskFilters = {}): Promise<Task[]> {
   return tasks.map(mapTask);
 }
 
-export async function addTask(
-  taskData: Omit<Task, "id" | "submittedAt" | "status" | "userName" | "userAvatar" | "weekNumber"> &
-    Partial<Pick<Task, "userName" | "userAvatar" | "weekNumber">>
-): Promise<Task> {
+export interface NewTask {
+  userId: string;
+  weekId: string;
+  domain: DomainType;
+  title: string;
+  description: string;
+  githubUrl?: string;
+  liveUrl?: string;
+  figmaUrl?: string;
+  notes?: string;
+}
+
+export async function addTask(taskData: NewTask): Promise<Task> {
   const domain = toDbDomain(taskData.domain);
   if (!domain) throw new NotFoundError(`Unknown domain: ${taskData.domain}`);
 
@@ -176,20 +203,29 @@ export async function addTask(
   return mapTask(created);
 }
 
-export async function evaluateTask(
-  taskId: string,
-  adminId: string,
-  _adminName: string,
-  score: number,
-  feedback: string,
-  criteriaScores?: Evaluation["criteriaScores"]
-): Promise<Task | null> {
+export interface EvaluationInput {
+  taskId: string;
+  adminId: string;
+  score: number;
+  feedback: string;
+  criteriaScores?: Evaluation["criteriaScores"];
+  /** Domain leads may only grade tasks from their own domain. */
+  restrictToDomain?: DomainType;
+}
+
+export async function evaluateTask({
+  taskId, adminId, score, feedback, criteriaScores, restrictToDomain,
+}: EvaluationInput): Promise<Task | null> {
   const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { id: true } });
   if (!admin) throw new NotFoundError("Evaluator account not found");
 
   return prisma.$transaction(async (tx) => {
     const task = await tx.task.findUnique({ where: { id: taskId }, include: { evaluation: true } });
     if (!task) return null;
+    if (task.userId === adminId) throw new ForbiddenError("You cannot grade your own submission");
+    if (restrictToDomain && task.domain !== toDbDomain(restrictToDomain)) {
+      throw new ForbiddenError("You can only grade submissions from your own domain");
+    }
 
     const previous = task.evaluation;
     const fields = {

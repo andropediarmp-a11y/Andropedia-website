@@ -16,6 +16,7 @@ export interface User {
   points?: number;
   tasksCompleted?: number;
   streakWeeks?: number;
+  isActive?: boolean;
 }
 
 export interface Week {

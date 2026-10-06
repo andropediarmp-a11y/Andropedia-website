@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -10,12 +10,19 @@ import {
   CheckSquare,
   ShieldAlert,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 export function PortalNav() {
   const pathname = usePathname();
-  const { currentUser } = useAuth();
+  const router = useRouter();
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/portal/login");
+  };
 
   const isLead = currentUser?.role === "domain_admin" || currentUser?.role === "super_admin";
   const isAdmin = currentUser?.role === "super_admin";
@@ -94,6 +101,14 @@ export function PortalNav() {
                 </Link>
               );
             })}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 transition-all hover:bg-rose-500/10 hover:text-rose-300"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Sign out</span>
+            </button>
           </motion.nav>
         </div>
       </div>

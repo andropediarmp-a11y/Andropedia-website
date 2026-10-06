@@ -64,8 +64,6 @@ export default function EvaluationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           taskId: selectedTask.id,
-          adminId: currentUser?.id || "usr_lead_web",
-          adminName: currentUser?.name || "Domain Lead",
           score: totalScore,
           feedback,
           criteriaScores: {

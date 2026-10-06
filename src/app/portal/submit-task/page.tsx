@@ -58,12 +58,7 @@ export default function SubmitTaskPage() {
     try {
       const selectedWeek = weeks.find((w) => w.id === selectedWeekId);
       const payload = {
-        userId: currentUser?.id || "usr_1",
-        userName: currentUser?.name || "Aarav Sharma",
-        userAvatar: currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        domain: effectiveDomain,
         weekId: selectedWeekId,
-        weekNumber: selectedWeek?.weekNumber || 4,
         title,
         description,
         githubUrl: githubUrl || undefined,
