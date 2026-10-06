@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { HOME_DOMAINS } from "@/content/home";
+import { ACCENTS, DOMAIN_ACCENT, accentVars } from "@/content/accents";
 import { POSITION_LABELS, TEAM_DOMAINS, groupTeam, type TeamMember } from "@/lib/team";
 
 // "Customers" frame from the design: a big stat, a honeycomb of glass hexagons and a short roster.
@@ -39,7 +40,7 @@ function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
 }
 
-function Person({ member, title }: { member: TeamMember; title: string }) {
+function Person({ member, title, color }: { member: TeamMember; title: string; color: string }) {
   const [failed, setFailed] = useState(false);
   return (
     <li className="glass-inner flex items-center gap-4 p-4">
@@ -53,7 +54,7 @@ function Person({ member, title }: { member: TeamMember; title: string }) {
       )}
       <div className="min-w-0">
         <p className="truncate text-[16px] leading-6 text-white/80">{member.name}</p>
-        <p className="truncate text-[14px] leading-5 text-white/50">{title}</p>
+        <p className="truncate text-[14px] font-medium leading-5" style={{ color }}>{title}</p>
       </div>
     </li>
   );
@@ -93,11 +94,11 @@ export function TeamHex() {
 
       <div className="relative mx-auto max-w-[652px]">
         <Reveal className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-fade text-[36px] font-medium leading-[1.1] tracking-[-2px] sm:max-w-[305px] sm:text-[50px]">
-            Meet the people behind Andropedia
+          <h2 className="text-[36px] font-medium leading-[1.1] tracking-[-2px] sm:max-w-[305px] sm:text-[50px]">
+            <span className="text-fade">Meet the people</span> <span className="text-aurora">behind Andropedia</span>
           </h2>
           <div className="flex flex-col sm:items-end">
-            <span className="text-fade text-[96px] font-medium leading-none tracking-[-5px] sm:text-[140px] sm:tracking-[-5.6px]" aria-label={members ? `${members.length} members` : "Members"}>
+            <span className="text-aurora text-[96px] font-medium leading-none tracking-[-5px] sm:text-[140px] sm:tracking-[-5.6px]" aria-label={members ? `${members.length} members` : "Members"}>
               {members ? members.length : "—"}
             </span>
             <span className="text-[16px] leading-6 text-white/50">Members across {TEAM_DOMAINS.length} domains</span>
@@ -114,18 +115,19 @@ export function TeamHex() {
             const t = DOMAIN_TILES[i];
             const Icon = d.icon;
             const count = counts[d.apiDomain];
+            const accent = DOMAIN_ACCENT[d.apiDomain];
             return (
               <Link
                 key={d.id}
                 href={`/team#${TEAM_DOMAINS.find((x) => x.id === d.apiDomain)?.slug ?? ""}`}
                 className="group absolute flex items-center justify-center text-center transition-transform hover:scale-105"
-                style={{ left: pct(t.x, W), top: pct(t.y, H), width: pct(TILE_W, W), aspectRatio: `${TILE_W} / ${TILE_H}`, backgroundImage: `url(${t.src})`, backgroundSize: "100% 100%" }}
+                style={{ ...accentVars(accent), left: pct(t.x, W), top: pct(t.y, H), width: pct(TILE_W, W), aspectRatio: `${TILE_W} / ${TILE_H}`, backgroundImage: `url(${t.src})`, backgroundSize: "100% 100%", filter: "drop-shadow(0 0 14px var(--a1-soft))" }}
                 aria-label={`${d.title}: ${count ?? 0} members`}
               >
                 <span className="flex flex-col items-center gap-0.5 px-2">
-                  <Icon className="h-4 w-4 text-white sm:h-6 sm:w-6" aria-hidden="true" />
-                  <span className="text-[10px] font-medium leading-3 text-white sm:text-[14px] sm:leading-5">{d.apiDomain}</span>
-                  <span className="text-[10px] leading-3 text-white/70 sm:text-[12px] sm:leading-[18px]">{count ?? "–"}</span>
+                  <Icon className="text-a1 h-4 w-4 sm:h-6 sm:w-6" aria-hidden="true" />
+                  <span className="text-accent text-[10px] font-semibold leading-3 sm:text-[14px] sm:leading-5">{d.apiDomain}</span>
+                  <span className="text-a2 text-[10px] leading-3 sm:text-[12px] sm:leading-[18px]">{count ?? "–"}</span>
                 </span>
               </Link>
             );
@@ -136,9 +138,9 @@ export function TeamHex() {
         <Reveal className="mt-10 space-y-6">
           {core.length > 0 && (
             <ul className="grid gap-3 sm:grid-cols-2">
-              {groups!.president.map((m) => <Person key={m.id} member={m} title={POSITION_LABELS.president} />)}
-              {groups!.vicePresident.map((m) => <Person key={m.id} member={m} title={POSITION_LABELS.vice_president} />)}
-              {groups!.chiefs.map((m) => <Person key={m.id} member={m} title={`Chief, ${domainLabel(m.domain)}`} />)}
+              {groups!.president.map((m) => <Person key={m.id} member={m} title={POSITION_LABELS.president} color={ACCENTS.amber.a1} />)}
+              {groups!.vicePresident.map((m) => <Person key={m.id} member={m} title={POSITION_LABELS.vice_president} color={ACCENTS.purple.a2} />)}
+              {groups!.chiefs.map((m) => <Person key={m.id} member={m} title={`Chief, ${domainLabel(m.domain)}`} color={DOMAIN_ACCENT[m.domain].a1} />)}
             </ul>
           )}
           <div className="flex justify-center">

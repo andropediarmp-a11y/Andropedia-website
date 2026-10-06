@@ -16,8 +16,9 @@ export function Hero() {
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
 
-        <h1 className="text-fade text-[40px] font-medium leading-[1.05] tracking-[-2px] sm:text-[60px] sm:tracking-[-3px]">
-          Pioneering Technology. Building Creators.
+        <h1 className="text-[40px] font-medium leading-[1.05] tracking-[-2px] sm:text-[60px] sm:tracking-[-3px]">
+          <span className="text-fade">Pioneering Technology.</span>{" "}
+          <span className="text-aurora">Building Creators.</span>
         </h1>
 
         <p className="max-w-[510px] text-[16px] leading-6 text-white/70">

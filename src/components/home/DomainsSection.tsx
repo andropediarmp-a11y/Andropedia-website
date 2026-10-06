@@ -3,6 +3,7 @@ import { ArrowRight, ChevronRight } from "lucide-react";
 import { BlurOrb, TitleLines } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { HOME_DOMAINS } from "@/content/home";
+import { DOMAIN_ACCENT, accentVars } from "@/content/accents";
 
 // "Features" frame from the design: a small line, a big fading title, then glass cards.
 // The domain descriptions sit in the cards and the Join Now button sits directly beneath them.
@@ -15,44 +16,46 @@ export function DomainsSection() {
         <Reveal className="relative mx-auto max-w-[800px] space-y-3 pt-6 text-center">
           <TitleLines className="-top-2 hidden sm:block" />
           <p className="text-fade text-[20px] leading-7 tracking-[-0.96px] sm:text-[24px]">Six specialised domains</p>
-          <h2 className="text-fade text-[34px] font-medium leading-[1.1] tracking-[-2px] sm:text-[50px]">
-            Find the track that fits how you build
+          <h2 className="text-[34px] font-medium leading-[1.1] tracking-[-2px] sm:text-[50px]">
+            <span className="text-fade">Find the track that fits</span> <span className="text-aurora">how you build</span>
           </h2>
         </Reveal>
 
         <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {HOME_DOMAINS.map((d, i) => {
             const Icon = d.icon;
+            const accent = DOMAIN_ACCENT[d.apiDomain];
             return (
               <Reveal as="li" key={d.id} delay={(i % 3) * 0.08} className="h-full">
-                <article className="glass-card flex h-full flex-col gap-5 p-6 sm:p-7" data-cursor-text={d.title}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="glass-inner flex h-12 w-12 items-center justify-center !rounded-xl">
-                      <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+                <article className="glass-card flex h-full flex-col gap-5 overflow-hidden p-6 sm:p-7" style={accentVars(accent)} data-cursor-text={d.title}>
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 85% 38% at 50% 0%, var(--a1-soft), transparent 72%)" }} />
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="glass-inner flex h-12 w-12 items-center justify-center !rounded-xl" style={{ borderColor: "var(--a1-line)", boxShadow: "0 0 24px var(--a1-soft)" }}>
+                      <Icon className="text-a1 h-6 w-6" aria-hidden="true" />
                     </div>
-                    <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] leading-[18px] text-white/70">{d.stats}</span>
+                    <span className="chip-accent">{d.stats}</span>
                   </div>
 
-                  <div className="space-y-1">
-                    <h3 className="text-fade-card text-[18px] font-medium leading-[27px]">{d.title}</h3>
-                    <p className="text-[12px] leading-[18px] text-white/50">{d.subtitle}</p>
+                  <div className="relative space-y-1">
+                    <h3 className="text-accent text-[20px] font-medium leading-[27px]">{d.title}</h3>
+                    <p className="text-a2 text-[12px] leading-[18px] opacity-80">{d.subtitle}</p>
                   </div>
 
-                  <p className="text-[16px] leading-6 text-white/60">{d.description}</p>
+                  <p className="relative text-[16px] leading-6 text-white/65">{d.description}</p>
 
-                  <ul className="space-y-1.5 border-t border-white/10 pt-4">
+                  <ul className="relative space-y-1.5 border-t pt-4" style={{ borderColor: "var(--a1-soft)" }}>
                     {d.activities.map((a) => (
                       <li key={a} className="flex items-center gap-2 text-[13px] leading-5 text-white/70">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--a1)", boxShadow: "0 0 8px var(--a1)" }} aria-hidden="true" />
                         {a}
                       </li>
                     ))}
                   </ul>
 
-                  <div className="mt-auto pt-2">
+                  <div className="relative mt-auto pt-2">
                     <Link
                       href={`/domains?tab=${encodeURIComponent(d.id === "RD" ? "R&D" : d.id)}`}
-                      className="btn-ghost"
+                      className="btn-ghost accent"
                       aria-label={`Explore the ${d.title} track`}
                     >
                       Explore track <ArrowRight className="h-4 w-4" aria-hidden="true" />

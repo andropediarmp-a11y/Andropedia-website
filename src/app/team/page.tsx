@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Users, Crown, Shield, Star } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/SocialIcons";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
+import { ACCENTS, DOMAIN_ACCENT, accentVars, type Accent } from "@/content/accents";
 import { POSITION_LABELS, TEAM_DOMAINS, groupTeam, type TeamMember } from "@/lib/team";
 
 type Size = "large" | "medium" | "compact";
@@ -47,7 +48,7 @@ function Socials({ member }: { member: TeamMember }) {
 }
 
 /** `title` is the line under the name, e.g. "President" or "Chief, Technical". */
-function MemberCard({ member, size, title, className = "" }: { member: TeamMember; size: Size; title?: string; className?: string }) {
+function MemberCard({ member, size, title, className = "", accent }: { member: TeamMember; size: Size; title?: string; className?: string; accent?: Accent }) {
   if (size === "compact") {
     return (
       <div className="dark-card p-4 flex items-center gap-3 hover:border-white/30 transition-colors" data-cursor-text={member.name}>
@@ -66,13 +67,14 @@ function MemberCard({ member, size, title, className = "" }: { member: TeamMembe
     <div
       className={`glass-card glass-card-sm is-interactive flex flex-col items-center text-center ${large ? "p-8 w-full sm:w-80" : "p-6"} ${className}`}
       data-cursor-text={member.name}
+      style={accent ? accentVars(accent) : undefined}
     >
       <Avatar
         member={member}
         className={`${large ? "w-28 h-28 text-3xl" : "w-20 h-20 text-xl"} rounded-2xl border border-white/30 shadow-lg`}
       />
       <h3 className={`${large ? "text-xl" : "text-lg"} font-bold text-white mt-4`}>{member.name}</h3>
-      {title && <p className="text-[13px] leading-5 text-emerald-300 mt-1">{title}</p>}
+      {title && <p className="text-a2 mt-1 text-[13px] font-medium leading-5">{title}</p>}
       {member.bio && <p className="text-xs text-slate-400 leading-relaxed mt-3 line-clamp-3">{member.bio}</p>}
       <div className="mt-4"><Socials member={member} /></div>
     </div>
@@ -86,7 +88,7 @@ function Empty({ children }: { children: React.ReactNode }) {
 function SubHeading({ icon: Icon, children }: { icon: typeof Crown; children: React.ReactNode }) {
   return (
     <h3 className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-slate-400">
-      <Icon className="w-3.5 h-3.5 text-emerald-400" />
+      <Icon className="text-a1 h-3.5 w-3.5" />
       {children}
     </h3>
   );
@@ -161,7 +163,7 @@ export default function TeamPage() {
             {/* ---------- Core ---------- */}
             <section id="core" className="scroll-mt-32 space-y-8" aria-label="Core team">
               <div className="text-center space-y-1">
-                <h2 className="text-fade text-[36px] sm:text-[50px] font-medium leading-[1.1] tracking-[-2px]">Core team</h2>
+                <h2 className="text-aurora text-[36px] sm:text-[50px] font-medium leading-[1.1] tracking-[-2px]">Core team</h2>
                 <p className="text-sm text-slate-400">President, Vice President and the Chief of every domain.</p>
               </div>
 
@@ -170,10 +172,10 @@ export default function TeamPage() {
               {(groups.president.length > 0 || groups.vicePresident.length > 0) && (
                 <div className="flex flex-col sm:flex-row flex-wrap items-center sm:items-stretch justify-center gap-6">
                   {groups.president.map((m) => (
-                    <MemberCard key={m.id} member={m} size="large" title={POSITION_LABELS.president} />
+                    <MemberCard key={m.id} member={m} size="large" title={POSITION_LABELS.president} accent={ACCENTS.amber} />
                   ))}
                   {groups.vicePresident.map((m) => (
-                    <MemberCard key={m.id} member={m} size="large" title={POSITION_LABELS.vice_president} />
+                    <MemberCard key={m.id} member={m} size="large" title={POSITION_LABELS.vice_president} accent={ACCENTS.purple} />
                   ))}
                 </div>
               )}
@@ -183,7 +185,7 @@ export default function TeamPage() {
                   <SubHeading icon={Crown}>Chiefs</SubHeading>
                   <div className="flex flex-wrap justify-center gap-5">
                     {groups.chiefs.map((m) => (
-                      <MemberCard key={m.id} member={m} size="medium" title={`Chief, ${domainLabel(m.domain)}`} className="w-full sm:w-72" />
+                      <MemberCard key={m.id} member={m} size="medium" title={`Chief, ${domainLabel(m.domain)}`} className="w-full sm:w-72" accent={DOMAIN_ACCENT[m.domain]} />
                     ))}
                   </div>
                 </div>
@@ -192,10 +194,10 @@ export default function TeamPage() {
 
             {/* ---------- Domains ---------- */}
             {groups.domains.map(({ domain, leads, coLeads, members: regular, total }) => (
-              <section key={domain.id} id={domain.slug} className="scroll-mt-32 space-y-6" aria-label={`${domain.label} team`}>
+              <section key={domain.id} id={domain.slug} className="scroll-mt-32 space-y-6" style={accentVars(DOMAIN_ACCENT[domain.id])} aria-label={`${domain.label} team`}>
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-white/10 pb-3">
                   <div>
-                    <h2 className="text-fade text-[30px] sm:text-[40px] font-medium leading-[1.1] tracking-[-1.5px]">{domain.label}</h2>
+                    <h2 className="text-accent text-[30px] sm:text-[40px] font-medium leading-[1.1] tracking-[-1.5px]">{domain.label}</h2>
                     <p className="text-sm text-slate-400">{domain.blurb}</p>
                   </div>
                   <span className="text-xs font-mono text-slate-500">{total} {total === 1 ? "member" : "members"}</span>
@@ -209,7 +211,7 @@ export default function TeamPage() {
                       <div className="space-y-3">
                         <SubHeading icon={Shield}>{leads.length > 1 ? "Leads" : "Lead"}</SubHeading>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                          {leads.map((m) => <MemberCard key={m.id} member={m} size="medium" title={`${POSITION_LABELS.lead}, ${domain.label}`} />)}
+                          {leads.map((m) => <MemberCard key={m.id} member={m} size="medium" title={`${POSITION_LABELS.lead}, ${domain.label}`} accent={DOMAIN_ACCENT[domain.id]} />)}
                         </div>
                       </div>
                     )}
@@ -217,7 +219,7 @@ export default function TeamPage() {
                       <div className="space-y-3">
                         <SubHeading icon={Star}>{coLeads.length > 1 ? "Co-Leads" : "Co-Lead"}</SubHeading>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                          {coLeads.map((m) => <MemberCard key={m.id} member={m} size="medium" title={`${POSITION_LABELS.co_lead}, ${domain.label}`} />)}
+                          {coLeads.map((m) => <MemberCard key={m.id} member={m} size="medium" title={`${POSITION_LABELS.co_lead}, ${domain.label}`} accent={DOMAIN_ACCENT[domain.id]} />)}
                         </div>
                       </div>
                     )}

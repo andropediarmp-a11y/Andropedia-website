@@ -41,7 +41,7 @@
   }
 
   ::selection {
-    background: rgba(51, 149, 255, 0.35);
+    background: rgba(175, 82, 222, 0.4);
     color: #ffffff;
   }
 }
@@ -56,25 +56,25 @@
    Components
    ============================================================================ */
 @layer components {
-  /* Headings: white fading to transparent, left to right (text gradient from the design). */
+  /* Headings: bright white easing into the brand colours (blue -> violet -> pink) instead of fading to grey. */
   .text-fade {
-    background-image: linear-gradient(91deg, #ffffff 1.6%, rgba(255, 255, 255, 0) 103%);
+    background-image: linear-gradient(95deg, #ffffff 0%, #dbe9ff 24%, #8cbfff 52%, #b49bff 78%, #ff9ad5 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
-  /* Strong variant for large single-line titles so the end of the line stays readable. */
+  /* Shorter, calmer version for compact titles. */
   .text-fade-strong {
-    background-image: linear-gradient(91deg, #ffffff 20%, rgba(255, 255, 255, 0.35) 100%);
+    background-image: linear-gradient(95deg, #ffffff 10%, #cfe3ff 45%, #a9b8ff 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
-  /* Card titles (18px medium) with a soft glow. */
+  /* Card titles: white into the card's own accent colour (set --a2 on the card; blue by default). */
   .text-fade-card {
-    background-image: linear-gradient(105deg, #ffffff 0%, rgba(255, 255, 255, 0.35) 103%);
+    background-image: linear-gradient(105deg, #ffffff 0%, var(--a2, #9ccaff) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -87,6 +87,27 @@
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
+  /* The signature highlight: teal -> blue -> purple -> pink. Use on one or two key words. */
+  .text-aurora {
+    background-image: linear-gradient(100deg, #5eead4 0%, #3395ff 32%, #af52de 68%, #ff6fb1 100%);
+    background-size: 160% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: auroraShift 9s ease-in-out infinite alternate;
+  }
+  /* White into one accent colour (needs --a1 / --a2 from accentVars()). */
+  .text-accent {
+    background-image: linear-gradient(105deg, #ffffff -12%, var(--a2, #8cbfff) 32%, var(--a1, #3395ff) 88%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  /* Plain coloured text for small labels and numbers. */
+  .text-a1 { color: var(--a1, #3395ff); }
+  .text-a2 { color: var(--a2, #8cbfff); }
 
   /* Glass card: frosted panel with a soft top highlight and a large inner glow (Features / Changelog cards). */
   .glass-card {
@@ -216,6 +237,9 @@
     transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
   .btn-ghost:hover { color: #fff; border-color: #fff; background: rgba(255, 255, 255, 0.06); }
+  /* Ghost button tinted by --a1 / --a2 (domain cards). */
+  .btn-ghost.accent { border-color: var(--a1-line, rgba(255, 255, 255, 0.6)); color: var(--a2, rgba(255, 255, 255, 0.7)); }
+  .btn-ghost.accent:hover { border-color: var(--a1); background: var(--a1-soft); color: #fff; }
 
   /* Nav pill link. */
   .pill-link {
@@ -255,14 +279,28 @@
     gap: 8px;
     padding: 4px 14px;
     border-radius: 99px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.03);
-    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--a1-line, rgba(140, 191, 255, 0.35));
+    background: var(--a1-soft, rgba(51, 149, 255, 0.1));
+    color: var(--a2, #9ccaff);
     font-size: 12px;
     font-weight: 500;
     line-height: 18px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+  /* Tinted pill that takes its colour from --a1 (badges, tags, stat chips). */
+  .chip-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--a1-line, rgba(51, 149, 255, 0.4));
+    background: var(--a1-soft, rgba(51, 149, 255, 0.15));
+    color: var(--a2, #8cbfff);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 18px;
   }
 }
 
@@ -296,6 +334,11 @@
   50% { opacity: 0.8; }
 }
 .animate-pulse-glow { animation: pulseGlow 4s ease-in-out infinite; }
+
+@keyframes auroraShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
 
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0); }

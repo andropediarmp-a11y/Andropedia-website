@@ -58,11 +58,11 @@ export function Footer() {
         <div className="grid flex-1 grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4 lg:max-w-[720px]">
           {COLUMNS.map((col) => (
             <nav key={col.title} aria-label={col.title} className="flex flex-col">
-              <h2 className="border-l border-white/10 py-2.5 pl-2.5 text-[14px] font-medium leading-5">{col.title}</h2>
+              <h2 className="border-l-2 border-[#3395ff]/60 py-2.5 pl-2.5 text-[14px] font-medium leading-5">{col.title}</h2>
               <ul>
                 {col.links.map((l) => (
                   <li key={l.name}>
-                    <Link href={l.href} className="block px-5 py-2.5 text-[13px] leading-5 text-white/70 transition-colors hover:text-white">
+                    <Link href={l.href} className="block px-5 py-2.5 text-[13px] leading-5 text-white/70 transition-colors hover:text-[#8cbfff]">
                       {l.name}
                     </Link>
                   </li>

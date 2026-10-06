@@ -59,8 +59,8 @@ export default function LoginPage() {
       <div className="grid w-full max-w-5xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="hidden space-y-8 lg:block">
           <p className="chip">Member portal</p>
-          <h1 className="text-fade text-[56px] font-medium leading-[1.05] tracking-[-3px]">
-            Build smarter. <br /> Perform louder.
+          <h1 className="text-[56px] font-medium leading-[1.05] tracking-[-3px]">
+            <span className="text-fade">Build smarter.</span> <br /> <span className="text-aurora">Perform louder.</span>
           </h1>
           <p className="max-w-md text-[16px] leading-6 text-white/70">
             Access sprint evaluations, weekly submissions and leaderboards from a secure club workspace designed for ambitious builders.
@@ -68,7 +68,7 @@ export default function LoginPage() {
           <ul className="space-y-3">
             {perks.map(({ icon: Icon, text }) => (
               <li key={text} className="glass-inner flex max-w-sm items-center gap-3 px-4 py-3">
-                <Icon className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+                <Icon className="h-5 w-5 text-teal-300" aria-hidden="true" />
                 <span className="text-[14px] leading-5 text-white/90">{text}</span>
               </li>
             ))}
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
         <div className="glass-card w-full max-w-md justify-self-center p-6 sm:p-9 lg:max-w-none">
           <div className="mb-7 space-y-1.5 text-center">
-            <h2 className="text-fade-strong text-[28px] font-medium leading-9 tracking-[-1px]">Welcome back</h2>
+            <h2 className="text-aurora text-[28px] font-semibold leading-9 tracking-[-1px]">Welcome back</h2>
             <p className="text-[13px] leading-5 text-white/50">Sign in with a one-time code sent to your email</p>
           </div>
 

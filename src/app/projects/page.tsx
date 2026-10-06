@@ -95,8 +95,8 @@ export default function ProjectsPage() {
             <FolderGit2 className="w-3.5 h-3.5" />
             ANDROPEDIA OPEN SOURCE
           </div>
-          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
-            Club projects
+          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            <span className="text-fade">Club</span> <span className="text-aurora">projects</span>
           </h1>
           <p className="text-white/70 text-base leading-6">
             High-impact software, algorithmic frameworks, research prototypes, and design systems built by our members.

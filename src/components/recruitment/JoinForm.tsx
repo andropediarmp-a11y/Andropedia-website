@@ -5,6 +5,10 @@ import Link from "next/link";
 import { AlertCircle, ArrowLeft, ArrowRight, CalendarClock, CheckCircle2, Copy, Lock, Send } from "lucide-react";
 import { type DomainId, RECRUIT_DOMAINS } from "@/content/recruitment";
 import { ToastRegion, useToasts } from "@/components/ui/Toast";
+import { DOMAIN_ACCENT, accentVars } from "@/content/accents";
+import type { DomainType } from "@/lib/types";
+
+const ID_TO_DOMAIN: Record<DomainId, DomainType> = { technical: "Technical", web: "Web", rd: "R&D", design: "Design", media: "Media", pr: "PR" };
 
 type Field =
   | "name" | "email" | "year" | "portfolioUrl"
@@ -512,14 +516,15 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
                 <label
                   key={d.id}
                   htmlFor={`domain-${d.id}`}
+                  style={accentVars(DOMAIN_ACCENT[ID_TO_DOMAIN[d.id]])}
                   className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between focus-within:ring-2 focus-within:ring-emerald-400/70 ${
                     form.domain === d.id
-                      ? "bg-emerald-500/15 border-emerald-400 text-white shadow-md shadow-emerald-500/10"
-                      : "bg-slate-900/60 border-white/10 text-slate-400 hover:border-white/20"
+                      ? "border-[var(--a1)] bg-[var(--a1-soft)] text-white shadow-[0_0_28px_var(--a1-soft)]"
+                      : "bg-black/30 border-white/10 text-slate-400 hover:border-[var(--a1-line)]"
                   }`}
                 >
                   <span className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-white text-sm">{d.name}</span>
+                    <span className="text-accent text-sm font-semibold">{d.name}</span>
                     <input
                       id={`domain-${d.id}`} type="radio" name="domain" value={d.id} checked={form.domain === d.id}
                       aria-describedby={err("domain") ? "domain-error" : undefined}

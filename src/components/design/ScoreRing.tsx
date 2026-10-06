@@ -16,15 +16,16 @@ export function ScoreRing({ value, max = 100, label, size = 142, className = "" 
       <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden="true">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#8cbfff" />
-            <stop offset="100%" stopColor="#7978de" />
+            <stop offset="0%" stopColor="#5eead4" />
+            <stop offset="50%" stopColor="#3395ff" />
+            <stop offset="100%" stopColor="#af52de" />
           </linearGradient>
         </defs>
         <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
         <circle cx="50" cy="50" r={r} fill="none" stroke={`url(#${id})`} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${c * pct} ${c}`} />
       </svg>
       <div className="relative text-center">
-        <div className="text-fade-strong text-[44px] font-medium leading-none tracking-[-2px]">{value}</div>
+        <div className="text-aurora text-[44px] font-semibold leading-none tracking-[-2px]">{value}</div>
         {label && <div className="mt-1 text-[11px] leading-4 text-white/50">{label}</div>}
       </div>
     </div>

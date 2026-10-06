@@ -263,8 +263,8 @@ function DomainsContent() {
             <Layers className="w-3.5 h-3.5" />
             SPECIALIZED OPERATING DOMAINS
           </div>
-          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
-            Explore Andropedia domains
+          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            <span className="text-fade">Explore Andropedia</span> <span className="text-aurora">domains</span>
           </h1>
           <p className="text-white/70 text-base leading-6">
             Select a domain to inspect its lead, weekly curriculum, tech stack, and notable club projects.

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { ArrowRight, Check, ChevronDown, MessageSquareText, Rocket, Sparkles, Users } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
+import { ACCENTS, accentVars } from "@/content/accents";
+
+const WHY_ACCENTS = [ACCENTS.blue, ACCENTS.pink, ACCENTS.teal];
+const STEP_ACCENTS = [ACCENTS.blue, ACCENTS.teal, ACCENTS.purple, ACCENTS.pink, ACCENTS.amber];
 import { JoinForm } from "@/components/recruitment/JoinForm";
 import { ELIGIBILITY, FAQS, PROCESS_STEPS, RECRUITMENT_CYCLE, WHY_JOIN } from "@/content/recruitment";
 
@@ -40,8 +44,8 @@ export default function JoinPage() {
             <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
             ANDROPEDIA {RECRUITMENT_CYCLE.toUpperCase()}
           </div>
-          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
-            Join the Tech Forge
+          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            <span className="text-fade">Join the</span> <span className="text-aurora">Tech Forge</span>
           </h1>
           <p className="text-white/70 text-base leading-6">
             Take the leap. Build real systems, solve high-stakes problems, and climb the club leaderboard alongside the sharpest minds on campus.
@@ -60,11 +64,11 @@ export default function JoinPage() {
           {WHY_JOIN.map((item, i) => {
             const Icon = WHY_ICONS[i % WHY_ICONS.length];
             return (
-              <div key={item.title} className="glass-card p-6 space-y-3">
-                <div className="glass-inner w-10 h-10 !rounded-xl flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+              <div key={item.title} className="glass-card p-6 space-y-3" style={accentVars(WHY_ACCENTS[i % 3])}>
+                <div className="glass-inner w-10 h-10 !rounded-xl flex items-center justify-center" style={{ borderColor: "var(--a1-line)", boxShadow: "0 0 22px var(--a1-soft)" }}>
+                  <Icon className="text-a1 w-5 h-5" aria-hidden="true" />
                 </div>
-                <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                <h3 className="text-accent text-lg font-semibold">{item.title}</h3>
                 <p className="text-sm text-slate-300 leading-relaxed">{item.text}</p>
               </div>
             );
@@ -73,11 +77,11 @@ export default function JoinPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-6 sm:gap-8" aria-label="Eligibility and selection process">
           <div className="glass-card p-6 sm:p-8 space-y-4">
-            <h2 className="text-xl font-bold text-white">Who can apply</h2>
+            <h2 className="text-fade-strong text-xl font-semibold">Who can apply</h2>
             <ul className="space-y-3">
               {ELIGIBILITY.map((line) => (
                 <li key={line} className="flex gap-3 text-sm text-slate-300 leading-relaxed">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" aria-hidden="true" />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-300" aria-hidden="true" />
                   <span>{line}</span>
                 </li>
               ))}
@@ -85,15 +89,15 @@ export default function JoinPage() {
           </div>
 
           <div className="glass-card p-6 sm:p-8 space-y-5">
-            <h2 className="text-xl font-bold text-white">How selection works</h2>
+            <h2 className="text-fade-strong text-xl font-semibold">How selection works</h2>
             <ol className="space-y-5">
               {PROCESS_STEPS.map((s, i) => (
-                <li key={s.title} className="flex gap-4">
-                  <span aria-hidden="true" className="w-8 h-8 shrink-0 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-bold flex items-center justify-center">
+                <li key={s.title} className="flex gap-4" style={accentVars(STEP_ACCENTS[i % 5])}>
+                  <span aria-hidden="true" className="chip-accent !h-8 !w-8 shrink-0 justify-center !px-0 text-sm font-bold" style={{ boxShadow: "0 0 18px var(--a1-soft)" }}>
                     {i + 1}
                   </span>
                   <div>
-                    <h3 className="text-sm font-bold text-white">{s.title}</h3>
+                    <h3 className="text-accent text-sm font-semibold">{s.title}</h3>
                     <p className="text-sm text-slate-300 leading-relaxed">{s.text}</p>
                   </div>
                 </li>

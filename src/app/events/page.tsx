@@ -106,8 +106,8 @@ export function EventsPage() {
             <Calendar className="w-3.5 h-3.5" />
             HACKATHONS & WORKSHOPS
           </div>
-          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
-            Events & hackathons
+          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            <span className="text-fade">Events &</span> <span className="text-aurora">hackathons</span>
           </h1>
           <p className="text-white/70 text-base leading-6">
             Participate in flagship hackathons, intense algorithmic battles, and technical workshops organized by Andropedia.
