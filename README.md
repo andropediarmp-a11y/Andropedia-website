@@ -99,6 +99,14 @@ Members log in with their email: the site emails a 6-digit code (valid 10 minute
 3. Keep default settings (`Framework Preset: Next.js`).
 4. Click **Deploy**. Both frontend pages and `/api/...` routes will be immediately live on the edge!
 
+### Running recruitment
+- **Open / close:** `RECRUITMENT_OPEN=false` closes it immediately; `RECRUITMENT_OPENS_AT` / `RECRUITMENT_CLOSES_AT` (ISO dates with a timezone, e.g. `2026-10-20T23:59:00+05:30`) schedule it. The server enforces this on every submission and `/join` shows the deadline or a closed message. Restart or redeploy after changing environment variables.
+- **Where applications go:** the Google Sheet (see `.env.example`). If the Sheet is down or not configured, the application is kept in the database (the applicant still gets a reference ID and email) and copied over later with `npm run recruitment:flush-outbox`, or by calling `GET /api/cron/recruitment-flush` with `Authorization: Bearer $CRON_SECRET` from any scheduler every 15 minutes or so. Hosting cron features that only allow a daily run are not enough on their own; use an external scheduler or run the command by hand.
+- **Emails that failed:** `npm run recruitment:resend-failed`.
+- **Health check:** `GET /api/health` (database reachable). With the `CRON_SECRET` bearer token it also lists configuration problems and how many applications are queued.
+- **Restrict to college emails:** set `RECRUITMENT_ALLOWED_EMAIL_DOMAINS=college.edu`.
+- **Tests:** `npm test` (85 tests: validation, deadline rules, duplicate detection, sheet retries, the application route, the outbox).
+
 ### Database setup (Supabase Postgres + Prisma)
 The API reads and writes a Postgres database through Prisma.
 1. Create a Supabase project and copy `.env.example` to `.env`.
