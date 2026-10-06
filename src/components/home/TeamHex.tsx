@@ -13,20 +13,20 @@ import { POSITION_LABELS, TEAM_DOMAINS, groupTeam, type TeamMember } from "@/lib
 // Here the hexagons are the six domains with live member counts; the roster is the core team.
 
 const W = 630;
-const H = 750;
+const H = 560;
 const TILE_W = 175;
 const TILE_H = 151;
 
 // Seven glass hexagons in a honeycomb: Core in the centre, the six domains around it.
 const HEX_SRC = "/design/hex/hex-glass.svg";
-const CORE_TILE = { x: 309, y: 433 };
+const CORE_TILE = { x: 309, y: 233 };
 const DOMAIN_TILES = [
-  { x: 312, y: 267 },
-  { x: 456, y: 353 },
-  { x: 455, y: 517 },
-  { x: 309, y: 596 },
-  { x: 164, y: 514 },
-  { x: 165, y: 351 },
+  { x: 312, y: 67 },
+  { x: 456, y: 153 },
+  { x: 455, y: 317 },
+  { x: 309, y: 396 },
+  { x: 164, y: 314 },
+  { x: 165, y: 151 },
 ];
 
 const pct = (n: number, total: number) => `${(n / total) * 100}%`;
@@ -101,7 +101,7 @@ export function TeamHex() {
         </Reveal>
 
         {/* Honeycomb of domains */}
-        <div className="relative mx-auto mt-6 w-full max-w-[610px] sm:-mt-6" style={{ aspectRatio: `${W} / ${H}` }}>
+        <div className="relative mx-auto mt-6 w-full max-w-[610px] sm:mt-2" style={{ aspectRatio: `${W} / ${H}` }}>
           <Link
             href="/team#core"
             className="group absolute flex items-center justify-center text-center transition-transform hover:scale-105"
