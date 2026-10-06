@@ -1,186 +1,237 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Users, ExternalLink, Trophy, Shield } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Users, Crown, Shield, Star } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/SocialIcons";
-import { initialUsers } from "@/lib/seed-data";
-import { User } from "@/lib/types";
+import { POSITION_LABELS, TEAM_DOMAINS, groupTeam, type TeamMember } from "@/lib/team";
+
+type Size = "large" | "medium" | "compact";
+
+function initials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?";
+}
+
+function Avatar({ member, className }: { member: TeamMember; className: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!member.avatar || failed) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 text-emerald-300 font-bold`} aria-label={member.name}>
+        {initials(member.name)}
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={member.avatar} alt={member.name} onError={() => setFailed(true)} className={`${className} object-cover`} />
+  );
+}
+
+function Socials({ member }: { member: TeamMember }) {
+  if (!member.github && !member.linkedin) return null;
+  const linkClass = "p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors";
+  return (
+    <div className="flex items-center gap-2">
+      {member.github && (
+        <a href={member.github} target="_blank" rel="noreferrer" className={linkClass} aria-label={`${member.name} on GitHub`}>
+          <GithubIcon className="w-3.5 h-3.5" />
+        </a>
+      )}
+      {member.linkedin && (
+        <a href={member.linkedin} target="_blank" rel="noreferrer" className={linkClass} aria-label={`${member.name} on LinkedIn`}>
+          <LinkedinIcon className="w-3.5 h-3.5" />
+        </a>
+      )}
+    </div>
+  );
+}
+
+/** `title` is the line under the name, e.g. "President" or "Chief, Technical". */
+function MemberCard({ member, size, title, className = "" }: { member: TeamMember; size: Size; title?: string; className?: string }) {
+  if (size === "compact") {
+    return (
+      <div className="glass-panel p-4 rounded-xl border border-white/10 flex items-center gap-3 hover:border-emerald-500/30 transition-colors" data-cursor-text={member.name}>
+        <Avatar member={member} className="w-12 h-12 rounded-xl border border-white/10 shrink-0 text-sm" />
+        <div className="min-w-0 flex-1">
+          <h4 className="text-sm font-semibold text-white truncate">{member.name}</h4>
+          {member.bio && <p className="text-[11px] text-slate-500 line-clamp-2 leading-snug">{member.bio}</p>}
+        </div>
+        <Socials member={member} />
+      </div>
+    );
+  }
+
+  const large = size === "large";
+  return (
+    <div
+      className={`glass-panel rounded-2xl border border-emerald-500/30 bg-emerald-950/10 flex flex-col items-center text-center hover:border-emerald-400/60 transition-colors ${large ? "p-8 w-full sm:w-80" : "p-6"} ${className}`}
+      data-cursor-text={member.name}
+    >
+      <Avatar
+        member={member}
+        className={`${large ? "w-28 h-28 text-3xl" : "w-20 h-20 text-xl"} rounded-2xl border-2 border-emerald-400/40 shadow-lg`}
+      />
+      <h3 className={`${large ? "text-xl" : "text-lg"} font-bold text-white mt-4`}>{member.name}</h3>
+      {title && <p className="text-xs font-mono text-emerald-400 mt-1">{title}</p>}
+      {member.bio && <p className="text-xs text-slate-400 leading-relaxed mt-3 line-clamp-3">{member.bio}</p>}
+      <div className="mt-4"><Socials member={member} /></div>
+    </div>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs font-mono text-slate-500 text-center py-6 border border-dashed border-white/10 rounded-xl">{children}</p>;
+}
+
+function SubHeading({ icon: Icon, children }: { icon: typeof Crown; children: React.ReactNode }) {
+  return (
+    <h3 className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-slate-400">
+      <Icon className="w-3.5 h-3.5 text-emerald-400" />
+      {children}
+    </h3>
+  );
+}
 
 export default function TeamPage() {
-  const [selectedDomain, setSelectedDomain] = useState<string>("All");
-  const [members, setMembers] = useState<User[]>(initialUsers);
-  const [isLoading, setIsLoading] = useState(true);
+  const [members, setMembers] = useState<TeamMember[] | null>(null);
   const [loadError, setLoadError] = useState(false);
 
-  const domains = ["All", "Technical", "Web", "R&D", "Design", "Media", "PR"];
-
   useEffect(() => {
+    let cancelled = false;
     fetch("/api/members", { cache: "no-store" })
-      .then((response) => response.json())
+      .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return;
         if (data.success) setMembers(data.members);
         else setLoadError(true);
       })
-      .catch((error) => {
-        console.error("Team member load error:", error);
-        setLoadError(true);
-      })
-      .finally(() => setIsLoading(false));
+      .catch(() => !cancelled && setLoadError(true));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const filteredMembers = members.filter((member) => {
-    if (selectedDomain === "All") return true;
-    return member.domain.toLowerCase() === selectedDomain.toLowerCase();
-  });
+  const groups = useMemo(() => (members ? groupTeam(members) : null), [members]);
+  const domainLabel = (id: string) => TEAM_DOMAINS.find((d) => d.id === id)?.label ?? id;
+  const hasCore = groups && (groups.president.length || groups.vicePresident.length || groups.chiefs.length);
 
   return (
     <div className="min-h-screen bg-[#080b11] text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-10">
+      <div className="max-w-6xl mx-auto space-y-14">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <header className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
             <Users className="w-3.5 h-3.5" />
-            ANDROPEDIA FELLOWSHIP
+            OUR TEAM
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white">
-            Meet the <span className="text-gradient-emerald">Team</span>
+            Meet the <span className="text-gradient-emerald">People</span> of Andropedia
           </h1>
           <p className="text-slate-400 text-sm sm:text-base">
-            The visionary leads, engineers, and creators building the future of our collegiate tech society.
+            The core team that runs the club, and the leads, co-leads and members of every domain.
           </p>
-        </div>
+        </header>
 
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {domains.map((d) => (
-            <button
-              key={d}
-              onClick={() => setSelectedDomain(d)}
-              className={`px-4 py-2 rounded-xl text-xs font-mono transition-all ${
-                selectedDomain === d
-                  ? "bg-emerald-500 text-slate-950 font-bold shadow-lg shadow-emerald-500/20"
-                  : "glass-panel text-slate-300 hover:text-white hover:border-emerald-500/30"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
+        {/* Jump links */}
+        <nav aria-label="Team sections" className="sticky top-20 z-30 -mx-4 px-4 py-2 bg-[#080b11]/85 backdrop-blur-xl border-y border-white/[0.06]">
+          <ul className="flex flex-wrap items-center justify-center gap-2">
+            {[{ href: "#core", label: "Core" }, ...TEAM_DOMAINS.map((d) => ({ href: `#${d.slug}`, label: d.label }))].map((l) => (
+              <li key={l.href}>
+                <a href={l.href} className="inline-block px-3 py-1.5 rounded-lg text-xs font-mono glass-panel text-slate-300 hover:text-white hover:border-emerald-500/30 transition-colors">
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-        {isLoading && (
-          <p className="text-center text-xs font-mono uppercase tracking-[0.18em] text-slate-500">
-            Syncing live member profiles...
-          </p>
-        )}
         {loadError && (
-          <p className="text-center text-xs text-amber-300">
-            Showing the saved roster while live profiles reconnect.
+          <p role="alert" className="text-center text-sm text-amber-300">
+            We couldn&apos;t load the team right now. Please refresh in a moment.
           </p>
         )}
+        {!groups && !loadError && (
+          <p className="text-center text-xs font-mono uppercase tracking-[0.18em] text-slate-500">Loading the team...</p>
+        )}
 
-        {/* Members Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-          {filteredMembers.map((member) => {
-            const isLead = member.role === "domain_admin" || member.role === "super_admin";
-            return (
-              <div
-                key={member.id}
-                className={`glass-panel p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between group hover:scale-[1.02] ${
-                  isLead ? "border-emerald-500/30 bg-emerald-950/10" : "border-white/10"
-                }`}
-                data-cursor-text={member.name}
-              >
-                <div className="space-y-4">
-                  {/* Top Avatar & Badges */}
-                  <div className="flex items-start justify-between">
-                    <div className="relative">
-                      <img
-                        src={member.avatar}
-                        alt={member.name}
-                        onError={(event) => {
-                          event.currentTarget.style.visibility = "hidden";
-                        }}
-                        className="w-20 h-20 rounded-2xl object-cover border-2 border-emerald-400/30 group-hover:border-emerald-400 transition-colors shadow-lg"
-                      />
-                      {isLead && (
-                        <div className="absolute -bottom-2 -right-2 p-1 rounded-full bg-emerald-500 text-slate-950 shadow-md">
-                          <Shield className="w-3.5 h-3.5 fill-current" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-right space-y-1">
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-slate-300 border border-white/10 block">
-                        {member.domain}
-                      </span>
-                      {member.points && (
-                        <div className="text-xs font-mono font-bold text-amber-300 flex items-center justify-end gap-1">
-                          <Trophy className="w-3 h-3 text-amber-400" />
-                          <span>{member.points} pts</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Name & Role */}
-                  <div>
-                    <h3 className="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors">
-                      {member.name}
-                    </h3>
-                    <p className="text-xs font-mono text-emerald-400/90 font-medium capitalize">
-                      {member.role === "super_admin"
-                        ? "Faculty Advisor / Super Admin"
-                        : member.role === "domain_admin"
-                        ? `Domain Lead (${member.domain})`
-                        : "Active Club Member"}
-                    </p>
-                  </div>
-
-                  {/* Bio */}
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                    {member.bio || "Dedicated builder driving weekly tech challenges."}
-                  </p>
-                </div>
-
-                {/* Socials & Profile Action */}
-                <div className="flex items-center justify-between pt-6 border-t border-white/10 mt-4">
-                  <div className="flex items-center gap-2">
-                    {member.github && (
-                      <a
-                        href={member.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                        aria-label="GitHub"
-                      >
-                        <GithubIcon className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    {member.linkedin && (
-                      <a
-                        href={member.linkedin}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                        aria-label="LinkedIn"
-                      >
-                        <LinkedinIcon className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
-
-                  <Link
-                    href="/portal/login"
-                    className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
-                  >
-                    <span>View Rank</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
-                </div>
+        {groups && (
+          <>
+            {/* ---------- Core ---------- */}
+            <section id="core" className="scroll-mt-40 space-y-8" aria-label="Core team">
+              <div className="text-center space-y-1">
+                <h2 className="text-3xl font-extrabold text-white">Core Team</h2>
+                <p className="text-sm text-slate-400">President, Vice President and the Chief of every domain.</p>
               </div>
-            );
-          })}
-        </div>
+
+              {!hasCore && <Empty>The core team will be announced soon.</Empty>}
+
+              {(groups.president.length > 0 || groups.vicePresident.length > 0) && (
+                <div className="flex flex-col sm:flex-row flex-wrap items-center sm:items-stretch justify-center gap-6">
+                  {groups.president.map((m) => (
+                    <MemberCard key={m.id} member={m} size="large" title={POSITION_LABELS.president} />
+                  ))}
+                  {groups.vicePresident.map((m) => (
+                    <MemberCard key={m.id} member={m} size="large" title={POSITION_LABELS.vice_president} />
+                  ))}
+                </div>
+              )}
+
+              {groups.chiefs.length > 0 && (
+                <div className="space-y-4">
+                  <SubHeading icon={Crown}>Chiefs</SubHeading>
+                  <div className="flex flex-wrap justify-center gap-5">
+                    {groups.chiefs.map((m) => (
+                      <MemberCard key={m.id} member={m} size="medium" title={`Chief, ${domainLabel(m.domain)}`} className="w-full sm:w-72" />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* ---------- Domains ---------- */}
+            {groups.domains.map(({ domain, leads, coLeads, members: regular, total }) => (
+              <section key={domain.id} id={domain.slug} className="scroll-mt-40 space-y-6" aria-label={`${domain.label} team`}>
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-white/10 pb-3">
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white">{domain.label}</h2>
+                    <p className="text-sm text-slate-400">{domain.blurb}</p>
+                  </div>
+                  <span className="text-xs font-mono text-slate-500">{total} {total === 1 ? "member" : "members"}</span>
+                </div>
+
+                {total === 0 ? (
+                  <Empty>No one is listed in {domain.label} yet.</Empty>
+                ) : (
+                  <>
+                    {leads.length > 0 && (
+                      <div className="space-y-3">
+                        <SubHeading icon={Shield}>{leads.length > 1 ? "Leads" : "Lead"}</SubHeading>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                          {leads.map((m) => <MemberCard key={m.id} member={m} size="medium" title={`${POSITION_LABELS.lead}, ${domain.label}`} />)}
+                        </div>
+                      </div>
+                    )}
+                    {coLeads.length > 0 && (
+                      <div className="space-y-3">
+                        <SubHeading icon={Star}>{coLeads.length > 1 ? "Co-Leads" : "Co-Lead"}</SubHeading>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                          {coLeads.map((m) => <MemberCard key={m.id} member={m} size="medium" title={`${POSITION_LABELS.co_lead}, ${domain.label}`} />)}
+                        </div>
+                      </div>
+                    )}
+                    {regular.length > 0 && (
+                      <div className="space-y-3">
+                        <SubHeading icon={Users}>Members</SubHeading>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {regular.map((m) => <MemberCard key={m.id} member={m} size="compact" />)}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

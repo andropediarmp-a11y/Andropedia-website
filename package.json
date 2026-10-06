@@ -14,7 +14,9 @@
     "postinstall": "prisma generate",
     "db:import-members": "tsx --env-file=.env scripts/import-sheet-members.ts",
     "user:set-role": "tsx --env-file=.env scripts/set-role.ts",
-    "user:deactivate": "tsx --env-file=.env scripts/set-role.ts --deactivate"
+    "user:deactivate": "tsx --env-file=.env scripts/set-role.ts --deactivate",
+    "team:set-position": "tsx --env-file=.env scripts/set-position.ts",
+    "team:import-positions": "tsx --env-file=.env scripts/set-position.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

@@ -3,7 +3,7 @@
 // it refuses to run against a non-local database unless ALLOW_DEMO_SEED=1 is set.
 // Safe to re-run: existing rows are never overwritten.
 import { prisma } from "../src/lib/prisma";
-import { toDbDomain } from "../src/lib/data-store";
+import { toDbDomain, toDbPosition } from "../src/lib/data-store";
 import { initialUsers, initialWeeks, initialTasks } from "../src/lib/seed-data";
 
 const ROLE = { member: "MEMBER", domain_admin: "DOMAIN_ADMIN", super_admin: "SUPER_ADMIN" } as const;
@@ -38,6 +38,7 @@ async function main() {
       name: u.name,
       email: u.email.toLowerCase(),
       role: ROLE[u.role],
+      position: toDbPosition(u.position ?? "member") ?? "MEMBER",
       domain: toDbDomain(u.domain)!,
       avatar: u.avatar || null,
       bio: u.bio ?? null,
