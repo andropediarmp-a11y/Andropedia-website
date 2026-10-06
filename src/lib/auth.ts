@@ -10,6 +10,7 @@ import type { RoleType, User } from "./types";
 export const SESSION_COOKIE = "andropedia_session";
 const SESSION_DAYS = 14;
 const SESSION_TOUCH_MS = 5 * 60 * 1000;
+const MAX_SESSIONS_PER_USER = 10;
 const CODE_TTL_MS = 10 * 60 * 1000;
 const CODE_MAX_ATTEMPTS = 5;
 
@@ -31,6 +32,15 @@ export async function createSession(userId: string): Promise<{ token: string; ex
   const token = crypto.randomBytes(32).toString("base64url");
   const expires = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await prisma.session.create({ data: { tokenHash: sha256(token), userId, expiresAt: expires } });
+
+  // Keep at most MAX_SESSIONS_PER_USER sessions: the oldest ones are signed out.
+  const stale = await prisma.session.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    skip: MAX_SESSIONS_PER_USER,
+    select: { id: true },
+  });
+  if (stale.length > 0) await prisma.session.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } });
   return { token, expires };
 }
 

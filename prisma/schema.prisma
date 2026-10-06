@@ -96,6 +96,7 @@ model Task {
 
   evaluation    Evaluation?
 
+  @@unique([userId, weekId]) // one submission per member per week (re-submitting edits it)
   @@index([userId])
   @@index([weekId])
   @@index([status])
@@ -158,4 +159,18 @@ model RecruitmentOutbox {
   sentAt      DateTime?
 
   @@index([sentAt])
+}
+
+// Who changed what: grading, week changes, role and account changes. No foreign key on purpose,
+// so entries survive if an account is later removed.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String   // e.g. "evaluation.save", "week.update", "member.update"
+  target    String   // id of the thing changed
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
 }

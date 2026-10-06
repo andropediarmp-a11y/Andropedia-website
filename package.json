@@ -18,7 +18,8 @@
     "recruitment:flush-outbox": "tsx --env-file=.env scripts/recruitment-flush-outbox.ts",
     "test": "vitest run",
     "team:set-position": "tsx --env-file=.env scripts/set-position.ts",
-    "team:import-positions": "tsx --env-file=.env scripts/set-position.ts"
+    "team:import-positions": "tsx --env-file=.env scripts/set-position.ts",
+    "db:cleanup": "tsx --env-file=.env scripts/db-cleanup.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

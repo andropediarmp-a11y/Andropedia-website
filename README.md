@@ -108,6 +108,14 @@ Members log in with their email: the site emails a 6-digit code (valid 10 minute
 - **Restrict to college emails:** set `RECRUITMENT_ALLOWED_EMAIL_DOMAINS=college.edu`.
 - **Tests:** `npm test` (85 tests: validation, deadline rules, duplicate detection, sheet retries, the application route, the outbox).
 
+### Running the club (admin)
+Super admins manage the club from **Portal -> Admin Panel**, or through the API:
+- **Sprint weeks:** open or close a week (only one is open at a time). Members can submit only to the open week, one submission each, editable until it is graded. API: `GET/POST /api/admin/weeks`, `PATCH /api/admin/weeks/:id`.
+- **Members:** change a member's portal role, team position, domain or active status. You can't demote or deactivate yourself, and the last super admin can't be removed. Deactivating someone signs them out everywhere. API: `PATCH /api/admin/members/:id`.
+- **Audit log:** every grade, week change and member change is recorded. API: `GET /api/admin/audit`.
+- **Leaderboard:** computed from graded evaluations only. All-time, "weekly" (the open week) and "monthly" (last 30 days) views; rank change compares with the standings before the latest graded week; streaks count consecutive graded weeks.
+- **Housekeeping:** `npm run db:cleanup` (or `GET /api/cron/maintenance` with the `CRON_SECRET` bearer token, daily) removes expired sessions and old login codes. Each member keeps at most 10 sessions.
+
 ### Database setup (Supabase Postgres + Prisma)
 The API reads and writes a Postgres database through Prisma.
 1. Create a Supabase project and copy `.env.example` to `.env`.
@@ -122,6 +130,9 @@ The API reads and writes a Postgres database through Prisma.
 4. For schema changes during development use `npm run db:migrate`.
 
 Set the same `DATABASE_URL` in your hosting provider's environment variables (e.g. Vercel).
+
+**Supabase security:** every table has Row Level Security enabled with no policies (migration `..._rls`). Supabase exposes the `public` schema through a public Data API; with RLS on and no policies that API can read and write nothing. The app talks to Postgres directly through Prisma as the table owner, which bypasses RLS, so it keeps working. Do not add policies or disable RLS.
+
 
 ---
 

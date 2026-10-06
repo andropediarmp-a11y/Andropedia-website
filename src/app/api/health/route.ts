@@ -1,15 +1,7 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { hasCronSecret } from "@/lib/cron-auth";
 import { configProblems } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
-
-function hasSecret(request: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const given = request.headers.get("authorization") ?? "";
-  const expected = `Bearer ${secret}`;
-  return given.length === expected.length && timingSafeEqual(Buffer.from(given), Buffer.from(expected));
-}
 
 // Uptime/health check. Public callers only learn ok/degraded; the detailed list of
 // configuration problems is shown only with `Authorization: Bearer $CRON_SECRET`.
@@ -24,7 +16,7 @@ export async function GET(request: NextRequest) {
   const problems = configProblems();
   const ok = database && problems.length === 0;
   const body: Record<string, unknown> = { status: ok ? "ok" : "degraded", database };
-  if (hasSecret(request)) {
+  if (hasCronSecret(request)) {
     body.problems = problems;
     body.queuedApplications = waiting;
   }

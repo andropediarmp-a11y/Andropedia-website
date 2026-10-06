@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { addTask, getTasks, NotFoundError } from "@/lib/data-store";
+import { ConflictError, getTasks, NotFoundError, submitTask } from "@/lib/data-store";
 import { readJson } from "@/lib/http";
 
 const shortText = z.string().trim().max(64).nullable().transform((v) => v || null);
@@ -78,11 +78,14 @@ export async function POST(request: NextRequest) {
 
   try {
     // Identity and domain come from the session, never from the request body.
-    const newTask = await addTask({ ...parsed.data, userId: user.id, domain: user.domain });
-    return NextResponse.json({ success: true, task: newTask }, { status: 201 });
+    const { task, created } = await submitTask({ ...parsed.data, userId: user.id, domain: user.domain });
+    return NextResponse.json({ success: true, task, created }, { status: created ? 201 : 200 });
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 404 });
+    }
+    if (error instanceof ConflictError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 409 });
     }
     console.error("Error creating task:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

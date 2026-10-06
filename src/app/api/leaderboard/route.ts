@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const leaderboard = await getLeaderboard(parsed.data.domain, parsed.data.period);
     return NextResponse.json(
       { success: true, leaderboard },
-      { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } }
+      { headers: { "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=120" } }
     );
   } catch (err) {
     log.error("Leaderboard load failed", err);
