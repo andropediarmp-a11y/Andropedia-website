@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
@@ -8,14 +8,12 @@ import { Footer } from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { siteUrl } from "@/lib/site";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Typeface from the Figma design (Inter, weights 400/500/600/700).
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -52,14 +50,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${inter.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#080b11] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200">
+      <body className="min-h-full flex flex-col bg-black text-white font-sans selection:bg-emerald-400/30">
         <MotionProvider>
           <AuthProvider>
             <CustomCursor />
             <Navbar />
-            <main className="flex-1 pt-20 flex flex-col">{children}</main>
+            <main id="top" className="flex-1 pt-[60px] flex flex-col">{children}</main>
             <Footer />
           </AuthProvider>
         </MotionProvider>
