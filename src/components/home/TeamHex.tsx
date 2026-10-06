@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Crown } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { HOME_DOMAINS } from "@/content/home";
@@ -12,26 +12,21 @@ import { POSITION_LABELS, TEAM_DOMAINS, groupTeam, type TeamMember } from "@/lib
 // "Customers" frame from the design: a big stat, a honeycomb of glass hexagons and a short roster.
 // Here the hexagons are the six domains with live member counts; the roster is the core team.
 
-const W = 610;
-const H = 644;
+const W = 630;
+const H = 750;
 const TILE_W = 175;
 const TILE_H = 151;
 
-// Honeycomb positions from the design (x, y inside a 610 x 644 box).
-const DECOR = [
-  { x: 309, y: 596, src: "/design/hex/hex-1.svg" },
-  { x: 455, y: 517, src: "/design/hex/hex-2.svg" },
-  { x: 166, y: 185, src: "/design/hex/hex-3.svg" },
-  { x: 309, y: 103, src: "/design/hex/hex-3.svg" },
-  { x: 23, y: 267, src: "/design/hex/hex-1.svg" },
-];
+// Seven glass hexagons in a honeycomb: Core in the centre, the six domains around it.
+const HEX_SRC = "/design/hex/hex-glass.svg";
+const CORE_TILE = { x: 309, y: 433 };
 const DOMAIN_TILES = [
-  { x: 165, y: 351, src: "/design/hex/hex-glass.svg" },
-  { x: 312, y: 267, src: "/design/hex/hex-glass.svg" },
-  { x: 456, y: 353, src: "/design/hex/hex-glass.svg" },
-  { x: 309, y: 433, src: "/design/hex/hex-glass.svg" },
-  { x: 21, y: 430, src: "/design/hex/hex-6.svg" },
-  { x: 164, y: 514, src: "/design/hex/hex-4.svg" },
+  { x: 312, y: 267 },
+  { x: 456, y: 353 },
+  { x: 455, y: 517 },
+  { x: 309, y: 596 },
+  { x: 164, y: 514 },
+  { x: 165, y: 351 },
 ];
 
 const pct = (n: number, total: number) => `${(n / total) * 100}%`;
@@ -107,10 +102,18 @@ export function TeamHex() {
 
         {/* Honeycomb of domains */}
         <div className="relative mx-auto mt-6 w-full max-w-[610px] sm:-mt-6" style={{ aspectRatio: `${W} / ${H}` }}>
-          {DECOR.map((t, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={t.src} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute" style={{ left: pct(t.x, W), top: pct(t.y, H), width: pct(TILE_W, W), height: "auto", aspectRatio: `${TILE_W} / ${TILE_H}` }} />
-          ))}
+          <Link
+            href="/team#core"
+            className="group absolute flex items-center justify-center text-center transition-transform hover:scale-105"
+            style={{ ...accentVars(ACCENTS.indigo), left: pct(CORE_TILE.x, W), top: pct(CORE_TILE.y, H), width: pct(TILE_W, W), aspectRatio: `${TILE_W} / ${TILE_H}`, backgroundImage: `url(${HEX_SRC})`, backgroundSize: "100% 100%", filter: "drop-shadow(0 0 14px var(--a1-soft))" }}
+            aria-label={`Core: ${core.length} members`}
+          >
+            <span className="flex flex-col items-center gap-0.5 px-2">
+              <Crown className="text-a1 h-4 w-4 sm:h-6 sm:w-6" aria-hidden="true" />
+              <span className="text-accent text-[10px] font-semibold leading-3 sm:text-[14px] sm:leading-5">Core</span>
+              <span className="text-a2 text-[10px] leading-3 sm:text-[12px] sm:leading-[18px]">{members ? core.length : "–"}</span>
+            </span>
+          </Link>
           {HOME_DOMAINS.map((d, i) => {
             const t = DOMAIN_TILES[i];
             const Icon = d.icon;
@@ -121,7 +124,7 @@ export function TeamHex() {
                 key={d.id}
                 href={`/team#${TEAM_DOMAINS.find((x) => x.id === d.apiDomain)?.slug ?? ""}`}
                 className="group absolute flex items-center justify-center text-center transition-transform hover:scale-105"
-                style={{ ...accentVars(accent), left: pct(t.x, W), top: pct(t.y, H), width: pct(TILE_W, W), aspectRatio: `${TILE_W} / ${TILE_H}`, backgroundImage: `url(${t.src})`, backgroundSize: "100% 100%", filter: "drop-shadow(0 0 14px var(--a1-soft))" }}
+                style={{ ...accentVars(accent), left: pct(t.x, W), top: pct(t.y, H), width: pct(TILE_W, W), aspectRatio: `${TILE_W} / ${TILE_H}`, backgroundImage: `url(${HEX_SRC})`, backgroundSize: "100% 100%", filter: "drop-shadow(0 0 14px var(--a1-soft))" }}
                 aria-label={`${d.title}: ${count ?? 0} members`}
               >
                 <span className="flex flex-col items-center gap-0.5 px-2">
