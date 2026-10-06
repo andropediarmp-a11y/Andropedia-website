@@ -49,7 +49,7 @@ export default function AdminPage() {
 
   return (
     <PortalAccessGate allowedRoles={["super_admin"]}>
-      <div className="flex min-h-screen flex-col bg-[#050b16] text-slate-100">
+      <div className="flex min-h-screen flex-col bg-transparent text-slate-100">
         <PortalNav />
 
         <motion.div
@@ -73,7 +73,7 @@ export default function AdminPage() {
             </span>
           </div>
 
-          <div className="rounded-[28px] border border-sky-400/10 bg-[#0b1420]/80 p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)] sm:p-8">
+          <div className="rounded-[28px] border border-sky-400/10 bg-white/[0.04] p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)] sm:p-8">
             <div className="mb-5">
               <h2 className="text-xl font-bold text-white">Sprint cycles</h2>
               <p className="mt-1 text-xs text-slate-400">Toggle submission status to open or close deliverable windows.</p>
@@ -106,7 +106,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1420]/80 shadow-[0_18px_50px_rgba(2,6,23,0.45)]">
+          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[0_18px_50px_rgba(2,6,23,0.45)]">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
               <h2 className="text-lg font-bold text-white">Member roster & roles ({members.length})</h2>
               <Link href="/team" className="text-xs font-semibold text-emerald-300">

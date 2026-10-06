@@ -15,7 +15,7 @@ export function PortalAccessGate({ children, allowedRoles }: PortalAccessGatePro
   const { currentUser, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="min-h-screen bg-[#050b16]" aria-busy="true" />;
+    return <div className="min-h-screen bg-transparent" aria-busy="true" />;
   }
 
   const hasAccess = currentUser !== null && (!allowedRoles || allowedRoles.includes(currentUser.role));
@@ -26,12 +26,12 @@ export function PortalAccessGate({ children, allowedRoles }: PortalAccessGatePro
       : "This workspace is reserved for verified Andropedia club members.";
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050b16] px-4 py-16 text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-transparent px-4 py-16 text-slate-100">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-md rounded-[28px] border border-sky-500/20 bg-[#0b1323]/85 p-8 text-center shadow-[0_30px_120px_rgba(3,7,18,0.85)] backdrop-blur-xl"
+          className="w-full max-w-md rounded-[28px] border border-sky-500/20 bg-black/60 p-8 text-center shadow-[0_30px_120px_rgba(3,7,18,0.85)] backdrop-blur-xl"
         >
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-500/10">
             <LockKeyhole className="h-7 w-7 text-emerald-400" />

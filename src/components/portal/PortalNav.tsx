@@ -36,7 +36,7 @@ export function PortalNav() {
   ];
 
   return (
-    <div className="sticky top-20 z-40 w-full border-b border-sky-400/10 bg-[#07121e]/85 backdrop-blur-xl">
+    <div className="sticky top-[60px] z-40 w-full border-b border-sky-400/10 bg-black/60 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <motion.div

@@ -63,7 +63,7 @@ export default function LeaderboardPage() {
 
   return (
     <PortalAccessGate>
-      <div className="flex min-h-screen flex-col bg-[#050b16] text-slate-100">
+      <div className="flex min-h-screen flex-col bg-transparent text-slate-100">
         <PortalNav />
 
         <motion.div
@@ -85,7 +85,7 @@ export default function LeaderboardPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-center justify-between gap-4 rounded-[26px] border border-sky-400/10 bg-[#0b1420]/80 p-4 shadow-[0_18px_50px_rgba(2,6,23,0.45)] lg:flex-row">
+          <div className="flex flex-col items-center justify-between gap-4 rounded-[26px] border border-sky-400/10 bg-white/[0.04] p-4 shadow-[0_18px_50px_rgba(2,6,23,0.45)] lg:flex-row">
             <div className="flex flex-wrap items-center gap-1.5">
               {domains.map((d) => (
                 <button
@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1420]/80 shadow-[0_18px_50px_rgba(2,6,23,0.45)]">
+          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[0_18px_50px_rgba(2,6,23,0.45)]">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
               <h2 className="text-lg font-bold text-white">Full standings</h2>
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400">{filtered.length} contenders</span>

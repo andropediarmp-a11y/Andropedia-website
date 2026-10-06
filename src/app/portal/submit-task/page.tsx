@@ -91,7 +91,7 @@ export default function SubmitTaskPage() {
 
   return (
     <PortalAccessGate>
-      <div className="flex min-h-screen flex-col bg-[#050b16] text-slate-100">
+      <div className="flex min-h-screen flex-col bg-transparent text-slate-100">
         <PortalNav />
 
         <motion.div
@@ -107,7 +107,7 @@ export default function SubmitTaskPage() {
             </Link>
           </div>
 
-          <div className="rounded-[28px] border border-sky-400/10 bg-[#0b1420]/80 p-6 shadow-[0_18px_60px_rgba(2,6,23,0.6)] sm:p-10">
+          <div className="rounded-[28px] border border-sky-400/10 bg-white/[0.04] p-6 shadow-[0_18px_60px_rgba(2,6,23,0.6)] sm:p-10">
             <div className="border-b border-white/10 pb-5">
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
                 <Sparkles className="h-3.5 w-3.5" />

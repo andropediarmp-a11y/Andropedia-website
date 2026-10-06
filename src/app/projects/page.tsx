@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { FolderGit2, ExternalLink, Star, Search,} from "lucide-react";
 import { GithubIcon } from "@/components/ui/SocialIcons";
 
@@ -84,18 +85,20 @@ export default function ProjectsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#080b11] text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="relative isolate min-h-screen overflow-hidden bg-black text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <GridLines variant="hero" />
+      <BlurOrb variant="features" size={800} opacity={0.35} position={{ left: "50%", top: "360px" }} />
+      <div className="relative max-w-7xl mx-auto space-y-10">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
+          <div className="chip">
             <FolderGit2 className="w-3.5 h-3.5" />
             ANDROPEDIA OPEN SOURCE
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white">
-            Club <span className="text-gradient-emerald">Projects</span>
+          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            Club projects
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <p className="text-white/70 text-base leading-6">
             High-impact software, algorithmic frameworks, research prototypes, and design systems built by our members.
           </p>
         </div>

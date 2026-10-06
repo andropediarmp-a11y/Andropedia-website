@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { 
   Cpu, 
   Globe, 
@@ -252,18 +253,20 @@ function DomainsContent() {
   const CurrentIcon = currentDomain.icon;
 
   return (
-    <div className="min-h-screen bg-[#080b11] text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="relative isolate min-h-screen overflow-hidden bg-black text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <GridLines variant="hero" />
+      <BlurOrb variant="features" size={800} opacity={0.35} position={{ left: "50%", top: "360px" }} />
+      <div className="relative max-w-7xl mx-auto space-y-10">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
+          <div className="chip">
             <Layers className="w-3.5 h-3.5" />
             SPECIALIZED OPERATING DOMAINS
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white">
-            Explore Andropedia <span className="text-gradient-emerald">Domains</span>
+          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            Explore Andropedia domains
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <p className="text-white/70 text-base leading-6">
             Select a domain to inspect its lead, weekly curriculum, tech stack, and notable club projects.
           </p>
         </div>
@@ -436,7 +439,7 @@ function DomainsContent() {
 
 export default function DomainsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#080b11] p-12 text-center text-slate-400">Loading domains...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-black p-12 text-center text-slate-400">Loading domains...</div>}>
       <DomainsContent />
     </Suspense>
   );

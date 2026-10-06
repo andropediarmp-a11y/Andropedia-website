@@ -131,9 +131,9 @@ function validate(f: FormData, step: number): Partial<Record<Field, string>> {
 
 // ---------------------------------------------------------------- shared bits
 const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70";
-const inputClass = `w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-base sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 aria-[invalid=true]:border-rose-400/70 transition-colors ${ring}`;
+const inputClass = `w-full px-4 py-3 bg-black/40 border border-white/15 rounded-xl text-base sm:text-sm text-white placeholder:text-white/40 shadow-[inset_0_0_30px_rgba(204,215,255,0.06)] focus:outline-none focus:border-emerald-400 aria-[invalid=true]:border-rose-400/70 transition-colors ${ring}`;
 const labelClass = "text-xs font-mono text-slate-300 uppercase tracking-wider";
-const primaryBtn = `inline-flex w-full sm:w-auto items-center justify-center gap-2 px-7 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed ${ring}`;
+const primaryBtn = `btn-glow w-full sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed ${ring}`;
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
@@ -172,7 +172,7 @@ function CycleBanner({ cycle, daysLeft }: { cycle: CycleInfo; daysLeft: number |
 function ClosedPanel({ cycle }: { cycle: CycleInfo }) {
   const upcoming = cycle.state === "upcoming";
   return (
-    <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-white/10 text-center space-y-4 max-w-2xl mx-auto">
+    <div className="glass-card p-8 sm:p-12 text-center space-y-4 max-w-2xl mx-auto">
       <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center mx-auto">
         <Lock className="w-6 h-6 text-slate-300" aria-hidden="true" />
       </div>
@@ -181,7 +181,7 @@ function ClosedPanel({ cycle }: { cycle: CycleInfo }) {
         {upcoming && cycle.opensAt ? `Applications open on ${formatDate(cycle.opensAt)}.` : cycle.message}{" "}
         Follow the club for the next recruitment announcement.
       </p>
-      <Link href="/" className={`inline-flex px-6 py-3 rounded-xl glass-panel text-slate-300 hover:text-white text-sm ${ring}`}>
+      <Link href="/" className={`btn-glass ${ring}`}>
         Back to home
       </Link>
     </div>
@@ -193,7 +193,7 @@ export function JoinForm() {
   const mounted = useMounted();
   if (!mounted) {
     return (
-      <div aria-busy="true" aria-label="Loading the application form" className="glass-panel rounded-3xl border border-white/10 p-6 sm:p-12 space-y-6 animate-pulse">
+      <div aria-busy="true" aria-label="Loading the application form" className="glass-card p-6 sm:p-12 space-y-6 animate-pulse">
         <div className="h-1.5 rounded-full bg-white/10" />
         <div className="h-6 w-48 rounded bg-white/10" />
         <div className="grid sm:grid-cols-2 gap-6">
@@ -375,7 +375,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
     return (
       <>
         <div ref={topRef} className="scroll-mt-24" />
-        <div className="glass-panel p-8 sm:p-14 rounded-3xl border border-emerald-500/40 text-center space-y-6 max-w-2xl mx-auto">
+        <div className="glass-card p-8 sm:p-14 text-center space-y-6 max-w-2xl mx-auto">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
             <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
           </div>
@@ -398,7 +398,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
               </button>
             </p>
           </div>
-          <Link href="/" className={`inline-flex px-6 py-3 rounded-xl glass-panel text-slate-300 hover:text-white text-sm ${ring}`}>
+          <Link href="/" className={`btn-glass ${ring}`}>
             Back to home
           </Link>
         </div>
@@ -432,7 +432,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
           else void submit();
         }}
         noValidate
-        className="glass-panel p-5 sm:p-12 rounded-3xl border border-white/10 space-y-8"
+        className="glass-card p-5 sm:p-12 space-y-8"
       >
         {cycle && <CycleBanner cycle={cycle} daysLeft={daysLeft} />}
 
@@ -611,7 +611,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
         <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
           {step > 0 ? (
             <button type="button" onClick={() => goToStep(step - 1)}
-              className={`inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-3 rounded-xl glass-panel text-slate-300 hover:text-white text-sm ${ring}`}>
+              className={`btn-glass !py-3 w-full sm:w-auto ${ring}`}>
               <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back
             </button>
           ) : <span className="hidden sm:block" />}
