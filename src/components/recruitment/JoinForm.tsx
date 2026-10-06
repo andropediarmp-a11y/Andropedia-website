@@ -270,7 +270,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
 
   const focusFirstError = (found: Partial<Record<Field, string>>, fields: Field[]) => {
     const first = fields.find((f) => found[f]);
-    if (first) window.requestAnimationFrame(() => document.getElementById(FIELD_ID[first])?.focus());
+    if (first) window.setTimeout(() => document.getElementById(FIELD_ID[first])?.focus(), 0);
   };
 
   const handleNext = () => {
@@ -342,7 +342,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
       } else if (res.status === 409) {
         setErrors({ email: data?.error || "An application with this email already exists." });
         goToStep(0);
-        window.requestAnimationFrame(() => document.getElementById("email")?.focus());
+        window.setTimeout(() => document.getElementById("email")?.focus(), 0);
       } else if (res.status === 429) {
         const wait = Number(res.headers.get("Retry-After"));
         setServerError(
@@ -385,7 +385,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
               Thank you for applying to Andropedia, <span className="text-emerald-400 font-semibold">{form.name}</span>.
               Our <span className="text-emerald-400 font-semibold">{domain?.name}</span> domain leads will review it.
               {queued
-                ? " Your application is safely saved; your confirmation email may take a little longer than usual."
+                ? " Your application is safely saved; your confirmation email may take a little longer than usual. "
                 : " We've emailed a confirmation to "}
               {!queued && <span className="text-emerald-400 font-semibold break-all">{form.email}</span>}
               {!queued && ". "}

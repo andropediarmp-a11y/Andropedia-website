@@ -10,7 +10,19 @@ export const metadata: Metadata = {
   title: { absolute: `Join Andropedia | ${RECRUITMENT_CYCLE}` },
   description,
   alternates: { canonical: "/join" },
-  openGraph: { title: `Join Andropedia | ${RECRUITMENT_CYCLE}`, description, url: "/join", type: "website" },
+  openGraph: {
+    title: `Join Andropedia | ${RECRUITMENT_CYCLE}`,
+    description,
+    url: "/join",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Andropedia: student technology club" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Join Andropedia | ${RECRUITMENT_CYCLE}`,
+    description,
+    images: ["/opengraph-image"],
+  },
 };
 
 const WHY_ICONS = [Rocket, MessageSquareText, Users];
