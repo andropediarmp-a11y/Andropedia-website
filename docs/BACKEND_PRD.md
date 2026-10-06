@@ -283,7 +283,7 @@ Formula injection: any value starting with `=`, `+`, `-` or `@` is prefixed with
 - **Contains:** applicant's name, reference ID, chosen domain, a short summary of their answers, what happens next (timeline, how shortlisting is communicated), and a contact for questions.
 - **Format:** plain-text + simple HTML version; no tracking pixels.
 - **On failure:** the application is still accepted (the reference is shown on screen) and the row is marked `email_status = failed`. A retry script (`npm run recruitment:resend-failed`) resends to every `failed` row.
-- **Abuse protection:** at most 3 submissions per email address per day, so the form can't be used to spam other people's inboxes.
+- **Abuse protection:** only one application is accepted per email address (see Spam & abuse), so the form can't be used to send repeated emails to someone else's inbox.
 
 **Sending service (choose by expected volume; daily limits are approximate, check current limits):**
 
@@ -298,9 +298,9 @@ If a recruitment drive could get more applications in one day than the limit, em
 #### Spam & abuse
 
 - Hidden spam-trap field. If a bot fills it, the server pretends it succeeded but saves nothing.
-- Rate limits: 5 submissions per IP per hour; 3 per email address per day.
+- Rate limit: 5 submissions per IP per hour.
 - Add Cloudflare Turnstile (a free CAPTCHA) only if spam actually shows up.
-- Duplicate applications from the same email are **kept**, not rejected. The dashboard decides which counts (e.g. latest row wins).
+- **One application per email address.** Before saving, the server checks the `email` column (D) of the sheet; if the address (compared case-insensitively) is already there, it responds `409` with "An application with this email has already been submitted" and saves and sends nothing. Simultaneous submissions of the same email on one server are blocked in memory. Known limits: two submissions landing on *different* serverless instances in the same instant could both get through, so the dashboard should still treat the earliest row per email as the real one; `name+tag@gmail.com` and dotted Gmail variants count as different addresses.
 
 #### Configuration (environment variables)
 
@@ -331,6 +331,7 @@ EMAIL_REPLY_TO=
 - [ ] Downloading the sheet as CSV gives the columns above, in order, with a header row.
 - [ ] The sheet is shared only with admins and the service account. It is never public.
 - [ ] Bot submissions caught by the spam trap or rate limits create no row and send no email.
+- [ ] A second submission with an email already in the sheet (any letter case) is rejected with a clear message, creates no row and sends no email.
 
 ### 2.8 API surface (target)
 

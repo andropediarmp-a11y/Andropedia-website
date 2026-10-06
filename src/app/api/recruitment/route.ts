@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applicationSchema, type StoredApplication } from "@/lib/recruitment/schema";
-import { appendApplication, setEmailStatus, SheetsNotConfiguredError } from "@/lib/recruitment/sheets";
+import { applicationSchema, type ApplicationInput, type StoredApplication } from "@/lib/recruitment/schema";
+import { appendApplication, emailExists, setEmailStatus, SheetsNotConfiguredError } from "@/lib/recruitment/sheets";
 import { sendConfirmation } from "@/lib/recruitment/email";
 import { rateLimited } from "@/lib/recruitment/rate-limit";
 
 const HOUR = 60 * 60 * 1000;
-const DAY = 24 * HOUR;
+
+// Emails currently being processed by this server instance, so two simultaneous
+// submissions for the same email can't both pass the duplicate check.
+const inFlight = new Set<string>();
 
 const fail = (error: string, status: number, fieldErrors?: Record<string, string[]>) =>
   NextResponse.json({ success: false, error, fieldErrors }, { status });
@@ -32,8 +35,30 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
-  if (rateLimited(`ip:${ip}`, 5, HOUR) || rateLimited(`email:${input.email}`, 3, DAY)) {
+  if (rateLimited(`ip:${ip}`, 5, HOUR)) {
     return fail("Too many submissions. Please try again later.", 429);
+  }
+
+  // One application per email address.
+  if (inFlight.has(input.email)) {
+    return fail("An application with this email is already being submitted.", 409);
+  }
+  inFlight.add(input.email);
+  try {
+    return await processApplication(input);
+  } finally {
+    inFlight.delete(input.email);
+  }
+}
+
+async function processApplication(input: ApplicationInput) {
+  try {
+    if (await emailExists(input.email)) {
+      return fail("An application with this email has already been submitted. Only one application per email is allowed.", 409);
+    }
+  } catch (err) {
+    console.error("Recruitment duplicate check failed:", err instanceof SheetsNotConfiguredError ? err.message : err);
+    return fail("We couldn't submit your application right now. Please try again in a few minutes.", 503);
   }
 
   const app: StoredApplication = {

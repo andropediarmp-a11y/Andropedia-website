@@ -71,6 +71,18 @@ export async function setEmailStatus(row: number, status: EmailStatus): Promise<
   });
 }
 
+/** True if an application with this (lower-cased) email is already in the sheet. */
+export async function emailExists(email: string): Promise<boolean> {
+  const { sheetId, tab } = config();
+  const range = encodeURIComponent(`${tab}!D2:D`);
+  const client = await sheetsClient();
+  const res = await client.request<{ values?: string[][] }>({
+    url: `${API}/${sheetId}/values/${range}`,
+  });
+  const target = email.trim().toLowerCase();
+  return (res.data.values ?? []).some((r) => (r[0] ?? "").replace(/^'/, "").trim().toLowerCase() === target);
+}
+
 /** Reads every data row (A-K) with its sheet row number. Used by the resend script. */
 export async function readApplications(): Promise<Array<{ row: number; app: StoredApplication; status: string }>> {
   const { sheetId, tab } = config();
