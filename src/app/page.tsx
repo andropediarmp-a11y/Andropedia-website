@@ -30,7 +30,9 @@ export default function HomePage() {
   const fadeUp = {
     initial: { opacity: 0, y: 28 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.2 },
+    // "some" = start as soon as any part is on screen. A fixed fraction (like 0.2) never triggers for
+    // sections taller than 5x the viewport (the embedded Team section), leaving them invisible.
+    viewport: { once: true, amount: "some" as const, margin: "0px 0px -60px 0px" },
     transition: { duration: 0.6, ease: "easeOut" as const },
   };
 
