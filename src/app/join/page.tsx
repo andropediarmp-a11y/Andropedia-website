@@ -21,24 +21,28 @@ export default function JoinPage() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    year: "2nd Year",
-    domain: "Web",
-    githubUrl: "",
+    year: "second",
+    domain: "web",
     portfolioUrl: "",
     experience: "",
     motivation: "",
+    consent: false,
+    website: "", // honeypot, hidden from real users
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [reference, setReference] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const domains = [
-    { name: "Technical", desc: "C++, Rust, Systems, DSA, Competitive Programming" },
-    { name: "Web", desc: "Next.js, TypeScript, Cloud, APIs, Microservices" },
-    { name: "R&D", desc: "Machine Learning, PyTorch, Vision, Research Papers" },
-    { name: "Design", desc: "UI/UX, Figma Tokens, 3D Assets, Micro-interactions" },
-    { name: "Media", desc: "Cinematography, After Effects, VFX, Video Podcasts" },
-    { name: "PR", desc: "Corporate Sponsorships, Hackathon Logistics, Alliances" },
+    { id: "technical", name: "Technical", desc: "C++, Rust, Systems, DSA, Competitive Programming" },
+    { id: "web", name: "Web", desc: "Next.js, TypeScript, Cloud, APIs, Microservices" },
+    { id: "rd", name: "R&D", desc: "Machine Learning, PyTorch, Vision, Research Papers" },
+    { id: "design", name: "Design", desc: "UI/UX, Figma Tokens, 3D Assets, Micro-interactions" },
+    { id: "media", name: "Media", desc: "Cinematography, After Effects, VFX, Video Podcasts" },
+    { id: "pr", name: "PR", desc: "Corporate Sponsorships, Hackathon Logistics, Alliances" },
   ];
 
   const faqs = [
@@ -60,9 +64,40 @@ export default function JoinPage() {
     }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const domainName = domains.find((d) => d.id === formData.domain)?.name ?? formData.domain;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/recruitment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.fullName,
+          email: formData.email,
+          year: formData.year,
+          domain: formData.domain,
+          skills: formData.experience,
+          motivation: formData.motivation,
+          portfolioUrl: formData.portfolioUrl,
+          consent: formData.consent,
+          website: formData.website,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        setReference(data.reference);
+        setSubmitted(true);
+      } else {
+        setErrorMsg(data?.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setErrorMsg("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -92,8 +127,9 @@ export default function JoinPage() {
               <h2 className="text-2xl sm:text-3xl font-bold text-white">Application Received!</h2>
               <p className="text-slate-300 text-sm leading-relaxed">
                 Thank you for applying to Andropedia, <span className="text-emerald-400 font-semibold">{formData.fullName}</span>. 
-                Our <span className="text-emerald-400 font-semibold">{formData.domain}</span> domain leads are reviewing submissions. Shortlisted candidates will receive an interview invitation via email.
+                Our <span className="text-emerald-400 font-semibold">{domainName}</span> domain leads are reviewing submissions. We&apos;ve emailed a confirmation to <span className="text-emerald-400 font-semibold">{formData.email}</span>. Shortlisted candidates will be contacted by email.
               </p>
+              <p className="text-xs font-mono text-slate-400">Reference ID: <span className="text-emerald-300">{reference}</span></p>
             </div>
             <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -103,7 +139,10 @@ export default function JoinPage() {
                 Inspect Live Leaderboard &rarr;
               </Link>
               <button
-                onClick={() => setSubmitted(false)}
+                onClick={() => {
+                  setSubmitted(false);
+                  setFormData({ ...formData, experience: "", motivation: "", consent: false });
+                }}
                 className="px-5 py-3 rounded-xl glass-panel text-slate-300 hover:text-white text-sm"
               >
                 Submit Another Application
@@ -150,10 +189,11 @@ export default function JoinPage() {
                   onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors"
                 >
-                  <option value="1st Year">1st Year (Freshman)</option>
-                  <option value="2nd Year">2nd Year (Sophomore)</option>
-                  <option value="3rd Year">3rd Year (Junior)</option>
-                  <option value="4th Year">4th Year (Senior)</option>
+                  <option value="first">1st Year (Freshman)</option>
+                  <option value="second">2nd Year (Sophomore)</option>
+                  <option value="third">3rd Year (Junior)</option>
+                  <option value="fourth">4th Year (Senior)</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 
@@ -162,8 +202,8 @@ export default function JoinPage() {
                 <input
                   type="url"
                   placeholder="https://github.com/yourhandle"
-                  value={formData.githubUrl}
-                  onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+                  value={formData.portfolioUrl}
+                  onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 transition-colors"
                 />
               </div>
@@ -177,9 +217,9 @@ export default function JoinPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {domains.map((dom) => (
                   <label
-                    key={dom.name}
+                    key={dom.id}
                     className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                      formData.domain === dom.name
+                      formData.domain === dom.id
                         ? "bg-emerald-500/15 border-emerald-400 text-white shadow-md shadow-emerald-500/10"
                         : "bg-slate-900/60 border-white/10 text-slate-400 hover:border-white/20"
                     }`}
@@ -189,9 +229,9 @@ export default function JoinPage() {
                       <input
                         type="radio"
                         name="domain"
-                        value={dom.name}
-                        checked={formData.domain === dom.name}
-                        onChange={() => setFormData({ ...formData, domain: dom.name })}
+                        value={dom.id}
+                        checked={formData.domain === dom.id}
+                        onChange={() => setFormData({ ...formData, domain: dom.id })}
                         className="accent-emerald-500"
                       />
                     </div>
@@ -232,13 +272,43 @@ export default function JoinPage() {
               </div>
             </div>
 
+            {/* Honeypot: hidden from people, bots tend to fill it */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              className="hidden"
+            />
+
+            <label className="flex items-start gap-3 text-xs text-slate-300 leading-relaxed cursor-pointer">
+              <input
+                required
+                type="checkbox"
+                checked={formData.consent}
+                onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
+                className="mt-0.5 accent-emerald-500"
+              />
+              <span>I agree that Andropedia may store my application details and contact me by email about my application. *</span>
+            </label>
+
+            {errorMsg && (
+              <p role="alert" className="rounded-xl border border-rose-500/35 bg-rose-500/10 p-3 text-xs text-rose-200">
+                {errorMsg}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 hover:scale-[1.02]"
+              disabled={submitting}
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
               data-cursor-text="Apply"
             >
               <Send className="w-4 h-4" />
-              <span>Submit Recruitment Application</span>
+              <span>{submitting ? "Submitting..." : "Submit Recruitment Application"}</span>
             </button>
           </form>
         )}
