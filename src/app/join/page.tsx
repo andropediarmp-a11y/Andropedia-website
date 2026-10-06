@@ -138,15 +138,6 @@ export default function JoinPage() {
               >
                 Inspect Live Leaderboard &rarr;
               </Link>
-              <button
-                onClick={() => {
-                  setSubmitted(false);
-                  setFormData({ ...formData, experience: "", motivation: "", consent: false });
-                }}
-                className="px-5 py-3 rounded-xl glass-panel text-slate-300 hover:text-white text-sm"
-              >
-                Submit Another Application
-              </button>
             </div>
           </div>
         ) : (
