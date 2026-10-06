@@ -14,7 +14,9 @@
     "postinstall": "prisma generate",
     "db:import-members": "tsx --env-file=.env scripts/import-sheet-members.ts",
     "user:set-role": "tsx --env-file=.env scripts/set-role.ts",
-    "user:deactivate": "tsx --env-file=.env scripts/set-role.ts --deactivate"
+    "user:deactivate": "tsx --env-file=.env scripts/set-role.ts --deactivate",
+    "recruitment:flush-outbox": "tsx --env-file=.env scripts/recruitment-flush-outbox.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -46,6 +48,7 @@
     "prisma": "^7.10.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

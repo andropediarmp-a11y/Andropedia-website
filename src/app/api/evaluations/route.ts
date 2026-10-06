@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { evaluateTask, ForbiddenError, NotFoundError } from "@/lib/data-store";
+import { readJson } from "@/lib/http";
 
 const criterion = z.number().int().min(0).max(25);
 
@@ -31,7 +32,9 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
   const { user } = auth;
 
-  const parsed = evaluationSchema.safeParse(await request.json().catch(() => null));
+  const body = await readJson(request, 8 * 1024);
+  if (!body.ok) return body.response;
+  const parsed = evaluationSchema.safeParse(body.data);
   if (!parsed.success) {
     return NextResponse.json(
       { success: false, error: parsed.error.issues[0]?.message ?? "Invalid evaluation." },

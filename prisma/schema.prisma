@@ -131,3 +131,20 @@ model LoginCode {
 
   @@index([email, createdAt])
 }
+
+// Applications accepted while the Google Sheet was unreachable. Stored until a flush copies them
+// to the sheet; the payload is then cleared. Holds the applicant's answers briefly, so access
+// to this table should be limited like the sheet itself.
+model RecruitmentOutbox {
+  id          String    @id @default(cuid())
+  reference   String    @unique
+  emailHash   String    @unique // sha256 of the normalised email: one application per person
+  payload     Json
+  attempts    Int       @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  emailSentAt DateTime?
+  sentAt      DateTime?
+
+  @@index([sentAt])
+}

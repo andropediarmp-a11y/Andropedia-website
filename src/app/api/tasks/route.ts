@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { addTask, getTasks, NotFoundError } from "@/lib/data-store";
+import { readJson } from "@/lib/http";
+
+const shortText = z.string().trim().max(64).nullable().transform((v) => v || null);
+const querySchema = z.object({
+  weekId: shortText,
+  domain: shortText,
+  userId: shortText,
+  status: z.string().trim().max(12).nullable().transform((v) => v?.toLowerCase() || null)
+    .refine((v) => v === null || v === "submitted" || v === "evaluated", "Unknown status"),
+});
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -9,12 +19,14 @@ export async function GET(request: NextRequest) {
   const { user } = auth;
 
   const { searchParams } = new URL(request.url);
-  const filters = {
+  const query = querySchema.safeParse({
     weekId: searchParams.get("weekId"),
     domain: searchParams.get("domain"),
     userId: searchParams.get("userId"),
     status: searchParams.get("status"),
-  };
+  });
+  if (!query.success) return NextResponse.json({ success: false, error: "Invalid filter." }, { status: 400 });
+  const filters = { ...query.data };
 
   // Members see only their own submissions; domain leads only their own domain.
   if (user.role === "member") {
@@ -54,7 +66,9 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
   const { user } = auth;
 
-  const parsed = taskSchema.safeParse(await request.json().catch(() => null));
+  const body = await readJson(request, 16 * 1024);
+  if (!body.ok) return body.response;
+  const parsed = taskSchema.safeParse(body.data);
   if (!parsed.success) {
     return NextResponse.json(
       { success: false, error: parsed.error.issues[0]?.message ?? "Invalid submission." },

@@ -12,13 +12,14 @@ export const DOMAIN_LABELS: Record<(typeof DOMAINS)[number], string> = {
   pr: "Public Relations",
 };
 
+const REQUIRED = "This field is required.";
 const text = (min: number, max: number, message: string) =>
-  z.string().trim().min(min, message).max(max, message);
+  z.string({ error: REQUIRED }).trim().min(min, message).max(max, message);
 
 export const applicationSchema = z.object({
   name: text(2, 80, "Enter your full name."),
   email: z
-    .string()
+    .string({ error: REQUIRED })
     .trim()
     .toLowerCase()
     .max(160)
