@@ -18,9 +18,9 @@ const COLUMNS = [
   {
     title: "Club",
     links: [
-      { name: "Meet the Team", href: "/team" },
-      { name: "Projects", href: "/projects" },
       { name: "Events & Hackathons", href: "/events" },
+      { name: "Projects", href: "/projects" },
+      { name: "Meet the Team", href: "/team" },
       { name: "Join Recruitment", href: "/join" },
     ],
   },

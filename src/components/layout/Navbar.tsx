@@ -23,9 +23,9 @@ export function Navbar() {
   const navLinks = [
     { name: "About", href: "/#about" },
     { name: "Domains", href: "/#domains" },
-    { name: "Team", href: "/team" },
-    { name: "Projects", href: "/projects" },
     { name: "Events", href: "/events" },
+    { name: "Projects", href: "/projects" },
+    { name: "Team", href: "/team" },
   ];
   const portalHref = currentUser ? getPortalDestinationForUser(currentUser) : "/portal/login";
 
