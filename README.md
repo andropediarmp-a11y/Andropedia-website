@@ -103,11 +103,13 @@ Members log in with their email: the site emails a 6-digit code (valid 10 minute
 The API reads and writes a Postgres database through Prisma.
 1. Create a Supabase project and copy `.env.example` to `.env`.
 2. Fill `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) from Supabase -> Connect.
-3. Create the tables and load the demo data:
+3. Create the tables:
    ```bash
-   npm run db:deploy   # applies prisma/migrations
-   npm run db:seed     # demo users/weeks/tasks; safe to re-run, never overwrites
+   npm run db:deploy          # applies prisma/migrations
+   npm run db:import-members  # real members from the club Google Sheet (safe to re-run)
+   npm run user:set-role -- you@college.edu super_admin Technical "Your Name"   # first admin
    ```
+   `npm run db:seed` loads **demo** data (fake members and a demo super admin) for local development only; it refuses to run against a non-local database unless `ALLOW_DEMO_SEED=1`.
 4. For schema changes during development use `npm run db:migrate`.
 
 Set the same `DATABASE_URL` in your hosting provider's environment variables (e.g. Vercel).

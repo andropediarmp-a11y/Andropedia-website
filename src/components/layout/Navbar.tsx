@@ -1,21 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { 
   Terminal, 
   Trophy, 
   Menu, 
   X, 
-  ArrowRight
+  ArrowRight,
+  LogOut
 } from "lucide-react";
 import { getPortalDestinationForUser, useAuth } from "@/lib/auth-context";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout(); // ends the server session, then clears local state
+    setMobileMenuOpen(false);
+    router.push("/");
+  };
 
   const navLinks = [
     { name: "About", href: "/#about" },
@@ -84,6 +92,18 @@ export function Navbar() {
             <span>{currentUser ? "Portal" : "Member Login"}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
+          {currentUser && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-rose-300 hover:border-rose-400/40 hover:bg-rose-500/10 font-medium text-sm transition-all"
+              data-cursor-text="Logout"
+              title={`Log out ${currentUser.name}`}
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          )}
         </div>
 
         {/* Mobile menu trigger */}
@@ -125,6 +145,16 @@ export function Navbar() {
             >
               Join the Club
             </Link>
+            {currentUser && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 px-3 py-2.5 rounded-lg text-base font-medium text-rose-300 hover:bg-rose-500/10"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout ({currentUser.name})
+              </button>
+            )}
           </div>
 
         </div>
