@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { MotionProvider } from "@/components/ui/MotionProvider";
 import { siteUrl } from "@/lib/site";
 
 const geistSans = Geist({
@@ -54,12 +55,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#080b11] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200">
-        <AuthProvider>
-          <CustomCursor />
-          <Navbar />
-          <main className="flex-1 pt-20 flex flex-col">{children}</main>
-          <Footer />
-        </AuthProvider>
+        <MotionProvider>
+          <AuthProvider>
+            <CustomCursor />
+            <Navbar />
+            <main className="flex-1 pt-20 flex flex-col">{children}</main>
+            <Footer />
+          </AuthProvider>
+        </MotionProvider>
       </body>
     </html>
   );
