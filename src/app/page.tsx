@@ -466,6 +466,17 @@ export default function HomePage() {
               );
             })}
           </div>
+
+          <div className="flex justify-center pt-4">
+            <Link
+              href="/join"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-base transition-all shadow-xl shadow-emerald-500/25 hover:scale-105"
+              data-cursor-text="Join"
+            >
+              <span>Join Now</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
       </motion.section>
 
@@ -573,38 +584,6 @@ export default function HomePage() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ================= JOIN BANNER CTA ================= */}
-      <motion.section {...fadeUp} className="py-24 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-5xl mx-auto rounded-3xl p-8 sm:p-14 bg-gradient-to-r from-emerald-950/60 via-slate-900/80 to-cyan-950/60 border border-emerald-500/30 text-center space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono">
-            <Sparkles className="w-3.5 h-3.5" />
-            RECRUITMENT CYCLE ACTIVE
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Ready to Build the Future with <br className="hidden sm:inline" />
-            <span className="text-gradient-emerald">Andropedia?</span>
-          </h2>
-          <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            Whether you code distributed backends, train AI models, design visual masterworks, or produce cinematic media — there is a high-impact seat for you.
-          </p>
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/join"
-              className="px-8 py-4 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-base transition-all shadow-xl shadow-emerald-500/25 hover:scale-105"
-            >
-              Apply for Recruitment 2026 &rarr;
-            </Link>
-            <Link
-              href="/portal/login"
-              className="px-6 py-4 rounded-xl glass-panel text-white font-semibold text-base hover:bg-white/10 transition-all"
-            >
-              View Leaderboard
-            </Link>
           </div>
         </div>
       </motion.section>

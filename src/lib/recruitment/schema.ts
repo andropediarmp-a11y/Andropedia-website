@@ -27,6 +27,7 @@ export const applicationSchema = z.object({
   domain: z.enum(DOMAINS, "Select an Andropedia domain."),
   skills: text(20, 800, "Describe your experience in a little more detail (20+ characters)."),
   motivation: text(40, 1200, "Tell us a little more about why you want to join (40+ characters)."),
+  domainAnswer: text(20, 800, "Answer the domain question in a little more detail (20+ characters)."),
   portfolioUrl: z
     .string()
     .trim()
@@ -52,4 +53,5 @@ export interface StoredApplication {
   motivation: string;
   portfolioUrl: string;
   consent: boolean;
+  domainAnswer: string;
 }

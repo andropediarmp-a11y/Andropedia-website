@@ -70,6 +70,7 @@ async function processApplication(input: ApplicationInput) {
     domain: input.domain,
     skills: input.skills,
     motivation: input.motivation,
+    domainAnswer: input.domainAnswer,
     portfolioUrl: input.portfolioUrl,
     consent: true,
   };

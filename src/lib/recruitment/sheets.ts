@@ -2,10 +2,10 @@ import { GoogleAuth } from "google-auth-library";
 import type { StoredApplication } from "./schema";
 
 // Column contract (docs/BACKEND_PRD.md section 2.7.1). The website only appends rows
-// and only ever writes columns A-K. Admins may add their own columns to the right.
+// and only ever writes columns A-L. Admins may add their own columns to the right.
 export const HEADERS = [
   "reference", "submitted_at", "name", "email", "year", "domain",
-  "skills", "motivation", "portfolio_url", "consent", "email_status",
+  "skills", "motivation", "portfolio_url", "consent", "email_status", "domain_answer",
 ] as const;
 
 export type EmailStatus = "pending" | "sent" | "failed";
@@ -41,14 +41,14 @@ const safe = (v: string) => (/^[=+\-@]/.test(v) ? `'${v}` : v);
 function toRow(app: StoredApplication, status: EmailStatus): string[] {
   return [
     app.reference, app.submittedAt, safe(app.name), safe(app.email), app.year, app.domain,
-    safe(app.skills), safe(app.motivation), safe(app.portfolioUrl), app.consent ? "TRUE" : "FALSE", status,
+    safe(app.skills), safe(app.motivation), safe(app.portfolioUrl), app.consent ? "TRUE" : "FALSE", status, safe(app.domainAnswer),
   ];
 }
 
 /** Appends one application. Returns the 1-based sheet row it landed on. */
 export async function appendApplication(app: StoredApplication, status: EmailStatus = "pending"): Promise<number> {
   const { sheetId, tab } = config();
-  const range = encodeURIComponent(`${tab}!A:K`);
+  const range = encodeURIComponent(`${tab}!A:L`);
   const client = await sheetsClient();
   const res = await client.request<{ updates?: { updatedRange?: string } }>({
     url: `${API}/${sheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
@@ -83,10 +83,10 @@ export async function emailExists(email: string): Promise<boolean> {
   return (res.data.values ?? []).some((r) => (r[0] ?? "").replace(/^'/, "").trim().toLowerCase() === target);
 }
 
-/** Reads every data row (A-K) with its sheet row number. Used by the resend script. */
+/** Reads every data row (A-L) with its sheet row number. Used by the resend script. */
 export async function readApplications(): Promise<Array<{ row: number; app: StoredApplication; status: string }>> {
   const { sheetId, tab } = config();
-  const range = encodeURIComponent(`${tab}!A2:K`);
+  const range = encodeURIComponent(`${tab}!A2:L`);
   const client = await sheetsClient();
   const res = await client.request<{ values?: string[][] }>({
     url: `${API}/${sheetId}/values/${range}`,
@@ -97,7 +97,7 @@ export async function readApplications(): Promise<Array<{ row: number; app: Stor
     app: {
       reference: r[0] ?? "", submittedAt: r[1] ?? "", name: r[2] ?? "", email: r[3] ?? "",
       year: r[4] ?? "", domain: r[5] ?? "", skills: r[6] ?? "", motivation: r[7] ?? "",
-      portfolioUrl: r[8] ?? "", consent: r[9] === "TRUE",
+      portfolioUrl: r[8] ?? "", consent: r[9] === "TRUE", domainAnswer: r[11] ?? "",
     },
   }));
 }

@@ -256,6 +256,8 @@ Admins' dashboard (separate project) ◀── reads Google Sheet / CSV export
 
 #### Sheet column contract (what the dashboard can rely on)
 
+> **v1 recruitment page:** the home page only shows the domain descriptions and a **Join Now** button; applying happens on the dedicated `/join` page (overview, who can apply, selection steps, a 4-step form with a domain-specific question, FAQ). Its text lives in `src/content/recruitment.ts`.
+
 The website **only adds rows**. It never edits, reorders or deletes existing columns or rows. New columns are only ever added at the right-hand end.
 
 | Col | Header | Example | Notes |
@@ -271,8 +273,9 @@ The website **only adds rows**. It never edits, reorders or deletes existing col
 | I | `portfolio_url` | `https://…` | Optional; http(s) only |
 | J | `consent` | `TRUE` | Must be true to submit |
 | K | `email_status` | `sent` | `pending` / `sent` / `failed` (Option A only) |
+| L | `domain_answer` | free text | Answer to the domain-specific question on the application page, 20-800 chars |
 
-The website **never writes** to columns to the right of K. Admins can add their own working columns there (e.g. `status`, `reviewer`, `interview_slot`, `notes`) without being affected by the website.
+The website **never writes** to columns to the right of L. Admins can add their own working columns there (e.g. `status`, `reviewer`, `interview_slot`, `notes`) without being affected by the website.
 
 Formula injection: any value starting with `=`, `+`, `-` or `@` is prefixed with `'` before it's written, so a submitted answer can't run as a spreadsheet formula.
 
