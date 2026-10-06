@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { siteUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Andropedia | Official Student Technology Club",
+  metadataBase: siteUrl(),
+  title: { default: "Andropedia | Official Student Technology Club", template: "%s | Andropedia" },
   description: "Official platform of Andropedia: student technology club driving innovation in Web, Technical, R&D, Design, Media, and PR. Explore our domains, member evaluations, and live leaderboards.",
   keywords: [
     "Andropedia",
@@ -36,7 +38,9 @@ export const metadata: Metadata = {
     title: "Andropedia | Official Student Technology Club",
     description: "Pioneering technology, building creators. Explore domains, projects, hackathons, and live member leaderboards.",
     type: "website",
-  }
+    siteName: "Andropedia",
+  },
+  twitter: { card: "summary_large_image", title: "Andropedia | Official Student Technology Club" },
 };
 
 export default function RootLayout({
