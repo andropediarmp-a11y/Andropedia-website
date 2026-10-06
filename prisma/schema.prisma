@@ -24,6 +24,16 @@ enum Domain {
   MEDIA
 }
 
+// Title on the Our Team page. Separate from `Role`, which controls portal permissions.
+enum ClubPosition {
+  PRESIDENT
+  VICE_PRESIDENT
+  CHIEF        // chief of the user's `domain`; listed in the Core team
+  LEAD
+  CO_LEAD
+  MEMBER
+}
+
 enum TaskStatus {
   SUBMITTED
   EVALUATED
@@ -44,6 +54,7 @@ model User {
   tasksCompleted  Int            @default(0)
   streakWeeks     Int            @default(0)
   isActive        Boolean        @default(true)
+  position        ClubPosition   @default(MEMBER)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 

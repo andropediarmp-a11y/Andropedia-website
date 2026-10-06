@@ -2,6 +2,9 @@ export type DomainType = "Technical" | "Web" | "PR" | "R&D" | "Design" | "Media"
 
 export type RoleType = "member" | "domain_admin" | "super_admin";
 
+/** Title shown on the Our Team page (separate from the permission role above). */
+export type ClubPosition = "president" | "vice_president" | "chief" | "lead" | "co_lead" | "member";
+
 export interface User {
   id: string;
   name: string;
@@ -17,6 +20,7 @@ export interface User {
   tasksCompleted?: number;
   streakWeeks?: number;
   isActive?: boolean;
+  position?: ClubPosition;
 }
 
 export interface Week {

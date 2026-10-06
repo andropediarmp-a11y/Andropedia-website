@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import {
-  User, Week, Task, Evaluation, LeaderboardEntry, DomainType, RoleType,
+  User, Week, Task, Evaluation, LeaderboardEntry, DomainType, RoleType, ClubPosition,
 } from "./types";
 
 // Database-backed data layer. Return shapes match the types in ./types so the
@@ -18,6 +18,15 @@ const DOMAIN_FROM_DB: Record<string, DomainType> = {
 };
 const ROLE_FROM_DB: Record<string, RoleType> = {
   MEMBER: "member", DOMAIN_ADMIN: "domain_admin", SUPER_ADMIN: "super_admin",
+};
+
+const POSITION_FROM_DB: Record<string, ClubPosition> = {
+  PRESIDENT: "president", VICE_PRESIDENT: "vice_president", CHIEF: "chief",
+  LEAD: "lead", CO_LEAD: "co_lead", MEMBER: "member",
+};
+export const toDbPosition = (p: string) => {
+  const key = p.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return key in POSITION_FROM_DB ? (key as "PRESIDENT" | "VICE_PRESIDENT" | "CHIEF" | "LEAD" | "CO_LEAD" | "MEMBER") : undefined;
 };
 
 export const toDbDomain = (d: string) => DOMAIN_TO_DB[d as DomainType] as (typeof DOMAIN_TO_DB)[DomainType] | undefined;
@@ -46,6 +55,7 @@ export function mapUser(u: DbUser): User {
     tasksCompleted: u.tasksCompleted,
     streakWeeks: u.streakWeeks,
     isActive: u.isActive,
+    position: POSITION_FROM_DB[u.position],
   };
 }
 

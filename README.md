@@ -87,6 +87,7 @@ Members log in with their email: the site emails a 6-digit code (valid 10 minute
 - **Real members:** `npm run db:import-members` copies members from the club's Google Sheet into the database (safe to re-run).
 - **First super admin:** `npm run user:set-role -- you@college.edu super_admin Technical "Your Name"`
 - **Change a role / switch someone off:** `npm run user:set-role -- email member|domain_admin|super_admin [domain]` and `npm run user:deactivate -- email`
+- **Our Team page (`/team`):** each member has a team position (President, Vice President, Chief, Lead, Co-Lead or Member). Everyone imported from the sheet starts as Member in their domain. Set positions with `npm run team:set-position -- email chief Technical` or in bulk with `npm run team:import-positions -- docs/team-positions.example.csv` (copy the example and fill it in). Positions don't change portal permissions: use `user:set-role` to give a Lead the `domain_admin` role.
 - **Production:** set `AUTH_SECRET` (see `.env.example`) and the SMTP variables; without SMTP no codes can be delivered.
 
 ---
