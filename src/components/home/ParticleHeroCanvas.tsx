@@ -81,7 +81,7 @@ export function ParticleHeroCanvas() {
       }
 
       // Draw and update particles
-      for (let p of particles) {
+      for (const p of particles) {
         // slight mouse repulsion/attraction
         const dx = mouseX - p.x;
         const dy = mouseY - p.y;

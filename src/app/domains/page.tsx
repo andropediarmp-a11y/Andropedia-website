@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -17,22 +17,21 @@ import {
   Sparkles,
   Award
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { GithubIcon } from "@/components/ui/SocialIcons";
 
 function DomainsContent() {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") || "Technical";
-  const [activeTab, setActiveTab] = useState(initialTab);
-
-  useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam) setActiveTab(tabParam);
-  }, [searchParams]);
+  // The URL's ?tab= picks the tab; a click overrides it until the URL's tab changes.
+  const tabParam = searchParams.get("tab");
+  const [choice, setChoice] = useState<{ forParam: string | null; tab: string } | null>(null);
+  const activeTab = choice && choice.forParam === tabParam ? choice.tab : tabParam || "Technical";
+  const setActiveTab = (tab: string) => setChoice({ forParam: tabParam, tab });
 
   const domainData: Record<string, {
     title: string;
     tagline: string;
-    icon: any;
+    icon: LucideIcon;
     lead: {
       name: string;
       role: string;
