@@ -56,7 +56,6 @@ export default function SubmitTaskPage() {
     setErrorMsg("");
 
     try {
-      const selectedWeek = weeks.find((w) => w.id === selectedWeekId);
       const payload = {
         weekId: selectedWeekId,
         title,

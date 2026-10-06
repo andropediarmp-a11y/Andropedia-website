@@ -19,10 +19,7 @@ import {
   Layers, 
   ExternalLink,
   ChevronRight,
-  ShieldAlert,
-  Zap,
-  Star
-} from "lucide-react";
+  Zap,} from "lucide-react";
 import { ParticleHeroCanvas } from "@/components/home/ParticleHeroCanvas";
 import DomainsPage from "@/app/domains/page";
 import TeamPage from "@/app/team/page";
@@ -571,7 +568,7 @@ export default function HomePage() {
                   &ldquo;{t.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={t.avatar}
                     alt={t.author}
                     className="w-11 h-11 rounded-full object-cover border border-emerald-400/40"

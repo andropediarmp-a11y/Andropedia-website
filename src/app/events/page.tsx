@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Calendar, MapPin, Users, Trophy, Sparkles, Check, ArrowRight, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, Users, Trophy, Sparkles, Check,} from "lucide-react";
 
 interface EventItem {
   id: string;

@@ -95,7 +95,7 @@ export default function TeamPage() {
                   {/* Top Avatar & Badges */}
                   <div className="flex items-start justify-between">
                     <div className="relative">
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={member.avatar}
                         alt={member.name}
                         onError={(event) => {

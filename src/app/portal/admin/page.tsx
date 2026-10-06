@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { PortalNav } from "@/components/portal/PortalNav";
 import { useAuth } from "@/lib/auth-context";
-import { Week, User, Task } from "@/lib/types";
+import { Week, User,} from "@/lib/types";
 import { PortalAccessGate } from "@/components/portal/PortalAccessGate";
 
 export default function AdminPage() {
@@ -20,17 +20,8 @@ export default function AdminPage() {
 
   const loadData = async () => {
     try {
-      const [resWeeks, resMembers, resTasks] = await Promise.all([
-        fetch("/api/weeks"),
-        fetch("/api/admin/members"),
-        fetch("/api/tasks"),
-      ]);
-
-      const [dataWeeks, dataMembers, dataTasks] = await Promise.all([
-        resWeeks.json(),
-        resMembers.json(),
-        resTasks.json(),
-      ]);
+      const [resWeeks, resMembers] = await Promise.all([fetch("/api/weeks"), fetch("/api/admin/members")]);
+      const [dataWeeks, dataMembers] = await Promise.all([resWeeks.json(), resMembers.json()]);
 
       if (dataWeeks.success) setWeeks(dataWeeks.weeks);
       if (dataMembers.success) setMembers(dataMembers.members);
@@ -139,7 +130,7 @@ export default function AdminPage() {
                     <tr key={member.id} className="hover:bg-white/[0.02]">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img src={member.avatar} alt={member.name} className="h-9 w-9 rounded-xl object-cover" />
+                          <img loading="lazy" decoding="async" src={member.avatar} alt={member.name} className="h-9 w-9 rounded-xl object-cover" />
                           <span className="font-bold text-white">{member.name}</span>
                         </div>
                       </td>

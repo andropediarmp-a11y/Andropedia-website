@@ -46,7 +46,7 @@ export function PortalNav() {
             className="flex w-full items-center justify-between gap-3 sm:w-auto"
           >
             <div className="flex items-center gap-3">
-              <img
+              <img loading="lazy" decoding="async"
                 src={currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"}
                 alt={currentUser?.name || "Member"}
                 className="h-10 w-10 rounded-2xl border border-cyan-400/30 object-cover shadow-[0_0_20px_rgba(103,232,249,0.2)]"

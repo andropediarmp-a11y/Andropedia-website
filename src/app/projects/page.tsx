@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { FolderGit2, ExternalLink, Star, Search, Filter, Sparkles } from "lucide-react";
+import { FolderGit2, ExternalLink, Star, Search,} from "lucide-react";
 import { GithubIcon } from "@/components/ui/SocialIcons";
 
 export default function ProjectsPage() {

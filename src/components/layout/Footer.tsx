@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Terminal, Heart, ArrowUpRight } from "lucide-react";
+import { Terminal, ArrowUpRight } from "lucide-react";
 import { GithubIcon, LinkedinIcon, DiscordIcon, TwitterIcon } from "@/components/ui/SocialIcons";
 
 export function Footer() {

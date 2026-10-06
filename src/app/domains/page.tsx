@@ -10,11 +10,9 @@ import {
   Palette, 
   Video, 
   Megaphone, 
-  CheckCircle2, 
   ArrowRight, 
   ExternalLink,
   Layers,
-  Sparkles,
   Award
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -360,7 +358,7 @@ function DomainsContent() {
                 <span>DOMAIN LEAD</span>
               </div>
               <div className="flex items-center gap-4">
-                <img
+                <img loading="lazy" decoding="async"
                   src={currentDomain.lead.avatar}
                   alt={currentDomain.lead.name}
                   className="w-16 h-16 rounded-xl object-cover border-2 border-emerald-400/40"

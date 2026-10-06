@@ -153,7 +153,7 @@ export default function LeaderboardPage() {
                     }`}
                   >
                     <div className="relative mx-auto mb-4 flex w-fit items-center justify-center">
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={entry.avatar}
                         alt={entry.name}
                         className={`rounded-full object-cover border-2 ${
@@ -225,7 +225,7 @@ export default function LeaderboardPage() {
 
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img src={entry.avatar} alt={entry.name} className="h-10 w-10 rounded-xl border border-white/10 object-cover" />
+                          <img loading="lazy" decoding="async" src={entry.avatar} alt={entry.name} className="h-10 w-10 rounded-xl border border-white/10 object-cover" />
                           <div>
                             <div className="flex items-center gap-2 font-bold text-white">
                               <span>{entry.name}</span>

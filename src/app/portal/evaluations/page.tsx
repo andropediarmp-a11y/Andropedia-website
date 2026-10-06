@@ -7,7 +7,6 @@ import {
   CheckSquare,
   Clock,
   ExternalLink,
-  Star,
   CheckCircle2,
 } from "lucide-react";
 import { PortalNav } from "@/components/portal/PortalNav";
@@ -155,7 +154,7 @@ export default function EvaluationsPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          <img src={task.userAvatar} alt={task.userName} className="h-10 w-10 rounded-full border border-white/10 object-cover" />
+                          <img loading="lazy" decoding="async" src={task.userAvatar} alt={task.userName} className="h-10 w-10 rounded-full border border-white/10 object-cover" />
                           <div>
                             <div className="text-sm font-bold text-white">{task.userName}</div>
                             <div className="text-[10px] font-mono text-slate-400">{task.domain} · Week {task.weekNumber}</div>
