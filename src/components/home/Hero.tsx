@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
+import { Marquee } from "@/components/design/Marquee";
 
 // Hero from the Figma "Framer Course" frame: grid lines + glowing orb, pill badge, big gradient
 // headline, blue glow button, then a glass dashboard card with floating score rings.
 export function Hero() {
   return (
-    <section className="relative isolate overflow-hidden bg-black pb-28 pt-[80px] sm:pt-[110px]">
+    <section className="relative isolate overflow-hidden bg-black pb-16 pt-[80px] sm:pt-[110px]">
       <GridLines variant="hero" />
       <BlurOrb variant="hero" size={1054} opacity={0.4} position={{ left: "50%", top: "62%" }} />
 
@@ -35,6 +36,8 @@ export function Hero() {
           </a>
         </div>
       </div>
+
+      <Marquee className="relative mt-16" />
     </section>
   );
 }

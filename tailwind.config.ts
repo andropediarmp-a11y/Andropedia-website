@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 // Design tokens come from the Figma file "Master No-Code Web Design with Framer" (dark theme).
-// Inter everywhere, pure black canvas, white text at 100/70/50/60 %, blue/indigo/purple accents.
+// Figtree everywhere, pure black canvas, white text at 100/70/50/60 %, blue/indigo/purple accents.
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,9 +11,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
-        // The Figma design has no monospace face; small caps labels use Inter.
-        mono: ["var(--font-inter)", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        sans: ["var(--font-figtree)", "Figtree", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        // The Figma design has no monospace face; small caps labels use Figtree.
+        mono: ["var(--font-figtree)", "Figtree", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },
       colors: {
         // The previous green accent now maps onto the Figma blue (Foundation/Blue #3395FF) so every

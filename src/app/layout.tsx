@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Figtree, Anton } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
@@ -8,11 +8,19 @@ import { Footer } from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { siteUrl } from "@/lib/site";
 
-// Typeface from the Figma design (Inter, weights 400/500/600/700).
-const inter = Inter({
-  variable: "--font-inter",
+// Figtree stands in for Graphik (a paid font) - weights 400/500/600/700.
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+// Heavy condensed display face for the oversized headlines on /about.
+const anton = Anton({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
   display: "swap",
 });
 
@@ -50,7 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} h-full antialiased dark`}
+      className={`${figtree.variable} ${anton.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-black text-white font-sans selection:bg-emerald-400/30">
         <MotionProvider>
