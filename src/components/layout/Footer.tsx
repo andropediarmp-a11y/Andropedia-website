@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUp, Terminal } from "lucide-react";
+import { LegalLinks } from "@/components/layout/LegalLinks";
 import { GithubIcon, LinkedinIcon, DiscordIcon, TwitterIcon } from "@/components/ui/SocialIcons";
 
 // Footer from the Figma design: black, four link columns, social circles, divider and legal row.
@@ -89,11 +90,7 @@ export function Footer() {
         <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-4 px-6 py-5 text-[13px] leading-5 text-white/70 sm:flex-row sm:px-12 lg:px-24">
           <p>&copy; {new Date().getFullYear()} Andropedia Technology Council</p>
           <div className="flex items-center gap-8">
-            <ul className="flex items-center gap-4">
-              <li><span className="cursor-default">Terms of Service</span></li>
-              <li className="h-4 w-px bg-white/10" aria-hidden="true" />
-              <li><span className="cursor-default">Privacy Policy</span></li>
-            </ul>
+            <LegalLinks />
             <a href="#top" aria-label="Back to top" className="btn-circle !h-11 !w-11 !bg-black/60">
               <ArrowUp className="h-6 w-6" aria-hidden="true" />
             </a>

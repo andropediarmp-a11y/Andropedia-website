@@ -8,4 +8,4 @@ export function siteUrl(): URL {
 }
 
 /** Pages that should appear in the sitemap. */
-export const PUBLIC_PATHS = ["/", "/join", "/team", "/domains", "/projects", "/events"] as const;
+export const PUBLIC_PATHS = ["/", "/join", "/team", "/domains", "/projects", "/events", "/about", "/terms", "/privacy"] as const;
