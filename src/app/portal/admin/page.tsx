@@ -12,6 +12,7 @@ import { PortalNav } from "@/components/portal/PortalNav";
 import { useAuth } from "@/lib/auth-context";
 import { Week, User, ClubPosition, RoleType } from "@/lib/types";
 import { PortalAccessGate } from "@/components/portal/PortalAccessGate";
+import { EventsAdmin } from "@/components/portal/EventsAdmin";
 
 const POSITION_OPTIONS: Array<[ClubPosition, string]> = [
   ["member", "Member"],
@@ -259,6 +260,7 @@ export default function AdminPage() {
               </table>
             </div>
           </div>
+          <EventsAdmin />
         </motion.div>
       </div>
     </PortalAccessGate>

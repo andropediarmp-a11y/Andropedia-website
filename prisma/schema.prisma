@@ -174,3 +174,64 @@ model AuditLog {
   @@index([createdAt])
   @@index([actorId])
 }
+
+// Club events (hackathons, workshops, contests). Managed by super admins; the public page lists
+// published ones and lets visitors RSVP.
+model Event {
+  id               String      @id @default(cuid())
+  title            String
+  type             String      // short label, e.g. "Hackathon", "Workshop"
+  description      String
+  location         String
+  startsAt         DateTime
+  endsAt           DateTime?
+  capacity         Int?        // null = unlimited seats (or teams, for team events)
+  teamMin          Int?        // both set = team event: teams of teamMin..teamMax people register together
+  teamMax          Int?
+  prize            String?
+  isPublished      Boolean     @default(false)
+  registrationOpen Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  rsvps            EventRsvp[]
+
+  @@index([startsAt])
+}
+
+model EventRsvp {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String
+  email       String    // as typed, trimmed
+  emailKey    String    // canonical form (Gmail dots/+tags removed): one seat per person per event
+  emailSentAt DateTime?
+  createdAt   DateTime  @default(now())
+  teamName    String?   // set for team registrations; name/email above are then the team leader's
+  members     EventMember[]
+
+  @@unique([eventId, emailKey])
+  @@index([eventId])
+}
+
+// One person on a team registration (the leader included). A person can be on only one team per event.
+model EventMember {
+  id         String    @id @default(cuid())
+  rsvpId     String
+  rsvp       EventRsvp @relation(fields: [rsvpId], references: [id], onDelete: Cascade)
+  eventId    String
+  isLeader   Boolean   @default(false)
+  name       String
+  mobile     String
+  email      String
+  emailKey   String
+  dept       String
+  section    String
+  year       String
+  registerNo String
+
+  @@unique([eventId, emailKey])
+  @@unique([eventId, registerNo])
+  @@index([rsvpId])
+}

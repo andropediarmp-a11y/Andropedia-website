@@ -19,7 +19,8 @@
     "test": "vitest run",
     "team:set-position": "tsx --env-file=.env scripts/set-position.ts",
     "team:import-positions": "tsx --env-file=.env scripts/set-position.ts",
-    "db:cleanup": "tsx --env-file=.env scripts/db-cleanup.ts"
+    "db:cleanup": "tsx --env-file=.env scripts/db-cleanup.ts",
+    "events:codesprint": "tsx --env-file=.env scripts/add-codesprint.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

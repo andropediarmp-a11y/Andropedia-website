@@ -331,3 +331,50 @@ export const initialTasks: Task[] = [
   }
 ];
 
+/** Demo events: two upcoming (one with a small capacity, to try the "full" state) and one past. */
+export function demoEvents() {
+  const day = 24 * 60 * 60 * 1000;
+  const at = (offsetDays: number, hour: number) => {
+    const d = new Date(Date.now() + offsetDays * day);
+    d.setUTCHours(hour, 0, 0, 0);
+    return d;
+  };
+  return [
+    {
+      id: "demo_event_hack",
+      title: "AndroHacks: The Cyber-Physical Frontier",
+      type: "Hackathon",
+      description: "A 36-hour hackathon on distributed web systems, generative AI agents and edge hardware, mentored by industry leaders.",
+      location: "Auditorium Main Hall",
+      startsAt: at(14, 4),
+      endsAt: at(15, 16),
+      capacity: 400,
+      prize: "Prize pool and certificates",
+      isPublished: true,
+    },
+    {
+      id: "demo_event_workshop",
+      title: "Workshop: Real-Time Apps with Next.js",
+      type: "Workshop",
+      description: "Hands-on session on streaming rendering, edge caching and WebSockets, led by the Web domain.",
+      location: "Tech Lab 4",
+      startsAt: at(7, 9),
+      endsAt: at(7, 12),
+      capacity: 3,
+      prize: "Certificate",
+      isPublished: true,
+    },
+    {
+      id: "demo_event_past",
+      title: "Summer Tech Bootcamp",
+      type: "Bootcamp",
+      description: "An intensive foundations track in React, Python data pipelines and Git workflows for first and second years.",
+      location: "Campus Labs",
+      startsAt: at(-60, 4),
+      endsAt: at(-50, 11),
+      capacity: null,
+      prize: null,
+      isPublished: true,
+    },
+  ];
+}

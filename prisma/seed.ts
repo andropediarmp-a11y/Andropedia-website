@@ -4,7 +4,7 @@
 // Safe to re-run: existing rows are never overwritten.
 import { prisma } from "../src/lib/prisma";
 import { toDbDomain, toDbPosition } from "../src/lib/data-store";
-import { initialUsers, initialWeeks, initialTasks } from "../src/lib/seed-data";
+import { initialUsers, initialWeeks, initialTasks, demoEvents } from "../src/lib/seed-data";
 
 const ROLE = { member: "MEMBER", domain_admin: "DOMAIN_ADMIN", super_admin: "SUPER_ADMIN" } as const;
 
@@ -104,8 +104,10 @@ async function main() {
     ),
   });
 
+  const events = await prisma.event.createMany({ skipDuplicates: true, data: demoEvents() });
+
   console.log(
-    `Seeded: ${users.count} users, ${weeks.count} weeks, ${tasks.count} tasks, ${evaluations.count} evaluations.`
+    `Seeded: ${users.count} users, ${weeks.count} weeks, ${tasks.count} tasks, ${evaluations.count} evaluations, ${events.count} events.`
   );
 }
 
