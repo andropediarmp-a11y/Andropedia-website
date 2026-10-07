@@ -24,12 +24,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await issueLoginCode(parsed.data.email);
-    if (result === "rate_limited") {
-      return jsonError("A code was just sent. Please wait a minute before requesting another.", 429, {
-        headers: { "Retry-After": "60" },
-      });
-    }
+    // A per-email rate limit ("rate_limited") is answered exactly like a sent code. Telling the caller
+    // would reveal which emails have a code on record, i.e. who is a club member.
+    await issueLoginCode(parsed.data.email);
     return NextResponse.json(GENERIC);
   } catch (err) {
     log.error("Login code could not be sent", err);
