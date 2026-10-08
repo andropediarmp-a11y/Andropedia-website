@@ -1,273 +1,129 @@
-"use client";
+import type { Metadata } from "next";
+import { ArrowRight, Check, ChevronDown, MessageSquareText, Rocket, Sparkles, Users } from "lucide-react";
+import { BlurOrb, GridLines } from "@/components/design/Backdrop";
+import { ACCENTS, accentVars } from "@/content/accents";
 
-import { useState } from "react";
-import Link from "next/link";
-import { 
-  Sparkles, 
-  CheckCircle2, 
-  Send, 
-  ChevronDown, 
-  ChevronUp, 
-  Code2, 
-  Globe, 
-  Cpu, 
-  Palette, 
-  Video, 
-  Megaphone,
-  ArrowRight
-} from "lucide-react";
+const WHY_ACCENTS = [ACCENTS.blue, ACCENTS.pink, ACCENTS.teal];
+const STEP_ACCENTS = [ACCENTS.blue, ACCENTS.teal, ACCENTS.purple, ACCENTS.pink, ACCENTS.amber];
+import { JoinForm } from "@/components/recruitment/JoinForm";
+import { ELIGIBILITY, FAQS, PROCESS_STEPS, RECRUITMENT_CYCLE, WHY_JOIN } from "@/content/recruitment";
 
+const description =
+  "Apply to join Andropedia, the student technology club. See who can apply, how selection works, and submit your application.";
+
+export const metadata: Metadata = {
+  title: { absolute: `Join Andropedia | ${RECRUITMENT_CYCLE}` },
+  description,
+  alternates: { canonical: "/join" },
+  openGraph: {
+    title: `Join Andropedia | ${RECRUITMENT_CYCLE}`,
+    description,
+    url: "/join",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Andropedia: student technology club" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Join Andropedia | ${RECRUITMENT_CYCLE}`,
+    description,
+    images: ["/opengraph-image"],
+  },
+};
+
+const WHY_ICONS = [Rocket, MessageSquareText, Users];
+
+// Static overview rendered on the server; only the application form is a client component.
 export default function JoinPage() {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    year: "2nd Year",
-    domain: "Web",
-    githubUrl: "",
-    portfolioUrl: "",
-    experience: "",
-    motivation: "",
-  });
-
-  const [submitted, setSubmitted] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  const domains = [
-    { name: "Technical", desc: "C++, Rust, Systems, DSA, Competitive Programming" },
-    { name: "Web", desc: "Next.js, TypeScript, Cloud, APIs, Microservices" },
-    { name: "R&D", desc: "Machine Learning, PyTorch, Vision, Research Papers" },
-    { name: "Design", desc: "UI/UX, Figma Tokens, 3D Assets, Micro-interactions" },
-    { name: "Media", desc: "Cinematography, After Effects, VFX, Video Podcasts" },
-    { name: "PR", desc: "Corporate Sponsorships, Hackathon Logistics, Alliances" },
-  ];
-
-  const faqs = [
-    {
-      q: "Who is eligible to apply for Andropedia?",
-      a: "Any undergraduate or postgraduate student with an active appetite for engineering, design, or community building. We welcome 1st, 2nd, and 3rd year students across all branches."
-    },
-    {
-      q: "How does the weekly task and evaluation cycle work?",
-      a: "Once inducted, each domain assigns weekly challenges tailored to current industry and research demands. Members submit deliverables via our portal, which domain leads evaluate on technical depth, innovation, completion, and documentation. Scores update the live leaderboard."
-    },
-    {
-      q: "What is the expected weekly time commitment?",
-      a: "Typically 6 to 10 hours per week, covering the weekly task sprint, domain sync discussions, and collaborative weekend hack sessions."
-    },
-    {
-      q: "Can I contribute to more than one domain?",
-      a: "Yes! While each member has a primary domain for weekly evaluations and leaderboard tracking, cross-domain collaboration on hackathons and flagship projects is strongly encouraged."
-    }
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-  };
-
   return (
-    <div className="min-h-screen bg-[#080b11] text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-12">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
-            <Sparkles className="w-3.5 h-3.5" />
-            ANDROPEDIA RECRUITMENT SPRINT 2026
+    <div className="relative isolate min-h-screen overflow-hidden bg-black py-10 sm:py-14 px-4 sm:px-6 lg:px-8 text-white">
+      <GridLines variant="hero" />
+      <BlurOrb variant="features" size={800} opacity={0.45} position={{ left: "50%", top: "420px" }} />
+      <div className="relative max-w-5xl mx-auto space-y-14 sm:space-y-16">
+        <header className="text-center max-w-3xl mx-auto space-y-4">
+          <div className="chip">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+            ANDROPEDIA {RECRUITMENT_CYCLE.toUpperCase()}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white">
-            Join the <span className="text-gradient-emerald">Tech Forge</span>
+          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            <span className="text-fade">Join the</span> <span className="text-aurora">Tech Forge</span>
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
-            Take the leap. Build real systems, solve high-stake problems, and climb the club leaderboard alongside the sharpest minds on campus.
+          <p className="text-white/70 text-base leading-6">
+            Take the leap. Build real systems, solve high-stakes problems, and climb the club leaderboard alongside the sharpest minds on campus.
           </p>
-        </div>
+          <a
+            href="#apply"
+            className="btn-glow"
+            data-cursor-text="Apply"
+          >
+            Start your application <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
+        </header>
 
-        {/* Form or Submitted confirmation */}
-        {submitted ? (
-          <div className="glass-panel p-10 sm:p-14 rounded-3xl border border-emerald-500/40 text-center space-y-6 max-w-2xl mx-auto animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">Application Received!</h2>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Thank you for applying to Andropedia, <span className="text-emerald-400 font-semibold">{formData.fullName}</span>. 
-                Our <span className="text-emerald-400 font-semibold">{formData.domain}</span> domain leads are reviewing submissions. Shortlisted candidates will receive an interview invitation via email.
-              </p>
-            </div>
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/portal/login"
-                className="px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20"
-              >
-                Inspect Live Leaderboard &rarr;
-              </Link>
-              <button
-                onClick={() => setSubmitted(false)}
-                className="px-5 py-3 rounded-xl glass-panel text-slate-300 hover:text-white text-sm"
-              >
-                Submit Another Application
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="glass-panel p-8 sm:p-12 rounded-3xl border border-white/10 space-y-8">
-            <div className="border-b border-white/10 pb-4">
-              <h2 className="text-xl font-bold text-white">Candidate Information</h2>
-              <p className="text-xs text-slate-400 font-mono">Fill out your profile details and select your preferred domain track.</p>
-            </div>
-
-            {/* Grid 1: Basic Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">Full Name *</label>
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g. Maya Nair"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">College Email *</label>
-                <input
-                  required
-                  type="email"
-                  placeholder="name@student.college.edu"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">Academic Year *</label>
-                <select
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors"
-                >
-                  <option value="1st Year">1st Year (Freshman)</option>
-                  <option value="2nd Year">2nd Year (Sophomore)</option>
-                  <option value="3rd Year">3rd Year (Junior)</option>
-                  <option value="4th Year">4th Year (Senior)</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">GitHub / Portfolio URL</label>
-                <input
-                  type="url"
-                  placeholder="https://github.com/yourhandle"
-                  value={formData.githubUrl}
-                  onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Domain Selection Radios */}
-            <div className="space-y-3">
-              <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">
-                Primary Domain Preference *
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {domains.map((dom) => (
-                  <label
-                    key={dom.name}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                      formData.domain === dom.name
-                        ? "bg-emerald-500/15 border-emerald-400 text-white shadow-md shadow-emerald-500/10"
-                        : "bg-slate-900/60 border-white/10 text-slate-400 hover:border-white/20"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-white text-sm">{dom.name}</span>
-                      <input
-                        type="radio"
-                        name="domain"
-                        value={dom.name}
-                        checked={formData.domain === dom.name}
-                        onChange={() => setFormData({ ...formData, domain: dom.name })}
-                        className="accent-emerald-500"
-                      />
-                    </div>
-                    <span className="text-[11px] text-slate-400 leading-snug">{dom.desc}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Questions */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">
-                  Relevant Experience or Prior Projects *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="Detail your experience with technologies, frameworks, competitions, or past projects..."
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-slate-300 uppercase tracking-wider">
-                  Why do you want to join Andropedia? *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="What excites you about our weekly sprints, culture, and club projects?"
-                  value={formData.motivation}
-                  onChange={(e) => setFormData({ ...formData, motivation: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 transition-colors"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 hover:scale-[1.02]"
-              data-cursor-text="Apply"
-            >
-              <Send className="w-4 h-4" />
-              <span>Submit Recruitment Application</span>
-            </button>
-          </form>
-        )}
-
-        {/* FAQs */}
-        <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-white/10 space-y-6">
-          <h2 className="text-2xl font-bold text-white">Frequently Asked Questions</h2>
-          <div className="divide-y divide-white/10">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
-              return (
-                <div key={index} className="py-4">
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full flex items-center justify-between text-left font-semibold text-white hover:text-emerald-400 transition-colors text-base"
-                  >
-                    <span>{faq.q}</span>
-                    {isOpen ? <ChevronUp className="w-5 h-5 text-emerald-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-                  </button>
-                  {isOpen && (
-                    <p className="mt-3 text-sm text-slate-300 leading-relaxed animate-in fade-in-50 duration-200">
-                      {faq.a}
-                    </p>
-                  )}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-5" aria-labelledby="why-heading">
+          <h2 id="why-heading" className="sr-only">Why join Andropedia</h2>
+          {WHY_JOIN.map((item, i) => {
+            const Icon = WHY_ICONS[i % WHY_ICONS.length];
+            return (
+              <div key={item.title} className="glass-card p-6 space-y-3" style={accentVars(WHY_ACCENTS[i % 3])}>
+                <div className="glass-inner w-10 h-10 !rounded-xl flex items-center justify-center" style={{ borderColor: "var(--a1-line)", boxShadow: "0 0 22px var(--a1-soft)" }}>
+                  <Icon className="text-a1 w-5 h-5" aria-hidden="true" />
                 </div>
-              );
-            })}
+                <h3 className="text-accent text-lg font-semibold">{item.title}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{item.text}</p>
+              </div>
+            );
+          })}
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-6 sm:gap-8" aria-label="Eligibility and selection process">
+          <div className="glass-card p-6 sm:p-8 space-y-4">
+            <h2 className="text-fade-strong text-xl font-semibold">Who can apply</h2>
+            <ul className="space-y-3">
+              {ELIGIBILITY.map((line) => (
+                <li key={line} className="flex gap-3 text-sm text-slate-300 leading-relaxed">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-300" aria-hidden="true" />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+
+          <div className="glass-card p-6 sm:p-8 space-y-5">
+            <h2 className="text-fade-strong text-xl font-semibold">How selection works</h2>
+            <ol className="space-y-5">
+              {PROCESS_STEPS.map((s, i) => (
+                <li key={s.title} className="flex gap-4" style={accentVars(STEP_ACCENTS[i % 5])}>
+                  <span aria-hidden="true" className="chip-accent !h-8 !w-8 shrink-0 justify-center !px-0 text-sm font-bold" style={{ boxShadow: "0 0 18px var(--a1-soft)" }}>
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-accent text-sm font-semibold">{s.title}</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">{s.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section id="apply" className="scroll-mt-24" aria-label="Application">
+          <JoinForm />
+        </section>
+
+        <section className="glass-card p-6 sm:p-12 space-y-6" aria-labelledby="faq-heading">
+          <h2 id="faq-heading" className="text-fade text-[30px] font-medium tracking-[-1.2px]">Frequently asked questions</h2>
+          <div className="divide-y divide-white/10">
+            {FAQS.map((faq, index) => (
+              <details key={faq.q} open={index === 0} className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-md font-semibold text-white hover:text-emerald-400 transition-colors text-base [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70">
+                  <span>{faq.q}</span>
+                  <ChevronDown className="w-5 h-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180 group-open:text-emerald-400" aria-hidden="true" />
+                </summary>
+                <p className="mt-3 text-sm text-slate-300 leading-relaxed">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

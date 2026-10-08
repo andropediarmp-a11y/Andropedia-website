@@ -7,7 +7,6 @@ import {
   CheckSquare,
   Clock,
   ExternalLink,
-  Star,
   CheckCircle2,
 } from "lucide-react";
 import { PortalNav } from "@/components/portal/PortalNav";
@@ -64,8 +63,6 @@ export default function EvaluationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           taskId: selectedTask.id,
-          adminId: currentUser?.id || "usr_lead_web",
-          adminName: currentUser?.name || "Domain Lead",
           score: totalScore,
           feedback,
           criteriaScores: {
@@ -92,7 +89,7 @@ export default function EvaluationsPage() {
 
   return (
     <PortalAccessGate allowedRoles={["domain_admin", "super_admin"]}>
-      <div className="flex min-h-screen flex-col bg-[#050b16] text-slate-100">
+      <div className="flex min-h-screen flex-col bg-transparent text-slate-100">
         <PortalNav />
 
         <motion.div
@@ -152,12 +149,12 @@ export default function EvaluationsPage() {
                         }
                       }}
                       className={`cursor-pointer rounded-[22px] border p-4 transition-all ${
-                        isSelected ? "border-emerald-400/40 bg-emerald-500/10 shadow-[0_12px_30px_rgba(52,211,153,0.12)]" : "border-white/10 bg-[#0b1420]/75 hover:border-sky-400/20"
+                        isSelected ? "border-emerald-400/40 bg-emerald-500/10 shadow-[0_12px_30px_rgba(52,211,153,0.12)]" : "border-white/10 bg-white/[0.04] hover:border-sky-400/20"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          <img src={task.userAvatar} alt={task.userName} className="h-10 w-10 rounded-full border border-white/10 object-cover" />
+                          <img loading="lazy" decoding="async" src={task.userAvatar} alt={task.userName} className="h-10 w-10 rounded-full border border-white/10 object-cover" />
                           <div>
                             <div className="text-sm font-bold text-white">{task.userName}</div>
                             <div className="text-[10px] font-mono text-slate-400">{task.domain} · Week {task.weekNumber}</div>
@@ -183,7 +180,7 @@ export default function EvaluationsPage() {
 
             <div className="lg:col-span-7">
               {selectedTask ? (
-                <div className="rounded-[28px] border border-sky-400/10 bg-[#0b1420]/80 p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)] sm:p-8">
+                <div className="rounded-[28px] border border-sky-400/10 bg-white/[0.04] p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)] sm:p-8">
                   <div className="border-b border-white/10 pb-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
@@ -256,7 +253,7 @@ export default function EvaluationsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-[28px] border border-white/10 bg-[#0b1420]/80 p-8 text-center text-slate-400">No submission selected.</div>
+                <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 text-center text-slate-400">No submission selected.</div>
               )}
             </div>
           </div>

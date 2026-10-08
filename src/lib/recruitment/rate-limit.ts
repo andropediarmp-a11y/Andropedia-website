@@ -1,0 +1,29 @@
+// In-memory sliding window. Per server instance only: on serverless hosts this is
+// best-effort protection against bursts, not a hard guarantee. Durable limits live in the
+// database (login codes are limited per email there).
+const hits = new Map<string, number[]>();
+
+export interface RateResult {
+  limited: boolean;
+  /** Seconds until the oldest hit leaves the window (for the Retry-After header). */
+  retryAfterSec: number;
+}
+
+export function checkRateLimit(key: string, limit: number, windowMs: number, now = Date.now()): RateResult {
+  const recent = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
+  if (recent.length >= limit) {
+    hits.set(key, recent);
+    return { limited: true, retryAfterSec: Math.max(1, Math.ceil((recent[0] + windowMs - now) / 1000)) };
+  }
+  recent.push(now);
+  hits.set(key, recent);
+  if (hits.size > 5000) {
+    for (const [k, v] of hits) if (v.every((t) => now - t >= windowMs)) hits.delete(k);
+  }
+  return { limited: false, retryAfterSec: 0 };
+}
+
+/** Test helper. */
+export function resetRateLimits() {
+  hits.clear();
+}

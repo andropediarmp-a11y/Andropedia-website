@@ -2,24 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   Design tokens: Figma "Master No-Code Web Design with Framer" (dark)
+   ============================================================================ */
 @layer base {
   :root {
-    --background: #050b16;
-    --background-soft: #0b1220;
-    --surface: #0f1b2a;
-    --surface-strong: #132339;
-    --surface-light: #162b42;
-    --foreground: #eaf3ff;
-    --foreground-muted: #9bb0cc;
-    --accent-emerald: #34d399;
-    --accent-cyan: #67e8f9;
-    --accent-violet: #8b5cf6;
-    --accent-blue: #60a5fa;
-    --border-color: rgba(148, 163, 184, 0.2);
+    --background: #000000;
+    --foreground: #ffffff;
+    --foreground-secondary: rgba(255, 255, 255, 0.7);
+    --foreground-tertiary: rgba(255, 255, 255, 0.5);
+    --container-bg: rgba(0, 0, 0, 0.6);
+    --container-border: rgba(255, 255, 255, 0.1);
+    --blue: #3395ff;
+    --indigo: #7978de;
+    --purple: #af52de;
+    --teal: #59c0d2;
+    --glow-blue: #2737cf;
   }
 
   * {
-    border-color: var(--border-color);
+    border-color: var(--container-border);
   }
 
   html {
@@ -29,125 +31,343 @@
   }
 
   body {
-    background:
-      radial-gradient(circle at top, rgba(96, 165, 250, 0.18), transparent 30%),
-      radial-gradient(circle at 80% 0%, rgba(52, 211, 153, 0.12), transparent 25%),
-      linear-gradient(180deg, #050b16 0%, #0a1221 42%, #090e17 100%);
+    background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-figtree), Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 24px;
     overflow-x: hidden;
-    selection-background-color: #34d399;
-    selection-color: #08131f;
+    -webkit-font-smoothing: antialiased;
   }
 
   ::selection {
-    background: rgba(103, 232, 249, 0.25);
-    color: #f8fbff;
+    background: rgba(175, 82, 222, 0.4);
+    color: #ffffff;
   }
 }
 
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #1c1c22; border-radius: 9999px; border: 2px solid #000; }
+::-webkit-scrollbar-thumb:hover { background: #2b2b34; }
+
+/* ============================================================================
+   Components
+   ============================================================================ */
+@layer components {
+  /* Headings: bright white easing into the brand colours (blue -> violet -> pink) instead of fading to grey. */
+  .text-fade {
+    background-image: linear-gradient(95deg, #ffffff 0%, #dbe9ff 24%, #8cbfff 52%, #b49bff 78%, #ff9ad5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  /* Shorter, calmer version for compact titles. */
+  .text-fade-strong {
+    background-image: linear-gradient(95deg, #ffffff 10%, #cfe3ff 45%, #a9b8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  /* Card titles: white into the card's own accent colour (set --a2 on the card; blue by default). */
+  .text-fade-card {
+    background-image: linear-gradient(105deg, #ffffff 0%, var(--a2, #9ccaff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-blue-fade {
+    background-image: linear-gradient(120deg, #8cbfff 0%, #3395ff 45%, #7978de 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  /* The signature highlight: teal -> blue -> purple -> pink. Use on one or two key words. */
+  .text-aurora {
+    background-image: linear-gradient(100deg, #5eead4 0%, #3395ff 32%, #af52de 68%, #ff6fb1 100%);
+    background-size: 160% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: auroraShift 9s ease-in-out infinite alternate;
+  }
+  /* White into one accent colour (needs --a1 / --a2 from accentVars()). */
+  .text-accent {
+    background-image: linear-gradient(105deg, #ffffff -12%, var(--a2, #8cbfff) 32%, var(--a1, #3395ff) 88%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  /* Plain coloured text for small labels and numbers. */
+  .text-a1 { color: var(--a1, #3395ff); }
+  .text-a2 { color: var(--a2, #8cbfff); }
+
+  /* Glass card: frosted panel with a soft top highlight and a large inner glow (Features / Changelog cards). */
+  .glass-card {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 40px;
+    background-image:
+      radial-gradient(ellipse 70% 22% at 50% -4%, rgba(255, 255, 255, 0.1), transparent 70%),
+      linear-gradient(180deg, rgba(46, 51, 90, 0) 0%, rgba(28, 27, 51, 0.1) 100%);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow:
+      inset 0 0 100px rgba(204, 215, 255, 0.15),
+      0 5px 10px rgba(0, 0, 0, 0.05),
+      0 15px 30px rgba(0, 0, 0, 0.05),
+      0 30px 60px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease, transform 0.3s ease;
+  }
+  a.glass-card:hover, button.glass-card:hover, .glass-card.is-interactive:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  .glass-card-sm { border-radius: 20px; border-color: rgba(255, 255, 255, 0.1); }
+
+  /* Flat dark card (Changelog bento): near-black with a faint top glow. */
+  .dark-card {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    background-image: radial-gradient(ellipse 60% 14% at 50% 0%, rgba(255, 255, 255, 0.09), transparent 70%);
+    overflow: hidden;
+  }
+
+  /* Nested glass tile (inputs, ticket cards, stat tiles). */
+  .glass-inner {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    background-image:
+      radial-gradient(ellipse 60% 18% at 50% -6%, rgba(255, 255, 255, 0.16), transparent 70%),
+      linear-gradient(180deg, rgba(46, 51, 90, 0.1) 0%, rgba(28, 27, 51, 0.02) 100%);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+
+  /* Back-compat names used across existing pages. */
+  .glass-panel {
+    background-image:
+      radial-gradient(ellipse 70% 22% at 50% -4%, rgba(255, 255, 255, 0.08), transparent 70%),
+      linear-gradient(180deg, rgba(46, 51, 90, 0) 0%, rgba(28, 27, 51, 0.12) 100%);
+    background-color: rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 60px rgba(204, 215, 255, 0.08), 0 15px 30px rgba(0, 0, 0, 0.2);
+  }
+  .glass-panel-elevated { @apply glass-panel; }
+
+  /* Buttons ------------------------------------------------------------ */
+  /* Glass button (primary on dark): white outline, blur, inset glow. */
+  .btn-glass {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid #ffffff;
+    background: rgba(255, 255, 255, 0.02);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+    box-shadow:
+      0 1px 22px rgba(255, 255, 255, 0.1),
+      0 4px 4px rgba(0, 0, 0, 0.05),
+      0 10px 10px rgba(0, 0, 0, 0.1),
+      inset 0 1px 3px rgba(199, 220, 255, 0.35),
+      inset 0 0 20px rgba(198, 204, 255, 0.2);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-glass:hover { background: rgba(255, 255, 255, 0.08); }
+
+  /* Blue glow button: the main call to action. */
+  .btn-glow {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 30px;
+    border-radius: 10px;
+    border: 1px solid var(--glow-blue);
+    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 40.9%, #402788 133%);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 10px 40px rgba(63, 74, 175, 0.5), inset 0 10px 30px rgba(73, 123, 255, 0.7);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .btn-glow:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 50px rgba(63, 74, 175, 0.7), inset 0 10px 34px rgba(73, 123, 255, 0.85);
+  }
+
+  /* Ghost button: outline only (card actions). */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 20px;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .btn-ghost:hover { color: #fff; border-color: #fff; background: rgba(255, 255, 255, 0.06); }
+  /* Ghost button tinted by --a1 / --a2 (domain cards). */
+  .btn-ghost.accent { border-color: var(--a1-line, rgba(255, 255, 255, 0.6)); color: var(--a2, rgba(255, 255, 255, 0.7)); }
+  .btn-ghost.accent:hover { border-color: var(--a1); background: var(--a1-soft); color: #fff; }
+
+  /* Nav pill link. */
+  .pill-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    color: #ffffff;
+    transition: background 0.2s ease;
+  }
+  .pill-link:hover { background: rgba(255, 255, 255, 0.08); }
+  .pill-link[aria-current="page"] { background: rgba(255, 255, 255, 0.12); }
+
+  /* Round icon button (footer social, back to top). */
+  .btn-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 32px;
+    border: 1px solid var(--container-border);
+    background: var(--container-bg);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.2s ease;
+  }
+  .btn-circle:hover { border-color: rgba(255, 255, 255, 0.4); }
+
+  /* Small label chip above headings. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    border-radius: 99px;
+    border: 1px solid var(--a1-line, rgba(140, 191, 255, 0.35));
+    background: var(--a1-soft, rgba(51, 149, 255, 0.1));
+    color: var(--a2, #9ccaff);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /* Tinted pill that takes its colour from --a1 (badges, tags, stat chips). */
+  .chip-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--a1-line, rgba(51, 149, 255, 0.4));
+    background: var(--a1-soft, rgba(51, 149, 255, 0.15));
+    color: var(--a2, #8cbfff);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 18px;
+  }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #080b11;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 9999px;
-  border: 2px solid #080b11;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-/* Glassmorphism and Neon Utilities */
-.glass-panel {
-  background: rgba(10, 17, 28, 0.72);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  box-shadow: 0 18px 60px rgba(2, 6, 23, 0.5);
-}
-
-.glass-panel-elevated {
-  background: rgba(15, 23, 38, 0.8);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.55);
-}
-
-.glass-card {
-  background: rgba(11, 19, 31, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.glass-card:hover {
-  background: rgba(19, 31, 48, 0.85);
-  border-color: rgba(103, 232, 249, 0.3);
-  box-shadow: 0 18px 40px -16px rgba(96, 165, 250, 0.25);
-  transform: translateY(-2px);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.35);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.35);
-}
-
-.glow-violet {
-  box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.35);
-}
-
-.text-gradient-emerald {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
+/* Back-compat gradient helpers (older pages). */
+.text-gradient-emerald,
 .text-gradient-violet {
-  background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+  background-image: linear-gradient(120deg, #8cbfff 0%, #3395ff 45%, #7978de 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-
 .text-gradient-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  background-image: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-
+.glow-emerald, .glow-cyan, .glow-violet { box-shadow: 0 0 40px -8px rgba(63, 74, 175, 0.55); }
 .grid-pattern {
   background-size: 40px 40px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
-
 .radial-glow {
-  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.04) 40%, transparent 70%);
+  background: radial-gradient(circle at 50% 0%, rgba(51, 149, 255, 0.14) 0%, rgba(121, 120, 222, 0.05) 40%, transparent 70%);
 }
 
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.8; }
 }
+.animate-pulse-glow { animation: pulseGlow 4s ease-in-out infinite; }
 
-.animate-pulse-glow {
-  animation: pulseGlow 4s ease-in-out infinite;
+@keyframes auroraShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float { animation: floatSlow 6s ease-in-out infinite; }
+
+/* ---- Accessibility ---- */
+/* Keyboard focus is always visible, even on elements that don't style it themselves. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid #3395ff;
+  outline-offset: 2px;
+}
+
+/* Respect the OS "reduce motion" setting: no smooth scrolling, no long animations. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none !important; }
 }

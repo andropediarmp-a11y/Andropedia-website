@@ -1,143 +1,99 @@
 import Link from "next/link";
-import { Terminal, Heart, ArrowUpRight } from "lucide-react";
+import { ArrowUp, Terminal } from "lucide-react";
+import { LegalLinks } from "@/components/layout/LegalLinks";
 import { GithubIcon, LinkedinIcon, DiscordIcon, TwitterIcon } from "@/components/ui/SocialIcons";
 
+// Footer from the Figma design: black, four link columns, social circles, divider and legal row.
+const COLUMNS = [
+  {
+    title: "Domains",
+    links: [
+      { name: "Technical", href: "/domains?tab=Technical" },
+      { name: "Web Development", href: "/domains?tab=Web" },
+      { name: "R&D / AI Labs", href: "/domains?tab=R%26D" },
+      { name: "Design & UX", href: "/domains?tab=Design" },
+      { name: "Media & VFX", href: "/domains?tab=Media" },
+      { name: "Public Relations", href: "/domains?tab=PR" },
+    ],
+  },
+  {
+    title: "Club",
+    links: [
+      { name: "Events & Hackathons", href: "/events" },
+      { name: "Projects", href: "/projects" },
+      { name: "Meet the Team", href: "/team" },
+      { name: "Join Recruitment", href: "/join" },
+    ],
+  },
+  {
+    title: "Members",
+    links: [
+      { name: "Member Login", href: "/portal/login" },
+      { name: "Dashboard", href: "/portal/dashboard" },
+      { name: "Leaderboard", href: "/portal/leaderboard" },
+    ],
+  },
+];
+
+const SOCIALS = [
+  { name: "GitHub", href: "https://github.com", Icon: GithubIcon },
+  { name: "LinkedIn", href: "https://linkedin.com", Icon: LinkedinIcon },
+  { name: "Discord", href: "https://discord.com", Icon: DiscordIcon },
+  { name: "X", href: "https://x.com", Icon: TwitterIcon },
+];
+
 export function Footer() {
-  const domains = [
-    { name: "Technical", href: "/#domains" },
-    { name: "Web Development", href: "/#domains" },
-    { name: "R&D / AI Labs", href: "/#domains" },
-    { name: "Design & UX", href: "/#domains" },
-    { name: "Media & VFX", href: "/#domains" },
-    { name: "Public Relations", href: "/#domains" },
-  ];
-
-  const quickLinks = [
-    { name: "Projects Showcase", href: "/#projects" },
-    { name: "Club Hackathons", href: "/#events" },
-    { name: "Meet the Team", href: "/#team" },
-    { name: "Join Recruitment", href: "/join" },
-    { name: "Member Portal", href: "/portal/dashboard" },
-    { name: "Member Login", href: "/portal/login" },
-  ];
-
   return (
-    <footer className="bg-[#05080d] border-t border-white/[0.06] text-slate-400 font-sans relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
-          {/* Brand Info */}
-          <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/40 flex items-center justify-center">
-                <Terminal className="w-5 h-5 text-emerald-400" />
-              </div>
-              <span className="font-bold text-xl tracking-wider text-white">ANDROPEDIA</span>
-            </Link>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-              The premier student technology society driving innovation, competitive algorithmic mastery, 
-              open-source breakthroughs, and interdisciplinary engineering.
-            </p>
-            <div className="flex items-center gap-3 pt-2">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:border-emerald-400 transition-colors"
-                aria-label="GitHub"
-              >
-                <GithubIcon className="w-4 h-4" />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:border-emerald-400 transition-colors"
-                aria-label="LinkedIn"
-              >
-                <LinkedinIcon className="w-4 h-4" />
-              </a>
-              <a
-                href="https://discord.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:border-emerald-400 transition-colors"
-                aria-label="Discord"
-              >
-                <DiscordIcon className="w-4 h-4" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:border-emerald-400 transition-colors"
-                aria-label="Twitter"
-              >
-                <TwitterIcon className="w-4 h-4" />
-              </a>
-            </div>
-          </div>
-
-          {/* Domains */}
-          <div>
-            <h3 className="text-white font-semibold text-sm tracking-wider uppercase mb-4">Domains</h3>
-            <ul className="space-y-2.5 text-sm">
-              {domains.map((item) => (
-                <li key={item.name}>
-                  <Link href={item.href} className="hover:text-emerald-400 transition-colors flex items-center gap-1 group">
-                    <span>{item.name}</span>
-                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-white font-semibold text-sm tracking-wider uppercase mb-4">Navigation</h3>
-            <ul className="space-y-2.5 text-sm">
-              {quickLinks.map((item) => (
-                <li key={item.name}>
-                  <Link href={item.href} className="hover:text-emerald-400 transition-colors">
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Weekly Cycle Stats */}
-          <div className="space-y-3 bg-slate-900/50 p-5 rounded-xl border border-white/10">
-            <h3 className="text-white font-semibold text-sm">Club Status</h3>
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs text-emerald-300 font-mono font-medium">Sprint 4 Active</span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Club members can sign in to access their private sprint workspace.
-            </p>
-            <Link
-              href="/portal/login"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 pt-1"
-            >
-              Member Login &rarr;
-            </Link>
-          </div>
+    <footer className="bg-black text-white">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-12 rounded-t-[30px] px-6 py-16 sm:px-12 lg:flex-row lg:justify-between lg:px-24 lg:py-24">
+        <div className="max-w-xs space-y-4">
+          <Link href="/" className="inline-flex items-center gap-1.5 p-1" aria-label="Andropedia home">
+            <Terminal className="h-6 w-6" aria-hidden="true" />
+            <span className="text-[18px] font-bold leading-none tracking-[-0.9px]">Andropedia</span>
+          </Link>
+          <p className="text-[13px] leading-5 text-white/70">
+            The student technology club building real systems, one weekly sprint at a time.
+          </p>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Andropedia Club. All rights reserved.</p>
-          <div className="flex items-center gap-1">
-            <span>Engineered with passion by</span>
-            <span className="text-emerald-400 font-medium">Andropedia Tech Council</span>
+        <div className="grid flex-1 grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4 lg:max-w-[720px]">
+          {COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={col.title} className="flex flex-col">
+              <h2 className="border-l-2 border-[#3395ff]/60 py-2.5 pl-2.5 text-[14px] font-medium leading-5">{col.title}</h2>
+              <ul>
+                {col.links.map((l) => (
+                  <li key={l.name}>
+                    <Link href={l.href} className="block px-5 py-2.5 text-[13px] leading-5 text-white/70 transition-colors hover:text-[#8cbfff]">
+                      {l.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+          <div className="flex flex-col gap-4">
+            <h2 className="border-l border-white/10 py-2.5 pl-2.5 text-[14px] font-medium uppercase leading-5">Follow us</h2>
+            <ul className="flex flex-wrap gap-2.5 opacity-60 hover:opacity-100 transition-opacity">
+              {SOCIALS.map(({ name, href, Icon }) => (
+                <li key={name}>
+                  <a href={href} target="_blank" rel="noreferrer" aria-label={name} className="btn-circle">
+                    <Icon className="h-4 w-4" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-4 px-6 py-5 text-[13px] leading-5 text-white/70 sm:flex-row sm:px-12 lg:px-24">
+          <p>&copy; {new Date().getFullYear()} Andropedia Technology Council</p>
+          <div className="flex items-center gap-8">
+            <LegalLinks />
+            <a href="#top" aria-label="Back to top" className="btn-circle !h-11 !w-11 !bg-black/60">
+              <ArrowUp className="h-6 w-6" aria-hidden="true" />
+            </a>
           </div>
         </div>
       </div>

@@ -57,7 +57,7 @@ export default function DashboardPage() {
 
   return (
     <PortalAccessGate>
-      <div className="flex min-h-screen flex-col bg-[#050b16] text-slate-100">
+      <div className="flex min-h-screen flex-col bg-transparent text-slate-100">
         <PortalNav />
 
         <motion.div
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="rounded-2xl border border-sky-300/10 bg-[#0b1420]/80 p-5 shadow-[0_18px_50px_rgba(2,6,23,0.45)]"
+                className="rounded-2xl border border-sky-300/10 bg-white/[0.04] p-5 shadow-[0_18px_50px_rgba(2,6,23,0.45)]"
               >
                 <div className="mb-3 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">
                   <span>{label}</span>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               {tasks.length === 0 ? (
-                <div className="rounded-[24px] border border-sky-400/10 bg-[#0b1420]/70 p-8 text-center text-sm text-slate-400">
+                <div className="rounded-[24px] border border-sky-400/10 bg-white/[0.04] p-8 text-center text-sm text-slate-400">
                   No tasks submitted yet. Submit your first weekly task to enter the leaderboard.
                 </div>
               ) : (
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                     key={task.id}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[24px] border border-white/10 bg-[#0b1420]/75 p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)]"
+                    className="rounded-[24px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)]"
                   >
                     <div className="flex flex-col justify-between gap-3 border-b border-white/10 pb-3 sm:flex-row sm:items-center">
                       <div>

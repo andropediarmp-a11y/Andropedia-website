@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -10,12 +10,19 @@ import {
   CheckSquare,
   ShieldAlert,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 export function PortalNav() {
   const pathname = usePathname();
-  const { currentUser } = useAuth();
+  const router = useRouter();
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/portal/login");
+  };
 
   const isLead = currentUser?.role === "domain_admin" || currentUser?.role === "super_admin";
   const isAdmin = currentUser?.role === "super_admin";
@@ -29,7 +36,7 @@ export function PortalNav() {
   ];
 
   return (
-    <div className="sticky top-20 z-40 w-full border-b border-sky-400/10 bg-[#07121e]/85 backdrop-blur-xl">
+    <div className="sticky top-[60px] z-40 w-full border-b border-sky-400/10 bg-black/60 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <motion.div
@@ -39,7 +46,7 @@ export function PortalNav() {
             className="flex w-full items-center justify-between gap-3 sm:w-auto"
           >
             <div className="flex items-center gap-3">
-              <img
+              <img loading="lazy" decoding="async"
                 src={currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"}
                 alt={currentUser?.name || "Member"}
                 className="h-10 w-10 rounded-2xl border border-cyan-400/30 object-cover shadow-[0_0_20px_rgba(103,232,249,0.2)]"
@@ -94,6 +101,14 @@ export function PortalNav() {
                 </Link>
               );
             })}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 transition-all hover:bg-rose-500/10 hover:text-rose-300"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Sign out</span>
+            </button>
           </motion.nav>
         </div>
       </div>

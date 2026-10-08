@@ -6,22 +6,43 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "recruitment:resend-failed": "tsx --env-file=.env scripts/recruitment-resend-failed.ts",
+    "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "postinstall": "prisma generate",
+    "db:import-members": "tsx --env-file=.env scripts/import-sheet-members.ts",
+    "user:set-role": "tsx --env-file=.env scripts/set-role.ts",
+    "user:deactivate": "tsx --env-file=.env scripts/set-role.ts --deactivate",
+    "recruitment:flush-outbox": "tsx --env-file=.env scripts/recruitment-flush-outbox.ts",
+    "test": "vitest run",
+    "team:set-position": "tsx --env-file=.env scripts/set-position.ts",
+    "team:import-positions": "tsx --env-file=.env scripts/set-position.ts",
+    "db:cleanup": "tsx --env-file=.env scripts/db-cleanup.ts",
+    "events:codesprint": "tsx --env-file=.env scripts/add-codesprint.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "framer-motion": "^13.4.0",
+    "google-auth-library": "^11.1.0",
     "lucide-react": "^1.47.0",
     "next": "16.3.5",
+    "nodemailer": "^10.0.15",
+    "pg": "^8.23.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
@@ -30,6 +51,8 @@
     "postcss": "^8.5.3",
     "prisma": "^7.10.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

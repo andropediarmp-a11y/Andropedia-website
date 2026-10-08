@@ -1,455 +1,448 @@
-import { User, Week, Task, Evaluation, LeaderboardEntry, DomainType } from "./types";
+import type { Prisma } from "@prisma/client";
+import { prisma } from "./prisma";
+import {
+  User, Week, Task, Evaluation, LeaderboardEntry, DomainType, RoleType, ClubPosition,
+} from "./types";
+import { recordAudit } from "./audit";
+import { computeLeaderboard, type BoardPeriod } from "./leaderboard";
+import { checkMemberChange, checkWeekDates, decideSubmission, type MemberPatch } from "./rules";
 
-// Seeded Users
-export const initialUsers: User[] = [
-  {
-    id: "usr_1",
-    name: "Aarav Sharma",
-    email: "aarav.sharma@andropedia.club",
-    role: "member",
-    domain: "Web",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    bio: "Full-stack enthusiast exploring Next.js 15, WebSockets, and distributed systems.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    points: 382,
-    tasksCompleted: 4,
-    streakWeeks: 4,
-  },
-  {
-    id: "usr_2",
-    name: "Diya Patel",
-    email: "diya.patel@andropedia.club",
-    role: "member",
-    domain: "R&D",
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-    bio: "AI/ML researcher specializing in Computer Vision and Transformer attention optimization.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    points: 374,
-    tasksCompleted: 4,
-    streakWeeks: 4,
-  },
-  {
-    id: "usr_3",
-    name: "Rohan Varma",
-    email: "rohan.varma@andropedia.club",
-    role: "member",
-    domain: "Technical",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    bio: "Competitive programmer (Codeforces Candidate Master) and Rust lover.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    points: 365,
-    tasksCompleted: 4,
-    streakWeeks: 3,
-  },
-  {
-    id: "usr_4",
-    name: "Sneha Mukherjee",
-    email: "sneha.m@andropedia.club",
-    role: "member",
-    domain: "Design",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
-    bio: "Product & UI/UX Designer crafting futuristic dark-mode design systems.",
-    portfolio: "https://behance.net",
-    linkedin: "https://linkedin.com",
-    points: 358,
-    tasksCompleted: 4,
-    streakWeeks: 4,
-  },
-  {
-    id: "usr_5",
-    name: "Karan Singhania",
-    email: "karan.s@andropedia.club",
-    role: "member",
-    domain: "Media",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    bio: "Visual storyteller, cinematographer, and 3D motion graphics artist.",
-    linkedin: "https://linkedin.com",
-    points: 342,
-    tasksCompleted: 4,
-    streakWeeks: 2,
-  },
-  {
-    id: "usr_6",
-    name: "Ananya Iyer",
-    email: "ananya.iyer@andropedia.club",
-    role: "member",
-    domain: "PR",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop&q=80",
-    bio: "Outreach strategist driving corporate sponsorships and tech-community tie-ups.",
-    linkedin: "https://linkedin.com",
-    points: 335,
-    tasksCompleted: 3,
-    streakWeeks: 3,
-  },
-  {
-    id: "usr_lead_web",
-    name: "Vikramaditya Rao",
-    email: "lead.web@andropedia.club",
-    role: "domain_admin",
-    domain: "Web",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-    bio: "Domain Lead (Web) | Cloud Architect & Open Source Contributor.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    points: 420,
-    tasksCompleted: 4,
-    streakWeeks: 4,
-  },
-  {
-    id: "usr_lead_tech",
-    name: "Pooja Reddy",
-    email: "lead.tech@andropedia.club",
-    role: "domain_admin",
-    domain: "Technical",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-    bio: "Domain Lead (Technical) | System Programming & ICPC Regionalist.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    points: 410,
-    tasksCompleted: 4,
-    streakWeeks: 4,
-  },
-  {
-    id: "usr_admin",
-    name: "Dr. Siddharth Sen",
-    email: "admin@andropedia.club",
-    role: "super_admin",
-    domain: "Technical",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-    bio: "Faculty Advisor & Super Admin | Department of Computer Science.",
-    linkedin: "https://linkedin.com",
-    points: 500,
-    tasksCompleted: 4,
-    streakWeeks: 4,
-  }
-];
+// Database-backed data layer. Return shapes match the types in ./types so the
+// pages and API responses are unchanged; Prisma enums are mapped at the edge.
 
-// Seeded Weeks
-export const initialWeeks: Week[] = [
-  {
-    id: "week_1",
-    weekNumber: 1,
-    title: "Foundational Architecture & Systems Setup",
-    theme: "Core Principles & Project Genesis",
-    startDate: "2026-08-25",
-    endDate: "2026-09-01",
-    isActive: false,
-    promptDescription: "Set up project repos, design systems, and initial architecture prototypes."
-  },
-  {
-    id: "week_2",
-    weekNumber: 2,
-    title: "API Integration & Algorithmic Engines",
-    theme: "Connectivity & Computational Logic",
-    startDate: "2026-09-02",
-    endDate: "2026-09-08",
-    isActive: false,
-    promptDescription: "Implement REST/GraphQL endpoints, core sorting algorithms, and UI wireframes."
-  },
-  {
-    id: "week_3",
-    weekNumber: 3,
-    title: "Performance Optimization & State Synchronization",
-    theme: "Speed, Resiliency & Aesthetics",
-    startDate: "2026-09-09",
-    endDate: "2026-09-15",
-    isActive: false,
-    promptDescription: "Benchmark render trees, optimize database queries, polish motion and video assets."
-  },
-  {
-    id: "week_4",
-    weekNumber: 4,
-    title: "Production Deployment & High-Impact Polish",
-    theme: "End-to-End Excellence",
-    startDate: "2026-09-16",
-    endDate: "2026-09-23",
-    isActive: true,
-    promptDescription: "Finalize deployment pipelines, stress test, review accessibility, and write rich documentation."
-  }
-];
+export class NotFoundError extends Error {}
+export class ForbiddenError extends Error {}
+/** The request is valid but conflicts with the current state (closed week, duplicate, locked). */
+export class ConflictError extends Error {}
 
-// Seeded Tasks
-export const initialTasks: Task[] = [
-  {
-    id: "task_1",
-    userId: "usr_1",
-    userName: "Aarav Sharma",
-    userAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    domain: "Web",
-    weekId: "week_3",
-    weekNumber: 3,
-    title: "Distributed Rate Limiter with Redis & Next.js Middleware",
-    description: "Built a token bucket rate limiter running on edge middleware with Redis cluster failover and sub-millisecond response latency.",
-    githubUrl: "https://github.com/andropedia/edge-rate-limiter",
-    liveUrl: "https://edge-rate-limiter-demo.vercel.app",
-    status: "evaluated",
-    submittedAt: "2026-09-14T18:30:00Z",
-    evaluation: {
-      id: "eval_1",
-      taskId: "task_1",
-      adminId: "usr_lead_web",
-      adminName: "Vikramaditya Rao",
-      score: 96,
-      criteriaScores: {
-        technicalDepth: 25,
-        innovation: 24,
-        completion: 24,
-        documentation: 23
-      },
-      feedback: "Phenomenal edge optimization. The token bucket algorithm handles concurrent bursts cleanly and benchmark tests are comprehensive.",
-      evaluatedAt: "2026-09-15T11:00:00Z"
-    }
-  },
-  {
-    id: "task_2",
-    userId: "usr_2",
-    userName: "Diya Patel",
-    userAvatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-    domain: "R&D",
-    weekId: "week_3",
-    weekNumber: 3,
-    title: "Lightweight Vision Transformer for Real-Time Gesture Parsing",
-    description: "Trained a distilled ViT model achieving 98.2% accuracy at 45 FPS on edge devices using WebGL and ONNX Runtime.",
-    githubUrl: "https://github.com/andropedia/edge-vision-transformer",
-    liveUrl: "https://gesture-vit-demo.vercel.app",
-    status: "evaluated",
-    submittedAt: "2026-09-14T21:15:00Z",
-    evaluation: {
-      id: "eval_2",
-      taskId: "task_2",
-      adminId: "usr_admin",
-      adminName: "Dr. Siddharth Sen",
-      score: 95,
-      criteriaScores: {
-        technicalDepth: 25,
-        innovation: 25,
-        completion: 23,
-        documentation: 22
-      },
-      feedback: "Exceptional research rigor. The model quantization down to FP16 enables seamless real-time browser inference.",
-      evaluatedAt: "2026-09-15T14:20:00Z"
-    }
-  },
-  {
-    id: "task_3",
-    userId: "usr_3",
-    userName: "Rohan Varma",
-    userAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    domain: "Technical",
-    weekId: "week_3",
-    weekNumber: 3,
-    title: "Persistent Lock-Free B-Tree in Rust",
-    description: "Implemented an atomic memory-mapped cache-friendly B-Tree with epoch-based garbage collection for high-throughput write workloads.",
-    githubUrl: "https://github.com/andropedia/lockfree-btree",
-    status: "evaluated",
-    submittedAt: "2026-09-13T19:40:00Z",
-    evaluation: {
-      id: "eval_3",
-      taskId: "task_3",
-      adminId: "usr_lead_tech",
-      adminName: "Pooja Reddy",
-      score: 93,
-      criteriaScores: {
-        technicalDepth: 25,
-        innovation: 23,
-        completion: 23,
-        documentation: 22
-      },
-      feedback: "Brilliant use of atomic primitives and epoch hazard pointers. Stress test cases in Cargo were thorough.",
-      evaluatedAt: "2026-09-15T09:30:00Z"
-    }
-  },
-  {
-    id: "task_4",
-    userId: "usr_4",
-    userName: "Sneha Mukherjee",
-    userAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
-    domain: "Design",
-    weekId: "week_3",
-    weekNumber: 3,
-    title: "Holographic Cyber Design System & Component Library",
-    description: "Designed a 40+ component design system in Figma with auto-layout v5, tokens, accessible contrast modes, and micro-interactions.",
-    figmaUrl: "https://figma.com/@andropedia/cyber-system",
-    liveUrl: "https://cyber-design-andropedia.vercel.app",
-    status: "evaluated",
-    submittedAt: "2026-09-14T16:10:00Z",
-    evaluation: {
-      id: "eval_4",
-      taskId: "task_4",
-      adminId: "usr_lead_web",
-      adminName: "Vikramaditya Rao",
-      score: 92,
-      criteriaScores: {
-        technicalDepth: 22,
-        innovation: 24,
-        completion: 24,
-        documentation: 22
-      },
-      feedback: "Vibrant visual hierarchy, flawless typography tokens, and high-fidelity interaction prototypes.",
-      evaluatedAt: "2026-09-15T12:45:00Z"
-    }
-  },
-  {
-    id: "task_5",
-    userId: "usr_1",
-    userName: "Aarav Sharma",
-    userAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    domain: "Web",
-    weekId: "week_4",
-    weekNumber: 4,
-    title: "Real-time Leaderboard Synchronization with Server-Sent Events",
-    description: "Built resilient streaming leaderboard state with zero reconnect latency, delta compaction, and optimistic client updates.",
-    githubUrl: "https://github.com/andropedia/realtime-sse-board",
-    liveUrl: "https://sse-leaderboard.vercel.app",
-    status: "submitted", // Pending evaluation so reviewer/lead can test evaluating it!
-    submittedAt: "2026-09-19T14:22:00Z"
-  },
-  {
-    id: "task_6",
-    userId: "usr_2",
-    userName: "Diya Patel",
-    userAvatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-    domain: "R&D",
-    weekId: "week_4",
-    weekNumber: 4,
-    title: "Decentralized Federated Learning Node for Edge Devices",
-    description: "Implemented privacy-preserving local gradient aggregation with differential privacy noise injection and smart-contract verification.",
-    githubUrl: "https://github.com/andropedia/federated-edge-node",
-    status: "submitted", // Also pending evaluation!
-    submittedAt: "2026-09-19T18:05:00Z"
-  }
-];
+const DOMAIN_TO_DB = {
+  Technical: "TECHNICAL", Web: "WEB", PR: "PR", "R&D": "RD", Design: "DESIGN", Media: "MEDIA",
+} as const;
+const DOMAIN_FROM_DB: Record<string, DomainType> = {
+  TECHNICAL: "Technical", WEB: "Web", PR: "PR", RD: "R&D", DESIGN: "Design", MEDIA: "Media",
+};
+const ROLE_FROM_DB: Record<string, RoleType> = {
+  MEMBER: "member", DOMAIN_ADMIN: "domain_admin", SUPER_ADMIN: "super_admin",
+};
+const ROLE_TO_DB = { member: "MEMBER", domain_admin: "DOMAIN_ADMIN", super_admin: "SUPER_ADMIN" } as const;
 
-// Global in-memory storage singleton for serverless runtime
-declare global {
-  var __andropedia_users: User[] | undefined;
-  var __andropedia_weeks: Week[] | undefined;
-  var __andropedia_tasks: Task[] | undefined;
-}
+const POSITION_FROM_DB: Record<string, ClubPosition> = {
+  PRESIDENT: "president", VICE_PRESIDENT: "vice_president", CHIEF: "chief",
+  LEAD: "lead", CO_LEAD: "co_lead", MEMBER: "member",
+};
+export const toDbPosition = (p: string) => {
+  const key = p.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return key in POSITION_FROM_DB ? (key as "PRESIDENT" | "VICE_PRESIDENT" | "CHIEF" | "LEAD" | "CO_LEAD" | "MEMBER") : undefined;
+};
 
-export function getUsers(): User[] {
-  if (!global.__andropedia_users) {
-    global.__andropedia_users = [...initialUsers];
-  }
-  return global.__andropedia_users;
-}
+export const toDbDomain = (d: string) => DOMAIN_TO_DB[d as DomainType] as (typeof DOMAIN_TO_DB)[DomainType] | undefined;
 
-export function getWeeks(): Week[] {
-  if (!global.__andropedia_weeks) {
-    global.__andropedia_weeks = [...initialWeeks];
-  }
-  return global.__andropedia_weeks;
-}
+type DbUser = Prisma.UserGetPayload<object>;
+type DbWeek = Prisma.WeekGetPayload<object>;
+type DbTask = Prisma.TaskGetPayload<{
+  include: { user: true; week: true; evaluation: { include: { admin: true } } };
+}>;
 
-export function getTasks(): Task[] {
-  if (!global.__andropedia_tasks) {
-    global.__andropedia_tasks = [...initialTasks];
-  }
-  return global.__andropedia_tasks;
-}
+const taskInclude = { user: true, week: true, evaluation: { include: { admin: true } } } as const;
 
-export function addTask(taskData: Omit<Task, "id" | "submittedAt" | "status">): Task {
-  const tasks = getTasks();
-  const newTask: Task = {
-    ...taskData,
-    id: `task_${Date.now()}`,
-    status: "submitted",
-    submittedAt: new Date().toISOString(),
+export function mapUser(u: DbUser): User {
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: ROLE_FROM_DB[u.role],
+    domain: DOMAIN_FROM_DB[u.domain],
+    avatar: u.avatar ?? "",
+    bio: u.bio ?? undefined,
+    github: u.github ?? undefined,
+    linkedin: u.linkedin ?? undefined,
+    portfolio: u.portfolio ?? undefined,
+    points: u.points,
+    tasksCompleted: u.tasksCompleted,
+    streakWeeks: u.streakWeeks,
+    isActive: u.isActive,
+    position: POSITION_FROM_DB[u.position],
   };
-  tasks.unshift(newTask);
-  return newTask;
 }
 
-export function evaluateTask(
-  taskId: string,
-  adminId: string,
-  adminName: string,
-  score: number,
-  feedback: string,
-  criteriaScores?: Evaluation["criteriaScores"]
-): Task | null {
-  const tasks = getTasks();
-  const taskIndex = tasks.findIndex((t) => t.id === taskId);
-  if (taskIndex === -1) return null;
+const dateOnly = (d: Date) => d.toISOString().slice(0, 10);
 
-  const evaluation: Evaluation = {
-    id: `eval_${Date.now()}`,
-    taskId,
-    adminId,
-    adminName,
-    score,
-    feedback,
-    criteriaScores,
-    evaluatedAt: new Date().toISOString(),
+function mapWeek(w: DbWeek): Week {
+  return {
+    id: w.id,
+    weekNumber: w.weekNumber,
+    title: w.title,
+    theme: w.theme,
+    startDate: dateOnly(w.startDate),
+    endDate: dateOnly(w.endDate),
+    isActive: w.isActive,
+    promptDescription: w.promptDescription ?? undefined,
+  };
+}
+
+function mapTask(t: DbTask): Task {
+  const e = t.evaluation;
+  const evaluation: Evaluation | undefined = e
+    ? {
+        id: e.id,
+        taskId: e.taskId,
+        adminId: e.adminId,
+        adminName: e.admin.name,
+        score: e.score,
+        criteriaScores:
+          e.technicalDepth != null && e.innovation != null && e.completion != null && e.documentation != null
+            ? {
+                technicalDepth: e.technicalDepth,
+                innovation: e.innovation,
+                completion: e.completion,
+                documentation: e.documentation,
+              }
+            : undefined,
+        feedback: e.feedback,
+        evaluatedAt: e.evaluatedAt.toISOString(),
+      }
+    : undefined;
+
+  return {
+    id: t.id,
+    userId: t.userId,
+    userName: t.user.name,
+    userAvatar: t.user.avatar ?? "",
+    domain: DOMAIN_FROM_DB[t.domain],
+    weekId: t.weekId,
+    weekNumber: t.week.weekNumber,
+    title: t.title,
+    description: t.description,
+    githubUrl: t.githubUrl ?? undefined,
+    liveUrl: t.liveUrl ?? undefined,
+    figmaUrl: t.figmaUrl ?? undefined,
+    notes: t.notes ?? undefined,
+    status: t.status === "EVALUATED" ? "evaluated" : "submitted",
+    submittedAt: t.submittedAt.toISOString(),
+    evaluation,
+  };
+}
+
+export async function getUsers(): Promise<User[]> {
+  const users = await prisma.user.findMany({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
+  return users.map(mapUser);
+}
+
+/** Public profile fields only: never exposes email or account status. */
+export type PublicMember = Omit<User, "email" | "isActive">;
+
+export async function getPublicMembers(): Promise<PublicMember[]> {
+  const users = await prisma.user.findMany({
+    where: { isActive: true },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
+  return users.map((u) => {
+    const { email: _email, isActive: _isActive, ...publicFields } = mapUser(u);
+    void _email;
+    void _isActive;
+    return publicFields;
+  });
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+  return user ? mapUser(user) : null;
+}
+
+export async function getWeeks(): Promise<Week[]> {
+  const weeks = await prisma.week.findMany({ orderBy: { weekNumber: "asc" } });
+  return weeks.map(mapWeek);
+}
+
+export interface TaskFilters {
+  weekId?: string | null;
+  domain?: string | null;
+  userId?: string | null;
+  status?: string | null;
+}
+
+export async function getTasks(filters: TaskFilters = {}): Promise<Task[]> {
+  const where: Prisma.TaskWhereInput = {};
+  if (filters.weekId && filters.weekId !== "all") where.weekId = filters.weekId;
+  if (filters.userId) where.userId = filters.userId;
+  if (filters.domain && filters.domain !== "All") {
+    const match = Object.entries(DOMAIN_TO_DB).find(([name]) => name.toLowerCase() === filters.domain!.toLowerCase());
+    if (!match) return [];
+    where.domain = match[1];
+  }
+  if (filters.status) {
+    const status = filters.status.toLowerCase();
+    if (status !== "submitted" && status !== "evaluated") return [];
+    where.status = status === "evaluated" ? "EVALUATED" : "SUBMITTED";
+  }
+  const tasks = await prisma.task.findMany({ where, include: taskInclude, orderBy: { submittedAt: "desc" } });
+  return tasks.map(mapTask);
+}
+
+export interface NewTask {
+  userId: string;
+  weekId: string;
+  domain: DomainType;
+  title: string;
+  description: string;
+  githubUrl?: string;
+  liveUrl?: string;
+  figmaUrl?: string;
+  notes?: string;
+}
+
+/**
+ * One submission per member per week. While the week is open it can be edited; once graded it is
+ * locked; closed weeks accept nothing. Returns whether a new task was created or an existing one updated.
+ */
+export async function submitTask(taskData: NewTask): Promise<{ task: Task; created: boolean }> {
+  const domain = toDbDomain(taskData.domain);
+  if (!domain) throw new NotFoundError(`Unknown domain: ${taskData.domain}`);
+
+  const [user, week, existing] = await Promise.all([
+    prisma.user.findUnique({ where: { id: taskData.userId }, select: { id: true } }),
+    prisma.week.findUnique({ where: { id: taskData.weekId }, select: { isActive: true } }),
+    prisma.task.findUnique({
+      where: { userId_weekId: { userId: taskData.userId, weekId: taskData.weekId } },
+      select: { id: true, status: true },
+    }),
+  ]);
+  if (!user) throw new NotFoundError("Member account not found");
+
+  const decision = decideSubmission(week, existing);
+  if (!decision.ok) {
+    throw decision.status === 404 ? new NotFoundError(decision.error) : new ConflictError(decision.error);
+  }
+
+  const fields = {
+    domain,
+    title: taskData.title,
+    description: taskData.description,
+    githubUrl: taskData.githubUrl || null,
+    liveUrl: taskData.liveUrl || null,
+    figmaUrl: taskData.figmaUrl || null,
+    notes: taskData.notes || null,
   };
 
-  tasks[taskIndex].status = "evaluated";
-  tasks[taskIndex].evaluation = evaluation;
-
-  // Update user's aggregate points and tasksCompleted
-  const users = getUsers();
-  const user = users.find((u) => u.id === tasks[taskIndex].userId);
-  if (user) {
-    user.points = (user.points || 0) + score;
-    user.tasksCompleted = (user.tasksCompleted || 0) + 1;
+  try {
+    const saved =
+      decision.action === "update" && existing
+        ? await prisma.task.update({ where: { id: existing.id }, data: fields, include: taskInclude })
+        : await prisma.task.create({ data: { userId: taskData.userId, weekId: taskData.weekId, ...fields }, include: taskInclude });
+    return { task: mapTask(saved), created: decision.action === "create" };
+  } catch (err) {
+    // Two simultaneous first submissions: the unique (userId, weekId) rule rejects the second.
+    if ((err as { code?: string }).code === "P2002") {
+      throw new ConflictError("You already submitted for this week. Refresh and edit your submission instead.");
+    }
+    throw err;
   }
-
-  return tasks[taskIndex];
 }
 
-export function getLeaderboard(domain?: string, period?: string): LeaderboardEntry[] {
-  const users = getUsers();
-  const tasks = getTasks();
+export interface EvaluationInput {
+  taskId: string;
+  adminId: string;
+  score: number;
+  feedback: string;
+  criteriaScores?: Evaluation["criteriaScores"];
+  /** Domain leads may only grade tasks from their own domain. */
+  restrictToDomain?: DomainType;
+}
 
-  // Filter tasks based on domain
-  let filteredUsers = users.filter((u) => u.role === "member");
-  if (domain && domain !== "All") {
-    filteredUsers = filteredUsers.filter((u) => u.domain.toLowerCase() === domain.toLowerCase());
-  }
+export async function evaluateTask({
+  taskId, adminId, score, feedback, criteriaScores, restrictToDomain,
+}: EvaluationInput): Promise<Task | null> {
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { id: true } });
+  if (!admin) throw new NotFoundError("Evaluator account not found");
 
-  // Compute entry for each user
-  const entries: LeaderboardEntry[] = filteredUsers.map((user) => {
-    const userEvaluatedTasks = tasks.filter(
-      (t) => t.userId === user.id && t.status === "evaluated" && t.evaluation
+  return prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId }, include: { evaluation: true } });
+    if (!task) return null;
+    if (task.userId === adminId) throw new ForbiddenError("You cannot grade your own submission");
+    if (restrictToDomain && task.domain !== toDbDomain(restrictToDomain)) {
+      throw new ForbiddenError("You can only grade submissions from your own domain");
+    }
+
+    const previous = task.evaluation;
+    const fields = {
+      adminId,
+      score,
+      feedback,
+      technicalDepth: criteriaScores?.technicalDepth ?? null,
+      innovation: criteriaScores?.innovation ?? null,
+      completion: criteriaScores?.completion ?? null,
+      documentation: criteriaScores?.documentation ?? null,
+      evaluatedAt: new Date(),
+    };
+    await tx.evaluation.upsert({
+      where: { taskId },
+      create: { taskId, ...fields },
+      update: fields,
+    });
+    await tx.task.update({ where: { id: taskId }, data: { status: "EVALUATED" } });
+
+    // Re-grading adjusts points by the difference instead of adding the score again.
+    await tx.user.update({
+      where: { id: task.userId },
+      data: {
+        points: { increment: score - (previous?.score ?? 0) },
+        ...(previous ? {} : { tasksCompleted: { increment: 1 } }),
+      },
+    });
+
+    await recordAudit(
+      { actorId: adminId, action: previous ? "evaluation.update" : "evaluation.create", target: taskId, meta: { score, previousScore: previous?.score ?? null, memberId: task.userId } },
+      tx
     );
 
-    const totalScore = userEvaluatedTasks.reduce((sum, t) => sum + (t.evaluation?.score || 0), 0) + (user.points ? Math.floor(user.points * 0.7) : 0);
-    const count = userEvaluatedTasks.length || (user.tasksCompleted || 1);
-    const avgScore = Math.round(totalScore / count);
-
-    const badges: string[] = [];
-    if (totalScore >= 350) badges.push("Grandmaster");
-    if (user.streakWeeks && user.streakWeeks >= 4) badges.push("Streak Fire");
-    if (user.domain === "Web") badges.push("Fullstack Pioneer");
-    if (user.domain === "Technical") badges.push("Algo Titan");
-    if (user.domain === "R&D") badges.push("Deep Innovator");
-    if (user.domain === "Design") badges.push("Visual Architect");
-
-    return {
-      rank: 1,
-      userId: user.id,
-      name: user.name,
-      avatar: user.avatar,
-      domain: user.domain,
-      totalScore,
-      avgScore,
-      tasksCompleted: count,
-      streakWeeks: user.streakWeeks || 1,
-      rankChange: Math.floor(Math.random() * 3) - 1, // +1, 0, or -1 for visual polish
-      badges,
-    };
+    const updated = await tx.task.findUniqueOrThrow({ where: { id: taskId }, include: taskInclude });
+    return mapTask(updated);
   });
+}
 
-  // Sort descending by totalScore
-  entries.sort((a, b) => b.totalScore - a.totalScore);
+export async function getLeaderboard(domain?: string, period?: string): Promise<LeaderboardEntry[]> {
+  const domainFilter = !domain || domain === "All" ? "All" : (Object.values(DOMAIN_FROM_DB).find((d) => d === domain) ?? null);
+  if (domainFilter === null) return []; // unknown domain -> no results
 
-  // Assign ranks
-  entries.forEach((entry, idx) => {
-    entry.rank = idx + 1;
+  const [users, evaluations, activeWeek] = await Promise.all([
+    prisma.user.findMany({ where: { role: "MEMBER", isActive: true }, select: { id: true, name: true, avatar: true, domain: true } }),
+    prisma.evaluation.findMany({
+      select: { score: true, evaluatedAt: true, task: { select: { userId: true, weekId: true, week: { select: { weekNumber: true } } } } },
+    }),
+    prisma.week.findFirst({ where: { isActive: true }, select: { id: true } }),
+  ]);
+
+  return computeLeaderboard(
+    {
+      users: users.map((u) => ({ id: u.id, name: u.name, avatar: u.avatar ?? "", domain: DOMAIN_FROM_DB[u.domain] })),
+      evaluations: evaluations.map((e) => ({
+        userId: e.task.userId,
+        weekId: e.task.weekId,
+        weekNumber: e.task.week.weekNumber,
+        score: e.score,
+        evaluatedAt: e.evaluatedAt,
+      })),
+      activeWeekId: activeWeek?.id ?? null,
+    },
+    domainFilter,
+    (period === "weekly" || period === "monthly" ? period : "all-time") as BoardPeriod
+  );
+}
+
+// ---------------------------------------------------------------- sprint weeks (super admin)
+
+export interface WeekInput {
+  weekNumber?: number;
+  title?: string;
+  theme?: string;
+  startDate?: string;
+  endDate?: string;
+  promptDescription?: string | null;
+  isActive?: boolean;
+}
+
+export async function createWeek(
+  input: Required<Pick<WeekInput, "weekNumber" | "title" | "theme" | "startDate" | "endDate">> & Pick<WeekInput, "promptDescription" | "isActive">,
+  actorId: string
+): Promise<Week> {
+  const start = new Date(input.startDate);
+  const end = new Date(input.endDate);
+  const problem = checkWeekDates(start, end);
+  if (problem) throw new ConflictError(problem);
+
+  try {
+    const week = await prisma.$transaction(async (tx) => {
+      if (input.isActive) await tx.week.updateMany({ where: { isActive: true }, data: { isActive: false } });
+      const created = await tx.week.create({
+        data: {
+          weekNumber: input.weekNumber, title: input.title, theme: input.theme, startDate: start, endDate: end,
+          promptDescription: input.promptDescription ?? null, isActive: input.isActive ?? false,
+        },
+      });
+      await recordAudit({ actorId, action: "week.create", target: created.id, meta: { weekNumber: created.weekNumber, isActive: created.isActive } }, tx);
+      return created;
+    });
+    return mapWeek(week);
+  } catch (err) {
+    if ((err as { code?: string }).code === "P2002") throw new ConflictError(`Week ${input.weekNumber} already exists.`);
+    throw err;
+  }
+}
+
+/** Edits a week. Opening a week closes any other open week, so only one is ever open. */
+export async function updateWeek(id: string, patch: WeekInput, actorId: string): Promise<Week> {
+  const current = await prisma.week.findUnique({ where: { id } });
+  if (!current) throw new NotFoundError("Sprint week not found");
+
+  const start = patch.startDate ? new Date(patch.startDate) : current.startDate;
+  const end = patch.endDate ? new Date(patch.endDate) : current.endDate;
+  const problem = checkWeekDates(start, end);
+  if (problem) throw new ConflictError(problem);
+
+  try {
+    const week = await prisma.$transaction(async (tx) => {
+      if (patch.isActive) await tx.week.updateMany({ where: { isActive: true, NOT: { id } }, data: { isActive: false } });
+      const updated = await tx.week.update({
+        where: { id },
+        data: {
+          ...(patch.weekNumber !== undefined ? { weekNumber: patch.weekNumber } : {}),
+          ...(patch.title !== undefined ? { title: patch.title } : {}),
+          ...(patch.theme !== undefined ? { theme: patch.theme } : {}),
+          ...(patch.promptDescription !== undefined ? { promptDescription: patch.promptDescription } : {}),
+          ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
+          startDate: start,
+          endDate: end,
+        },
+      });
+      await recordAudit({ actorId, action: "week.update", target: id, meta: { changed: Object.keys(patch), isActive: updated.isActive } }, tx);
+      return updated;
+    });
+    return mapWeek(week);
+  } catch (err) {
+    if ((err as { code?: string }).code === "P2002") throw new ConflictError(`Week ${patch.weekNumber} already exists.`);
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------- member management (super admin)
+
+/** Changes a member's permission role, team position, domain or active status, with safety rules. */
+export async function updateMember(actorId: string, id: string, patch: MemberPatch): Promise<User> {
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) throw new NotFoundError("Member not found");
+
+  const activeSuperAdmins = await prisma.user.count({ where: { role: "SUPER_ADMIN", isActive: true } });
+  const reason = checkMemberChange({
+    actorId,
+    target: { id: target.id, role: ROLE_FROM_DB[target.role], isActive: target.isActive },
+    patch,
+    activeSuperAdmins,
   });
+  if (reason) throw new ForbiddenError(reason);
 
-  return entries;
+  const position = patch.position ? toDbPosition(patch.position) : undefined;
+  const domain = patch.domain ? toDbDomain(patch.domain) : undefined;
+  if ((patch.position && !position) || (patch.domain && !domain)) throw new NotFoundError("Unknown position or domain");
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id },
+      data: {
+        ...(patch.role ? { role: ROLE_TO_DB[patch.role] } : {}),
+        ...(position ? { position } : {}),
+        ...(domain ? { domain } : {}),
+        ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
+      },
+    });
+    if (patch.isActive === false) await tx.session.deleteMany({ where: { userId: id } }); // sign them out everywhere
+    await recordAudit(
+      {
+        actorId, action: "member.update", target: id,
+        meta: { before: { role: ROLE_FROM_DB[target.role], position: POSITION_FROM_DB[target.position], domain: DOMAIN_FROM_DB[target.domain], isActive: target.isActive }, patch },
+      },
+      tx
+    );
+    return user;
+  });
+  return mapUser(updated);
 }

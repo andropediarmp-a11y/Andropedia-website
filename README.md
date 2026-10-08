@@ -43,7 +43,7 @@ The platform is designed with a **frontend-heavy, zero-friction backend architec
 - **Recruitment Application (`/join`)**: Interactive candidate application form with domain preference selector and FAQ accordion.
 
 ### 🏆 Member & Admin Evaluation Portal
-- **Instant Role Switcher**: Quick-test buttons in navigation and login (`Member`, `Domain Lead`, `Super Admin`) for friction-free demonstration.
+- **Email-code login** with server-side sessions; every portal API checks the session and role on the server.
 - **Member Dashboard (`/portal/dashboard`)**: Personal score radar, active sprint prompt, streak flame counter, and recent task review feedback.
 - **Weekly Task Submission (`/portal/submit-task`)**: Form allowing members to submit code repositories, live demo URLs, Figma files, and architectural notes.
 - **Domain Lead Evaluation Queue (`/portal/evaluations`)**: Inspect submitted code, score deliverables using a 4-rubric slider (0-100 total score), and provide constructive feedback.
@@ -79,12 +79,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🔑 Quick Demo Credentials
+## 🔑 Logging in
 
-The platform features an instant role switcher in the header for effortless reviewer testing:
-- **Member**: Aarav Sharma (`Web Domain`)
-- **Domain Lead**: Vikramaditya Rao (`Web Domain Lead`)
-- **Super Admin**: Dr. Siddharth Sen (`Faculty Advisor / Super Admin`)
+Members log in with their email: the site emails a 6-digit code (valid 10 minutes), which starts a secure session. Only emails that exist in the database can log in.
+
+- **Local development:** if SMTP isn't configured, the code is printed in the terminal running `npm run dev` (`[dev] Login code for ...`). `npm run db:seed` creates demo accounts such as `aarav.sharma@andropedia.club` (member), `lead.web@andropedia.club` (domain lead) and `admin@andropedia.club` (super admin).
+- **Real members:** `npm run db:import-members` copies members from the club's Google Sheet into the database (safe to re-run).
+- **First super admin:** `npm run user:set-role -- you@college.edu super_admin Technical "Your Name"`
+- **Change a role / switch someone off:** `npm run user:set-role -- email member|domain_admin|super_admin [domain]` and `npm run user:deactivate -- email`
+- **Our Team page (`/team`):** each member has a team position (President, Vice President, Chief, Lead, Co-Lead or Member). Everyone imported from the sheet starts as Member in their domain. Set positions with `npm run team:set-position -- email chief Technical` or in bulk with `npm run team:import-positions -- docs/team-positions.example.csv` (copy the example and fill it in). Positions don't change portal permissions: use `user:set-role` to give a Lead the `domain_admin` role.
+- **Production:** set `AUTH_SECRET` (see `.env.example`) and the SMTP variables; without SMTP no codes can be delivered.
 
 ---
 
@@ -96,16 +100,39 @@ The platform features an instant role switcher in the header for effortless revi
 3. Keep default settings (`Framework Preset: Next.js`).
 4. Click **Deploy**. Both frontend pages and `/api/...` routes will be immediately live on the edge!
 
-### Optional: Connecting to Managed PostgreSQL (Supabase / Neon)
-1. Create a free database on [Supabase](https://supabase.com) or [Neon](https://neon.tech).
-2. Set the connection string in your environment variables:
-   ```env
-   DATABASE_URL="postgresql://postgres:password@your-host:5432/andropedia?schema=public"
-   ```
-3. Run Prisma migration:
+### Running recruitment
+- **Open / close:** `RECRUITMENT_OPEN=false` closes it immediately; `RECRUITMENT_OPENS_AT` / `RECRUITMENT_CLOSES_AT` (ISO dates with a timezone, e.g. `2026-10-20T23:59:00+05:30`) schedule it. The server enforces this on every submission and `/join` shows the deadline or a closed message. Restart or redeploy after changing environment variables.
+- **Where applications go:** the Google Sheet (see `.env.example`). If the Sheet is down or not configured, the application is kept in the database (the applicant still gets a reference ID and email) and copied over later with `npm run recruitment:flush-outbox`, or by calling `GET /api/cron/recruitment-flush` with `Authorization: Bearer $CRON_SECRET` from any scheduler every 15 minutes or so. Hosting cron features that only allow a daily run are not enough on their own; use an external scheduler or run the command by hand.
+- **Emails that failed:** `npm run recruitment:resend-failed`.
+- **Health check:** `GET /api/health` (database reachable). With the `CRON_SECRET` bearer token it also lists configuration problems and how many applications are queued.
+- **Restrict to college emails:** set `RECRUITMENT_ALLOWED_EMAIL_DOMAINS=college.edu`.
+- **Tests:** `npm test` (85 tests: validation, deadline rules, duplicate detection, sheet retries, the application route, the outbox).
+
+### Running the club (admin)
+Super admins manage the club from **Portal -> Admin Panel**, or through the API:
+- **Sprint weeks:** open or close a week (only one is open at a time). Members can submit only to the open week, one submission each, editable until it is graded. API: `GET/POST /api/admin/weeks`, `PATCH /api/admin/weeks/:id`.
+- **Members:** change a member's portal role, team position, domain or active status. You can't demote or deactivate yourself, and the last super admin can't be removed. Deactivating someone signs them out everywhere. API: `PATCH /api/admin/members/:id`.
+- **Audit log:** every grade, week change and member change is recorded. API: `GET /api/admin/audit`.
+- **Leaderboard:** computed from graded evaluations only. All-time, "weekly" (the open week) and "monthly" (last 30 days) views; rank change compares with the standings before the latest graded week; streaks count consecutive graded weeks.
+- **Housekeeping:** `npm run db:cleanup` (or `GET /api/cron/maintenance` with the `CRON_SECRET` bearer token, daily) removes expired sessions and old login codes. Each member keeps at most 10 sessions.
+
+### Database setup (Supabase Postgres + Prisma)
+The API reads and writes a Postgres database through Prisma.
+1. Create a Supabase project and copy `.env.example` to `.env`.
+2. Fill `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) from Supabase -> Connect.
+3. Create the tables:
    ```bash
-   npx prisma db push
+   npm run db:deploy          # applies prisma/migrations
+   npm run db:import-members  # real members from the club Google Sheet (safe to re-run)
+   npm run user:set-role -- you@college.edu super_admin Technical "Your Name"   # first admin
    ```
+   `npm run db:seed` loads **demo** data (fake members and a demo super admin) for local development only; it refuses to run against a non-local database unless `ALLOW_DEMO_SEED=1`.
+4. For schema changes during development use `npm run db:migrate`.
+
+Set the same `DATABASE_URL` in your hosting provider's environment variables (e.g. Vercel).
+
+**Supabase security:** every table has Row Level Security enabled with no policies (migration `..._rls`). Supabase exposes the `public` schema through a public Data API; with RLS on and no policies that API can read and write nothing. The app talks to Postgres directly through Prisma as the table owner, which bypasses RLS, so it keeps working. Do not add policies or disable RLS.
+
 
 ---
 
