@@ -129,7 +129,7 @@ export function TeamDialog({ event, onClose, onDone }: { event: PublicEvent; onC
                 <div className="grid gap-3 sm:grid-cols-2">
                   <input className={field} placeholder="Full name" aria-label={`Member ${i + 1} full name`} value={m.name} onChange={(e) => update(i, "name", e.target.value)} autoComplete="off" required maxLength={80} />
                   <input className={field} placeholder="Register number" aria-label={`Member ${i + 1} register number`} value={m.registerNo} onChange={(e) => update(i, "registerNo", e.target.value)} autoComplete="off" required maxLength={24} />
-                  <input className={field} type="email" placeholder="College email" aria-label={`Member ${i + 1} email`} value={m.email} onChange={(e) => update(i, "email", e.target.value)} autoComplete="off" required maxLength={160} />
+                  <input className={field} type="email" placeholder="Email" aria-label={`Member ${i + 1} email`} value={m.email} onChange={(e) => update(i, "email", e.target.value)} autoComplete="off" required maxLength={160} />
                   <input className={field} type="tel" inputMode="tel" placeholder="Mobile number" aria-label={`Member ${i + 1} mobile number`} value={m.mobile} onChange={(e) => update(i, "mobile", e.target.value)} autoComplete="off" required maxLength={16} />
                   <input className={field} placeholder="Department (e.g. CSE)" aria-label={`Member ${i + 1} department`} value={m.dept} onChange={(e) => update(i, "dept", e.target.value)} autoComplete="off" required maxLength={60} />
                   <div className="grid grid-cols-2 gap-3">

@@ -43,6 +43,9 @@ model User {
   id              String         @id @default(cuid())
   name            String
   email           String         @unique
+  // Login is by register number. The password is derived from it (see lib/auth.ts); only a hash is stored.
+  registerNo      String?        @unique
+  passwordHash    String?
   role            Role           @default(MEMBER)
   domain          Domain
   avatar          String?
@@ -131,7 +134,7 @@ model Session {
   @@index([expiresAt])
 }
 
-// One-time email login codes. Only a hash of the code is stored.
+// One-time email login codes. No longer used: login is by register number. Safe to drop once every deployment runs the new login.
 model LoginCode {
   id        String    @id @default(cuid())
   email     String
@@ -142,23 +145,6 @@ model LoginCode {
   createdAt DateTime  @default(now())
 
   @@index([email, createdAt])
-}
-
-// Applications accepted while the Google Sheet was unreachable. Stored until a flush copies them
-// to the sheet; the payload is then cleared. Holds the applicant's answers briefly, so access
-// to this table should be limited like the sheet itself.
-model RecruitmentOutbox {
-  id          String    @id @default(cuid())
-  reference   String    @unique
-  emailHash   String    @unique // sha256 of the normalised email: one application per person
-  payload     Json
-  attempts    Int       @default(0)
-  lastError   String?
-  createdAt   DateTime  @default(now())
-  emailSentAt DateTime?
-  sentAt      DateTime?
-
-  @@index([sentAt])
 }
 
 // Permanent record of every recruitment application. The database is the source of truth; the
@@ -260,4 +246,28 @@ model EventMember {
   @@unique([eventId, emailKey])
   @@unique([eventId, registerNo])
   @@index([rsvpId])
+}
+
+// Fixed-window counters for rate limiting, shared by every server instance (see lib/rate-limit-db.ts).
+model RateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+}
+
+// Club projects shown on /projects. Managed by super admins; only published ones are public.
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  domain      String   // Web | Technical | R&D | Design | Media | PR
+  description String
+  tags        String[]
+  github      String?
+  live        String?
+  status      String   @default("In progress") // free label, e.g. "Live & Open Source"
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, createdAt])
 }

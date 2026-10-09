@@ -6,6 +6,7 @@ import { ACCENTS, accentVars } from "@/content/accents";
 const WHY_ACCENTS = [ACCENTS.blue, ACCENTS.pink, ACCENTS.teal];
 const STEP_ACCENTS = [ACCENTS.blue, ACCENTS.teal, ACCENTS.purple, ACCENTS.pink, ACCENTS.amber];
 import { JoinForm } from "@/components/recruitment/JoinForm";
+import { StatusLookup } from "@/components/recruitment/StatusLookup";
 import { ELIGIBILITY, FAQS, PROCESS_STEPS, RECRUITMENT_CYCLE, WHY_JOIN } from "@/content/recruitment";
 
 const description =
@@ -109,6 +110,8 @@ export default function JoinPage() {
         <section id="apply" className="scroll-mt-24" aria-label="Application">
           <JoinForm />
         </section>
+
+        <StatusLookup />
 
         <section className="glass-card p-6 sm:p-12 space-y-6" aria-labelledby="faq-heading">
           <h2 id="faq-heading" className="text-fade text-[30px] font-medium tracking-[-1.2px]">Frequently asked questions</h2>

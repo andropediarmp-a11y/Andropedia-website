@@ -60,7 +60,7 @@ const settleAfter = () => Promise.all(h.afterTasks.splice(0));
 beforeEach(() => {
   resetRateLimits();
   h.afterTasks.length = 0;
-  for (const k of ["RECRUITMENT_OPEN", "RECRUITMENT_OPENS_AT", "RECRUITMENT_CLOSES_AT", "RECRUITMENT_ALLOWED_EMAIL_DOMAINS"]) delete process.env[k];
+  for (const k of ["RECRUITMENT_OPEN", "RECRUITMENT_OPENS_AT", "RECRUITMENT_CLOSES_AT"]) delete process.env[k];
   vi.mocked(prisma.application.create).mockResolvedValue({} as never);
   vi.mocked(prisma.application.update).mockResolvedValue({} as never);
   vi.mocked(appendApplication).mockResolvedValue(7);
@@ -191,12 +191,9 @@ describe("POST /api/recruitment: validation and abuse protection", () => {
     expect(Number(res.headers.get("Retry-After"))).toBeGreaterThan(0);
   });
 
-  it("enforces the optional email-domain allow-list", async () => {
-    process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS = "college.edu";
-    const bad = await apply({ ...payload, email: "priya@gmail.com" });
-    expect(bad.status).toBe(400);
-    expect((await bad.json()).fieldErrors.email[0]).toMatch(/college email/i);
-    expect((await apply(payload)).status).toBe(201);
+  it("accepts any email provider", async () => {
+    expect((await apply({ ...payload, email: "priya@gmail.com" })).status).toBe(201);
+    expect((await apply({ ...payload, email: "priya@some-company.io" })).status).toBe(201);
   });
 });
 

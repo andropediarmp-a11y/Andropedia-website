@@ -38,6 +38,14 @@ const REQUEST_TIMEOUT_MS = 10_000;
 
 export class SheetsNotConfiguredError extends Error {}
 
+/** True when applications can be mirrored to a sheet at all (Apps Script web app or service account). */
+export function sheetMirrorConfigured(): boolean {
+  return webAppConfig() !== null || !!(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY && process.env.RECRUITMENT_SHEET_ID);
+}
+
+/** The web app skips a reference it already wrote, so only the service-account path needs a lookup first. */
+export const mirrorNeedsLookup = () => webAppConfig() === null;
+
 function config() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");

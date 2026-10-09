@@ -99,8 +99,8 @@ const PRIVACY_SECTIONS: LegalSection[] = [
       "We only collect what a form on this site asks for. Depending on what you do, that is:",
       {
         list: [
-          "Recruitment application: name, college email, year of study, chosen domain, your skills, why you want to join, an optional portfolio link, and your consent.",
-          "Event registration: name and college email. For team events we also collect each team member's mobile number, department, section, year of study and register number.",
+          "Recruitment application: name, email, year of study, chosen domain, your skills, why you want to join, an optional portfolio link, and your consent.",
+          "Event registration: name and email. For team events we also collect each team member's mobile number, department, section, year of study and register number.",
           "Member profiles: name, email, domain, LinkedIn link, profile photo and a short bio that members give the club through the member form.",
           "Member portal: the tasks you submit, the scores and feedback you receive, and your points and rank.",
           "Login: your email address, and a one-time code we send you. We store only a scrambled (hashed) version of the code and of your session.",

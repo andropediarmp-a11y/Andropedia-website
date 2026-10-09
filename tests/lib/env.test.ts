@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowedEmailDomains, configProblems, readEnv } from "@/lib/env";
+import { configProblems, readEnv } from "@/lib/env";
 
 describe("readEnv", () => {
   it("accepts an empty environment", () => {
@@ -37,12 +37,16 @@ describe("configProblems", () => {
   });
 });
 
-describe("allowedEmailDomains", () => {
-  it("parses a comma list", () => {
-    expect(allowedEmailDomains({ RECRUITMENT_ALLOWED_EMAIL_DOMAINS: " College.edu , @student.college.edu " })).toEqual([
-      "college.edu",
-      "student.college.edu",
-    ]);
-    expect(allowedEmailDomains({})).toEqual([]);
+describe("configProblems with the Apps Script web app", () => {
+  const base = { NODE_ENV: "production", DATABASE_URL: "postgres://x", AUTH_SECRET: "s", CRON_SECRET: "c" };
+  it("treats the web app as both the sheet and the mail sender", () => {
+    const p = configProblems({ ...base, RECRUITMENT_SHEET_WEBHOOK_URL: "https://script.google.com/x", RECRUITMENT_SHEET_WEBHOOK_SECRET: "s" });
+    expect(p).toEqual([]);
+  });
+  it("warns about every missing piece when nothing is configured", () => {
+    const p = configProblems({ NODE_ENV: "production", DATABASE_URL: "postgres://x", AUTH_SECRET: "s" }).join(" ");
+    expect(p).toMatch(/No Google Sheet/);
+    expect(p).toMatch(/No email sender/);
+    expect(p).toMatch(/CRON_SECRET/);
   });
 });

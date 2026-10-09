@@ -74,7 +74,6 @@ const result = { rsvpId: "r1", event: { id: "ev1", title: "Hack Night", location
 beforeEach(() => {
   resetRateLimits();
   h.afterTasks.length = 0;
-  delete process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS;
   vi.mocked(rsvpToEvent).mockResolvedValue(result);
   vi.mocked(sendRsvpConfirmation).mockResolvedValue(undefined);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -130,12 +129,6 @@ describe("POST /api/events/:id/rsvp", () => {
     expect(res.status).toBe(201);
     expect(rsvpToEvent).not.toHaveBeenCalled();
     expect(sendRsvpConfirmation).not.toHaveBeenCalled();
-  });
-
-  it("only accepts allowed email domains when configured", async () => {
-    process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS = "college.edu";
-    expect((await rsvp({ name: "Out Sider", email: "out@gmail.com" })).status).toBe(400);
-    expect((await rsvp(person)).status).toBe(201);
   });
 
   it("rate-limits one IP after 10 reservations an hour", async () => {
@@ -215,11 +208,4 @@ describe("POST /api/events/:id/rsvp (team)", () => {
     expect(rsvpTeam).not.toHaveBeenCalled();
   });
 
-  it("checks the email domain of every member when configured", async () => {
-    process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS = "college.edu";
-    const outsider = { ...team, members: [member(1), { ...member(2), email: "m2@gmail.com" }, member(3)] };
-    expect((await rsvp(outsider)).status).toBe(400);
-    expect(rsvpTeam).not.toHaveBeenCalled();
-    expect((await rsvp(team)).status).toBe(201);
-  });
 });

@@ -12,14 +12,10 @@ export function getPortalDestinationForUser(user?: User | null): string {
   return "/portal/dashboard";
 }
 
-type StepResult = { ok: true } | { ok: false; error: string };
-
 interface AuthContextType {
   currentUser: User | null;
-  /** Emails a one-time login code to a club member. */
-  requestCode: (email: string) => Promise<StepResult>;
-  /** Exchanges the emailed code for a session; returns the user on success. */
-  verifyCode: (email: string, code: string) => Promise<{ user: User } | { error: string }>;
+  /** Logs a member in with their register number and password; returns the user on success. */
+  login: (registerNo: string, password: string) => Promise<{ user: User } | { error: string }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -62,18 +58,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const requestCode = useCallback(async (email: string): Promise<StepResult> => {
-    const data = await postJson("/api/auth/request-code", { email });
-    return data.success ? { ok: true } : { ok: false, error: data.error || "Could not send the code." };
-  }, []);
-
-  const verifyCode = useCallback(async (email: string, code: string) => {
-    const data = await postJson("/api/auth/verify-code", { email, code });
+  const login = useCallback(async (registerNo: string, password: string) => {
+    const data = await postJson("/api/auth/login", { registerNo, password });
     if (data.success && data.user) {
       setCurrentUser(data.user as User);
       return { user: data.user as User };
     }
-    return { error: (data.error as string) || "That code is invalid or has expired." };
+    return { error: (data.error as string) || "Wrong register number or password." };
   }, []);
 
   const logout = useCallback(async () => {
@@ -82,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, requestCode, verifyCode, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

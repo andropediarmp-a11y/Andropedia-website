@@ -1,15 +1,29 @@
 import { BlurOrb } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { ScoreRing } from "@/components/design/ScoreRing";
-import { DEMO_LEADERBOARD, HOME_METRICS } from "@/content/home";
+import { HOME_METRICS } from "@/content/home";
 import { ACCENTS, DOMAIN_ACCENT, MEDAL, accentVars } from "@/content/accents";
-import type { DomainType } from "@/lib/types";
+import { getLeaderboard, getWeeks } from "@/lib/data-store";
+import { log } from "@/lib/logger";
+import type { DomainType, LeaderboardEntry } from "@/lib/types";
 
 const METRIC_ACCENTS = [ACCENTS.blue, ACCENTS.teal, ACCENTS.amber, ACCENTS.pink];
 
 // Glass "app" card from the hero frame: a snapshot of the live sprint and the club in numbers.
 // It sits after the club description and the domains, with the other highlights.
-export function SprintSnapshot() {
+export async function SprintSnapshot() {
+  // Real standings. If the database can't be reached the card shows an empty state instead of failing the page.
+  let rows: LeaderboardEntry[] = [];
+  let sprint: number | null = null;
+  try {
+    const [board, weeks] = await Promise.all([getLeaderboard("All", "all-time"), getWeeks()]);
+    rows = board.slice(0, 4);
+    sprint = weeks.find((w) => w.isActive)?.weekNumber ?? null;
+  } catch (err) {
+    log.error("Home leaderboard unavailable", err);
+  }
+  const top = rows[0];
+
   return (
     <section id="sprint" className="relative isolate overflow-hidden bg-black px-5 py-24 sm:px-10">
       <BlurOrb variant="hero" size={900} opacity={0.3} position={{ left: "50%", top: "50%" }} />
@@ -21,24 +35,30 @@ export function SprintSnapshot() {
               <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
               <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
               <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-              <span className="ml-3 text-white">Sprint 4 &middot; Live leaderboard</span>
+              <span className="ml-3 text-white">{sprint ? `Sprint ${sprint} · ` : ""}Live leaderboard</span>
             </div>
-            <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-white/80">Evaluation window active</span>
+            {sprint && <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-white/80">Evaluation window active</span>}
           </div>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-[1.15fr_1fr]">
             <div className="glass-inner p-4 sm:p-5">
               <h2 className="text-aurora text-[16px] font-medium leading-6">Top performers</h2>
-              <ol className="mt-3 space-y-2">
-                {DEMO_LEADERBOARD.map((row) => (
-                  <li key={row.rank} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-                    <span className="w-5 text-[14px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "rgba(255,255,255,0.5)" }}>{row.rank}</span>
-                    <span className="flex-1 text-[14px] font-medium leading-5 text-white">{row.name}</span>
-                    <span className="chip-accent hidden sm:inline-flex" style={accentVars(DOMAIN_ACCENT[row.domain as DomainType])}>{row.domain}</span>
-                    <span className="w-12 text-right text-[15px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "#ffffff" }}>{row.score}</span>
-                  </li>
-                ))}
-              </ol>
+              {rows.length === 0 ? (
+                <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-6 text-center text-[14px] text-white/60">
+                  Rankings appear after the first graded sprint.
+                </p>
+              ) : (
+                <ol className="mt-3 space-y-2">
+                  {rows.map((row) => (
+                    <li key={row.userId} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                      <span className="w-5 text-[14px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "rgba(255,255,255,0.5)" }}>{row.rank}</span>
+                      <span className="flex-1 text-[14px] font-medium leading-5 text-white">{row.name}</span>
+                      <span className="chip-accent hidden sm:inline-flex" style={accentVars(DOMAIN_ACCENT[row.domain as DomainType])}>{row.domain}</span>
+                      <span className="w-12 text-right text-[15px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "#ffffff" }}>{row.totalScore}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -57,7 +77,7 @@ export function SprintSnapshot() {
         </div>
 
         {/* Floating score ring, as in the design */}
-        <ScoreRing value={96} label="Top task score" className="animate-float absolute -right-2 -top-12 hidden sm:flex lg:-right-10" />
+        {top && <ScoreRing value={Math.round(top.avgScore)} label="Top average score" className="animate-float absolute -right-2 -top-12 hidden sm:flex lg:-right-10" />}
       </Reveal>
     </section>
   );

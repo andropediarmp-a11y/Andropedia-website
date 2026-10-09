@@ -2,29 +2,17 @@ import "server-only";
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { hashPassword, normalizeRegisterNo, verifyPassword } from "./password";
 import { prisma } from "./prisma";
 import { mapUser } from "./data-store";
-import { escapeHtml, isMailConfigured, sendMail } from "./mailer";
 import type { RoleType, User } from "./types";
 
 export const SESSION_COOKIE = "andropedia_session";
 const SESSION_DAYS = 14;
 const SESSION_TOUCH_MS = 5 * 60 * 1000;
 const MAX_SESSIONS_PER_USER = 10;
-const CODE_TTL_MS = 10 * 60 * 1000;
-const CODE_MAX_ATTEMPTS = 5;
 
 const sha256 = (value: string) => crypto.createHash("sha256").update(value).digest("hex");
-
-function authSecret(): string {
-  const secret = process.env.AUTH_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET is not set.");
-  return "dev-only-insecure-secret";
-}
-
-const hashCode = (email: string, code: string) =>
-  crypto.createHmac("sha256", authSecret()).update(`${email}:${code}`).digest("hex");
 
 // ---------------------------------------------------------------- sessions
 
@@ -121,82 +109,20 @@ export async function requireUser(request: NextRequest, roles?: RoleType[]): Pro
   return { ok: true, user };
 }
 
-// ------------------------------------------------------------- login codes
+// ------------------------------------------------------------- register number + password
 
-export type IssueResult = "sent" | "unknown" | "rate_limited";
+// Checked against when the register number is unknown, so a miss costs the same time as a wrong password.
+let decoyHash: string | undefined;
 
-/** Emails a one-time code to an active member. Unknown emails are silently ignored. */
-export async function issueLoginCode(rawEmail: string): Promise<IssueResult> {
-  const email = rawEmail.trim().toLowerCase();
-
-  const now = Date.now();
-  const [lastMinute, lastHour] = await Promise.all([
-    prisma.loginCode.count({ where: { email, createdAt: { gt: new Date(now - 60_000) } } }),
-    prisma.loginCode.count({ where: { email, createdAt: { gt: new Date(now - 3_600_000) } } }),
-  ]);
-  if (lastMinute >= 1 || lastHour >= 5) return "rate_limited";
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.isActive) return "unknown";
-
-  const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
-  await prisma.loginCode.updateMany({ where: { email, usedAt: null }, data: { usedAt: new Date() } });
-  const record = await prisma.loginCode.create({
-    data: { email, codeHash: hashCode(email, code), expiresAt: new Date(now + CODE_TTL_MS) },
-  });
-
-  if (!isMailConfigured() && process.env.NODE_ENV !== "production") {
-    console.log(`[dev] Login code for ${email}: ${code}`);
-    return "sent";
-  }
-
-  try {
-    await sendMail({
-      to: email,
-      subject: `Your Andropedia login code: ${code}`,
-      text: `Hi ${user.name},\n\nYour Andropedia login code is ${code}\nIt expires in 10 minutes. If you didn't request it, you can ignore this email.\n\n- Team Andropedia`,
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:480px"><p>Hi ${escapeHtml(user.name)},</p><p>Your Andropedia login code is</p><p style="font-size:28px;letter-spacing:6px;font-weight:bold">${code}</p><p>It expires in 10 minutes. If you didn't request it, you can ignore this email.</p><p>- Team Andropedia</p></div>`,
-    });
-  } catch (err) {
-    await prisma.loginCode.deleteMany({ where: { id: record.id } });
-    throw err;
-  }
-  return "sent";
-}
-
-/** Checks a code; on success returns the user and a fresh session. */
-export async function verifyLoginCode(
-  rawEmail: string,
-  code: string
+/** Checks a register number and password; on success returns the user and a fresh session. */
+export async function loginWithPassword(
+  rawRegisterNo: string,
+  password: string
 ): Promise<{ user: User; token: string; expires: Date } | null> {
-  const email = rawEmail.trim().toLowerCase();
-
-  const record = await prisma.loginCode.findFirst({
-    where: { email, usedAt: null, expiresAt: { gt: new Date() } },
-    orderBy: { createdAt: "desc" },
-  });
-  if (!record) return null;
-
-  // Count the attempt first so parallel guesses can't exceed the limit.
-  const claimed = await prisma.loginCode.updateMany({
-    where: { id: record.id, usedAt: null, attempts: { lt: CODE_MAX_ATTEMPTS } },
-    data: { attempts: { increment: 1 } },
-  });
-  if (claimed.count === 0) return null;
-
-  const expected = Buffer.from(record.codeHash);
-  const actual = Buffer.from(hashCode(email, code));
-  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) return null;
-
-  // Single use: only one request can flip usedAt from null.
-  const used = await prisma.loginCode.updateMany({
-    where: { id: record.id, usedAt: null },
-    data: { usedAt: new Date() },
-  });
-  if (used.count === 0) return null;
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.isActive) return null;
+  const registerNo = normalizeRegisterNo(rawRegisterNo);
+  const user = await prisma.user.findUnique({ where: { registerNo } });
+  const passwordOk = verifyPassword(password, user?.passwordHash ?? (decoyHash ??= hashPassword("decoy")));
+  if (!user || !user.isActive || !passwordOk) return null;
 
   const session = await createSession(user.id);
   return { user: mapUser(user), ...session };

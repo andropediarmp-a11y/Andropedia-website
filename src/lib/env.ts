@@ -13,6 +13,8 @@ const schema = z.object({
   GOOGLE_PRIVATE_KEY: text,
   RECRUITMENT_SHEET_ID: text,
   RECRUITMENT_SHEET_TAB: text,
+  RECRUITMENT_SHEET_WEBHOOK_URL: text,
+  RECRUITMENT_SHEET_WEBHOOK_SECRET: text,
   SMTP_HOST: text,
   SMTP_PORT: z.preprocess(blank, z.coerce.number().int().min(1).max(65535).optional()),
   SMTP_USER: text,
@@ -22,7 +24,6 @@ const schema = z.object({
   RECRUITMENT_OPEN: z.preprocess(blank, z.enum(["true", "false"]).optional()),
   RECRUITMENT_OPENS_AT: isoDate,
   RECRUITMENT_CLOSES_AT: isoDate,
-  RECRUITMENT_ALLOWED_EMAIL_DOMAINS: text,
   CRON_SECRET: text,
   NEXT_PUBLIC_SITE_URL: z.preprocess(blank, z.url().optional()),
 });
@@ -64,18 +65,11 @@ export function configProblems(source: Record<string, string | undefined> = proc
 
   if (production) {
     if (!e.DATABASE_URL) problems.push("DATABASE_URL is not set.");
-    if (!e.AUTH_SECRET) problems.push("AUTH_SECRET is not set (login codes cannot be issued).");
-    if (!google.every(Boolean)) problems.push("Google Sheets is not configured: applications will only be queued in the database.");
-    if (!smtp.every(Boolean)) problems.push("SMTP is not configured: confirmation emails and login codes cannot be sent.");
+    if (!e.AUTH_SECRET) problems.push("AUTH_SECRET is not set (member logins cannot be checked).");
+    const webApp = !!(e.RECRUITMENT_SHEET_WEBHOOK_URL && e.RECRUITMENT_SHEET_WEBHOOK_SECRET);
+    if (!google.every(Boolean) && !webApp) problems.push("No Google Sheet is configured: applications are kept in the database only.");
+    if (!smtp.every(Boolean) && !webApp) problems.push("No email sender is configured (SMTP or the Apps Script web app): confirmation emails and login codes cannot be sent.");
+    if (!e.CRON_SECRET) problems.push("CRON_SECRET is not set: the retry and cleanup endpoints are disabled.");
   }
   return problems;
-}
-
-/** Lower-cased allowed email domains, e.g. "college.edu,student.college.edu". Empty = allow all. */
-export function allowedEmailDomains(source: Record<string, string | undefined> = process.env): string[] {
-  const raw = schema.safeParse(source).data?.RECRUITMENT_ALLOWED_EMAIL_DOMAINS;
-  return (raw ?? "")
-    .split(",")
-    .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
-    .filter(Boolean);
 }

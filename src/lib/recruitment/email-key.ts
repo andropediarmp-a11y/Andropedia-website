@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 const GMAIL_DOMAINS = new Set(["gmail.com", "googlemail.com"]);
 
 /**
@@ -14,16 +12,4 @@ export function emailKey(email: string): string {
     return `${localRaw.split("+")[0].replace(/\./g, "")}@gmail.com`;
   }
   return `${localRaw}@${domainRaw}`;
-}
-
-/** Stored instead of the address itself when an application is queued (see the outbox). */
-export function emailHash(email: string): string {
-  return createHash("sha256").update(emailKey(email)).digest("hex");
-}
-
-/** True when `email` belongs to one of the allowed domains (an empty list allows everything). */
-export function isAllowedDomain(email: string, allowed: string[]): boolean {
-  if (allowed.length === 0) return true;
-  const domain = email.trim().toLowerCase().split("@")[1] ?? "";
-  return allowed.some((d) => domain === d || domain.endsWith(`.${d}`));
 }

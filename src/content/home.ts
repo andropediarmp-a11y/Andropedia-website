@@ -90,11 +90,3 @@ export const ABOUT_POINTS = [
   { title: "Real-time transparency", text: "A live leaderboard that fosters healthy competition across the club." },
   { title: "Cross-domain synergy", text: "Web, R&D, Design, Media, Technical and PR working as one team." },
 ];
-
-/** Demo rows for the leaderboard mock-up on the home page. */
-export const DEMO_LEADERBOARD = [
-  { rank: 1, name: "Aarav Sharma", domain: "Web", score: 382 },
-  { rank: 2, name: "Diya Patel", domain: "R&D", score: 374 },
-  { rank: 3, name: "Rohan Varma", domain: "Technical", score: 365 },
-  { rank: 4, name: "Sneha Mukherjee", domain: "Design", score: 358 },
-];

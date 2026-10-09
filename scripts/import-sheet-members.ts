@@ -1,29 +1,68 @@
 // Usage: npm run db:import-members
-// Copies members from the club's Google Sheet into the User table so they can log in.
-// Safe to re-run: existing accounts (matched by email) are left untouched, so roles
-// and points set in the database are never overwritten.
+// Copies members from the club's Google Form sheet into the User table and gives each one a login:
+// username = register number, password = register number (stored hashed).
+// Safe to re-run. Existing accounts (matched by email or register number) keep their role, points and
+// any password that was already set; only a missing register number or password is filled in.
 import { prisma } from "../src/lib/prisma";
 import { toDbDomain } from "../src/lib/data-store";
 import { getLiveMembers } from "../src/lib/live-members";
+import { hashPassword } from "../src/lib/password";
 
 async function main() {
   const members = await getLiveMembers();
   console.log(`Read ${members.length} member(s) from the sheet.`);
 
-  const result = await prisma.user.createMany({
-    skipDuplicates: true,
-    data: members.map((m) => ({
-      name: m.name,
-      email: m.email.toLowerCase(),
-      role: "MEMBER" as const,
-      domain: toDbDomain(m.domain) ?? "TECHNICAL",
-      avatar: m.avatar || null,
-      bio: m.bio || null,
-      linkedin: m.linkedin || null,
-    })),
-  });
+  // Two emails with the same register number are the same person: the later form answer wins.
+  const byRegisterNo = new Map(members.map((m) => [m.registerNo, m]));
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  const skipped: string[] = [];
 
-  console.log(`Imported ${result.count} new member(s); ${members.length - result.count} already existed.`);
+  for (const m of byRegisterNo.values()) {
+    const email = m.email.toLowerCase();
+    const [byEmail, byReg] = await Promise.all([
+      prisma.user.findUnique({ where: { email } }),
+      prisma.user.findUnique({ where: { registerNo: m.registerNo } }),
+    ]);
+
+    if (byEmail && byReg && byEmail.id !== byReg.id) {
+      skipped.push(`${m.registerNo}: the register number and the email belong to two different accounts`);
+      continue;
+    }
+    const existing = byEmail ?? byReg;
+
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          name: m.name,
+          email,
+          registerNo: m.registerNo,
+          passwordHash: hashPassword(m.registerNo),
+          role: "MEMBER",
+          domain: toDbDomain(m.domain) ?? "TECHNICAL",
+          avatar: m.avatar || null,
+          bio: m.bio || null,
+          linkedin: m.linkedin || null,
+        },
+      });
+      created++;
+      continue;
+    }
+
+    const patch: { registerNo?: string; passwordHash?: string } = {};
+    if (!existing.registerNo) patch.registerNo = m.registerNo;
+    if (!existing.passwordHash) patch.passwordHash = hashPassword(existing.registerNo ?? m.registerNo);
+    if (Object.keys(patch).length === 0) {
+      unchanged++;
+      continue;
+    }
+    await prisma.user.update({ where: { id: existing.id }, data: patch });
+    updated++;
+  }
+
+  console.log(`Created ${created}, updated ${updated} (register number / password added), left ${unchanged} as they were.`);
+  if (skipped.length) console.log(`Skipped ${skipped.length}:\n  ${skipped.join("\n  ")}`);
 }
 
 main()

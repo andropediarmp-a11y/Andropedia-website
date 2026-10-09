@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hasCronSecret } from "@/lib/cron-auth";
 import { configProblems } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
+import { pendingWhere } from "@/lib/recruitment/retry";
 
 // Uptime/health check. Public callers only learn ok/degraded; the detailed list of
 // configuration problems is shown only with `Authorization: Bearer $CRON_SECRET`.
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   let database = true;
   let waiting: number | null = null;
   try {
-    waiting = await prisma.recruitmentOutbox.count({ where: { sentAt: null } });
+    waiting = await prisma.application.count({ where: pendingWhere() });
   } catch {
     database = false;
   }
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
   const body: Record<string, unknown> = { status: ok ? "ok" : "degraded", database };
   if (hasCronSecret(request)) {
     body.problems = problems;
-    body.queuedApplications = waiting;
+    body.unsyncedApplications = waiting;
   }
   return NextResponse.json(body, { status: database ? 200 : 503, headers: { "Cache-Control": "no-store" } });
 }

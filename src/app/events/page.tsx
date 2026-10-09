@@ -138,8 +138,8 @@ function RsvpDialog({ event, onClose, onDone }: { event: PublicEvent; onClose: (
               <input className={field} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required maxLength={80} placeholder="Your name" autoFocus />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-white/70">College email</span>
-              <input className={field} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required maxLength={160} placeholder="you@college.edu" />
+              <span className="text-xs font-medium text-white/70">Email</span>
+              <input className={field} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required maxLength={160} placeholder="you@example.com" />
             </label>
             {/* Honeypot: hidden from people, irresistible to bots. */}
             <input tabIndex={-1} autoComplete="off" aria-hidden="true" value={website} onChange={(e) => setWebsite(e.target.value)} className="absolute left-[-9999px] h-0 w-0 opacity-0" name="website" />

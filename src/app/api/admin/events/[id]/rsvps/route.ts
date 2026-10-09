@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleDataError } from "@/lib/api-errors";
 import { requireUser } from "@/lib/auth";
+import { csvCell as cell } from "@/lib/csv";
 import { listAttendees } from "@/lib/events";
-
-// Prefix cells that start with a formula character so spreadsheets treat them as text.
-const cell = (v: string | undefined) => {
-  const t = v ?? "";
-  return `"${(/^[=+\-@\t\r]/.test(t) ? `'${t}` : t).replace(/"/g, '""')}"`;
-};
 
 // Attendee list for one event. Names, emails and phone numbers: super admins only.
 // Add ?format=csv to download. Team events list one row per team member.
