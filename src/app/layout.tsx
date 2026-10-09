@@ -3,6 +3,7 @@ import { Figtree, Anton } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { MainShell } from "@/components/layout/MainShell";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/ui/MotionProvider";
@@ -65,7 +66,7 @@ export default function RootLayout({
           <AuthProvider>
             <CustomCursor />
             <Navbar />
-            <main id="top" className="flex-1 pt-[60px] flex flex-col">{children}</main>
+            <MainShell>{children}</MainShell>
             <Footer />
           </AuthProvider>
         </MotionProvider>
