@@ -203,6 +203,7 @@ model Event {
   prize            String?
   isPublished      Boolean     @default(false)
   registrationOpen Boolean     @default(true)
+  dateTbc          Boolean     @default(false) // the real date is not known yet: shown as "Date to be announced" and treated as past
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 

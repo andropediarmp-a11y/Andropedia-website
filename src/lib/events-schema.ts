@@ -53,6 +53,7 @@ const eventFields = {
   prize: z.string().trim().max(160).nullable().optional(),
   isPublished: z.boolean().optional(),
   registrationOpen: z.boolean().optional(),
+  dateTbc: z.boolean().optional(),
 };
 
 export const eventCreateSchema = z.object(eventFields);
