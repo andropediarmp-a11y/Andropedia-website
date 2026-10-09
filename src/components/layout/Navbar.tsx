@@ -24,8 +24,8 @@ interface MenuItem {
 const ITEMS: MenuItem[] = [
   { name: "Join us", href: "/join#how-selection-works", accent: ACCENTS.indigo },
   { name: "Events", href: "/events", accent: ACCENTS.purple },
-  { name: "Teams", href: "/domains", accent: ACCENTS.teal },
-  { name: "Members", href: "/team", accent: ACCENTS.amber },
+  { name: "Teams", href: "/team", accent: ACCENTS.teal },
+  { name: "Members", href: "/portal/login", accent: ACCENTS.amber }, // signed-in members go to their portal instead
 ];
 
 export function Navbar() {
@@ -76,7 +76,8 @@ export function Navbar() {
     };
   }, [open, close]);
 
-  const items = ITEMS;
+  // Members is the member portal: the login page, or straight to the portal for someone who is already signed in.
+  const items = ITEMS.map((i) => (i.name === "Members" && currentUser ? { ...i, href: getPortalDestinationForUser(currentUser) } : i));
 
   // Home always lands on the hero: from another page it opens "/", and on the home page itself it jumps back to the top.
   const isHome = (href: string) => href === "/";
@@ -134,7 +135,7 @@ export function Navbar() {
             aria-haspopup="true"
             aria-controls="site-menu"
             data-cursor-text="Dial"
-            className="group flex h-7 w-36 items-start justify-center rounded-b-full border border-t-0 border-white/20 bg-white/[0.06] pt-1.5 shadow-[inset_0_0_20px_rgba(204,215,255,0.08)] backdrop-blur-[12px] transition-all hover:h-9 hover:border-white/40 hover:bg-white/[0.12] focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+            className="group mx-auto flex h-7 w-36 items-start justify-center rounded-b-full border border-t-0 border-white/20 bg-white/[0.06] pt-1.5 shadow-[inset_0_0_20px_rgba(204,215,255,0.08)] backdrop-blur-[12px] transition-all hover:h-9 hover:border-white/40 hover:bg-white/[0.12] focus-visible:ring-2 focus-visible:ring-emerald-400/70"
           >
             {/* six tiny holes: a hint of what is inside */}
             <span aria-hidden="true" className="flex items-center gap-1.5">

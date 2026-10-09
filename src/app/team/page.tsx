@@ -111,6 +111,19 @@ export default function TeamPage() {
   }, []);
 
   const groups = useMemo(() => (members ? groupTeam(members) : null), [members]);
+
+  // The sections only exist once the members have loaded, so a link like /team#pr has to be followed after that.
+  const ready = groups !== null;
+  useEffect(() => {
+    if (!ready) return;
+    const go = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    go();
+    window.addEventListener("hashchange", go);
+    return () => window.removeEventListener("hashchange", go);
+  }, [ready]);
   const domainLabel = (id: string) => TEAM_DOMAINS.find((d) => d.id === id)?.label ?? id;
   const hasCore = groups && (groups.president.length || groups.vicePresident.length || groups.chiefs.length);
 

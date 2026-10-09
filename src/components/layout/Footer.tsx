@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUp, Terminal } from "lucide-react";
 import { LegalLinks } from "@/components/layout/LegalLinks";
-import { GithubIcon, LinkedinIcon, DiscordIcon, TwitterIcon } from "@/components/ui/SocialIcons";
+import { LinkedinIcon, InstagramIcon } from "@/components/ui/SocialIcons";
 
 // Footer from the Figma design: black, four link columns, social circles, divider and legal row.
 const COLUMNS = [
@@ -35,10 +35,8 @@ const COLUMNS = [
 ];
 
 const SOCIALS = [
-  { name: "GitHub", href: "https://github.com", Icon: GithubIcon },
-  { name: "LinkedIn", href: "https://linkedin.com", Icon: LinkedinIcon },
-  { name: "Discord", href: "https://discord.com", Icon: DiscordIcon },
-  { name: "X", href: "https://x.com", Icon: TwitterIcon },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/andropedia-club/", Icon: LinkedinIcon },
+  { name: "Instagram", href: "https://www.instagram.com/andropedia_srm.rmp/", Icon: InstagramIcon },
 ];
 
 export function Footer() {

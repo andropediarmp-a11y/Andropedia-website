@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   easeInOut,
   motion,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -178,15 +179,19 @@ function TrainArt({ rot, doorGlow }: { rot: MotionValue<number>; doorGlow: Motio
 
 // ---------------------------------------------------------------- world pieces
 
-function StreakLine({ world, top, speed, className }: { world: MotionValue<number>; top: string; speed: number; className?: string }) {
-  const pos = useTransform(world, (v) => `calc(${-v * speed} * var(--st-gap))`);
+const STREAK_PERIOD = 330; // px: the repeat length of the dash pattern below
+
+function StreakLine({ world, gap, top, speed, className }: { world: MotionValue<number>; gap: MotionValue<number>; top: string; speed: number; className?: string }) {
+  // Slide the whole line by a whole number of patterns, so it loops without a jump and only the GPU transform changes.
+  const x = useTransform([world, gap], ([v, g]: number[]) => -((v * speed * g) % STREAK_PERIOD));
   return (
     <motion.div
       aria-hidden="true"
-      className={`absolute inset-x-0 h-px ${className ?? ""}`}
+      className={`absolute left-0 h-px will-change-transform ${className ?? ""}`}
       style={{
         top,
-        backgroundPositionX: pos,
+        x,
+        width: `calc(100% + ${STREAK_PERIOD}px)`,
         backgroundImage:
           "repeating-linear-gradient(90deg, rgba(190,225,255,0) 0 70px, rgba(190,225,255,0.95) 70px 190px, rgba(190,225,255,0) 190px 330px)",
       }}
@@ -205,7 +210,7 @@ function Station({ index, world, title, text }: { index: number; world: MotionVa
 
   return (
     <div className="absolute bottom-[20%] top-[126px] flex w-[min(88vw,480px)] -translate-x-1/2 flex-col items-center" style={{ left: `calc(${index} * var(--st-gap))` }}>
-      <motion.div style={{ opacity, scale, y: lift, ...accentVars(accent) }} className="glass-card w-full p-6 sm:p-7">
+      <motion.div style={{ opacity, scale, y: lift, ...accentVars(accent) }} className="glass-card w-full p-6 will-change-[transform,opacity] sm:p-7">
         <div className="flex items-start gap-4">
           <span
             aria-hidden="true"
@@ -256,16 +261,24 @@ function TrainRide() {
   const [active, setActive] = useState(0);
 
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
-  const smooth = useSpring(scrollYProgress, { stiffness: 110, damping: 26, mass: 0.4 });
+  const smooth = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.35, restDelta: 0.00005 });
+  // Distance between two stops in px (the CSS --st-gap), so the moving layers use plain numeric transforms.
+  const gap = useMotionValue(0);
+  useEffect(() => {
+    const measure = () => gap.set(window.innerWidth >= 1024 ? window.innerWidth * 0.72 : window.innerWidth);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [gap]);
   // 0 = parked at stop 1 ... LAST = parked at the final stop; eased between stops so it brakes and accelerates.
   const world = useTransform(smooth, SCROLL_INPUTS, WORLD_OUTPUTS, { ease: easeInOut });
   // 0 when parked, 1 mid-ride.
   const moving = useTransform(world, (v) => Math.pow(Math.sin(Math.PI * v), 2));
   const doorGlow = useTransform(moving, (m) => 1 - m);
 
-  const worldX = useTransform(world, (v) => `calc(${-v} * var(--st-gap))`);
-  const farX = useTransform(world, (v) => `calc(${-v * 0.16} * var(--st-gap))`);
-  const midX = useTransform(world, (v) => `calc(${-v * 0.38} * var(--st-gap))`);
+  const worldX = useTransform([world, gap], ([v, g]: number[]) => -v * g);
+  const farX = useTransform([world, gap], ([v, g]: number[]) => -v * 0.16 * g);
+  const midX = useTransform([world, gap], ([v, g]: number[]) => -v * 0.38 * g);
   const wheelRot = useTransform(world, (v) => v * 3600);
   // Zero at every stop, so the train rocks only while it is running.
   const sway = useTransform(world, (v) => Math.sin(v * Math.PI * 16) * 1.1);
@@ -276,11 +289,13 @@ function TrainRide() {
 
   useMotionValueEvent(world, "change", (v) => {
     setActive(Math.round(v));
+    // Only near the end, and only then measure (reading layout on every frame of the ride would stutter it).
     // Gate on the section's real position, not just `world`: the scroll value can glitch high for a
     // moment while the layout is first measured, which must not set off the celebration.
-    const el = sectionRef.current;
-    const real = el ? -el.getBoundingClientRect().top / Math.max(1, el.offsetHeight - window.innerHeight) : 0;
-    if (v > LAST - 0.02 && real > 0.85 && real <= 1.02 && !firedRef.current) {
+    if (v > LAST - 0.02 && !firedRef.current) {
+      const el = sectionRef.current;
+      const real = el ? -el.getBoundingClientRect().top / Math.max(1, el.offsetHeight - window.innerHeight) : 0;
+      if (real <= 0.85 || real > 1.02) return;
       firedRef.current = true;
       import("canvas-confetti").then(({ default: confetti }) =>
         confetti({
@@ -311,10 +326,10 @@ function TrainRide() {
         <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_30%,rgba(51,149,255,0.16),transparent_70%)]" />
 
         {/* far and mid skyline, each sliding at its own fraction of the train's speed */}
-        <motion.div aria-hidden="true" className="absolute bottom-[20%] left-[-60vw] h-[34%] opacity-40" style={{ x: farX, width: "calc(120vw + 4 * var(--st-gap) * 0.2)" }}>
+        <motion.div aria-hidden="true" className="absolute bottom-[20%] left-[-60vw] h-[34%] opacity-40 will-change-transform" style={{ x: farX, width: "calc(120vw + 4 * var(--st-gap) * 0.2)" }}>
           <Skyline buildings={FAR_BUILDINGS} tint="rgba(51,149,255,0.16)" />
         </motion.div>
-        <motion.div aria-hidden="true" className="absolute bottom-[20%] left-[-60vw] h-[26%] opacity-70" style={{ x: midX, width: "calc(120vw + 4 * var(--st-gap) * 0.45)" }}>
+        <motion.div aria-hidden="true" className="absolute bottom-[20%] left-[-60vw] h-[26%] opacity-70 will-change-transform" style={{ x: midX, width: "calc(120vw + 4 * var(--st-gap) * 0.45)" }}>
           <Skyline buildings={MID_BUILDINGS} tint="rgba(121,120,222,0.2)" dots />
         </motion.div>
 
@@ -322,7 +337,7 @@ function TrainRide() {
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 top-[80%] bg-gradient-to-b from-blue-500/[0.09] to-transparent" />
 
         {/* the world: rails, platforms, posts and cards. Origin is the stage centre; stops sit at i * gap. */}
-        <motion.div className="absolute left-1/2 top-0 z-[1] h-full w-0" style={{ x: worldX }}>
+        <motion.div className="absolute left-1/2 top-0 z-[1] h-full w-0 will-change-transform" style={{ x: worldX }}>
           <div
             aria-hidden="true"
             className="absolute top-[80%] h-[2px] bg-gradient-to-r from-transparent via-white/60 to-transparent"
@@ -360,10 +375,10 @@ function TrainRide() {
 
         {/* speed streaks in front, only while running */}
         <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[3]" style={{ opacity: streakOpacity }}>
-          <StreakLine world={world} top="calc(80% - 150px)" speed={2.6} className="opacity-50" />
-          <StreakLine world={world} top="calc(80% - 96px)" speed={3.4} />
-          <StreakLine world={world} top="calc(80% - 52px)" speed={4.2} className="opacity-70" />
-          <StreakLine world={world} top="calc(80% + 26px)" speed={5} className="opacity-60" />
+          <StreakLine world={world} gap={gap} top="calc(80% - 150px)" speed={2.6} className="opacity-50" />
+          <StreakLine world={world} gap={gap} top="calc(80% - 96px)" speed={3.4} />
+          <StreakLine world={world} gap={gap} top="calc(80% - 52px)" speed={4.2} className="opacity-70" />
+          <StreakLine world={world} gap={gap} top="calc(80% + 26px)" speed={5} className="opacity-60" />
         </motion.div>
 
         {/* title + route map */}

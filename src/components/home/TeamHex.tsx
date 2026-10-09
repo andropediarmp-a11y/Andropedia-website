@@ -338,30 +338,59 @@ export function TeamHex() {
       <BlurOrb variant="customers" size={613} opacity={0.5} position={{ left: "50%", top: "52%" }} />
       <BlurOrb variant="customers-soft" size={600} opacity={0.3} position={{ left: "50%", top: "52%" }} />
 
-      <div className="relative mx-auto max-w-[900px]">
-        <Reveal className="mx-auto flex max-w-[652px] flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <RevealLines className="text-[36px] font-medium leading-[1.1] tracking-[-2px] sm:max-w-[360px] sm:text-[50px]">
-            <span className="text-fade">Meet the people</span>
-            <span className="text-aurora">behind Andropedia</span>
-          </RevealLines>
-          <div className="flex flex-col sm:items-end">
-            <span className="text-aurora text-[96px] font-medium leading-none tracking-[-5px] sm:text-[140px] sm:tracking-[-5.6px]" aria-label={members ? `${members.length} members` : "Members"}>
-              {members ? <CountUp value={String(members.length)} duration={1.8} /> : "—"}
-            </span>
-            <span className="text-[16px] leading-6 text-white/50">Members across {TEAM_DOMAINS.length} domains</span>
-          </div>
-        </Reveal>
+      <div className="relative mx-auto max-w-[1240px]">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1fr] lg:gap-6">
+          {/* Left: the pitch */}
+          <div className="space-y-5 xl:space-y-6">
+            <Reveal className="space-y-3.5">
+              <p className="chip font-mono !text-[11px] !px-3 !py-1 uppercase tracking-[0.14em]">Our Community</p>
+              <RevealLines className="font-mono text-[30px] font-bold uppercase leading-[1.08] tracking-tight sm:text-[38px] lg:text-[44px] xl:text-[48px]">
+                <span className="text-fade">Meet the people</span>
+                <span className="text-aurora">behind Andropedia</span>
+              </RevealLines>
+              <p className="max-w-[480px] text-[14px] leading-relaxed text-white/75 sm:text-[15px]">
+                A collective of developers, designers, researchers, and creators pushing boundaries across SRMIST and shipping real-world software.
+              </p>
+            </Reveal>
 
-        {/* Honeycomb of domains */}
-        <div className="th-comb relative mx-auto mt-6 w-full max-w-[610px] sm:mt-2" style={{ aspectRatio: `${W} / ${H}` }}>
-          <Hex info={coreInfo} pos={CORE_TILE} delay={0} open={openKey === coreInfo.key} onToggle={setOpenKey} />
-          {domainInfos.map((info, i) => (
-            <Hex key={info.key} info={info} pos={DOMAIN_TILES[i]} delay={0.25 + i * 0.09} open={openKey === info.key} onToggle={setOpenKey} />
-          ))}
+            <Reveal delay={0.1} className="flex items-baseline gap-4">
+              <span className="text-aurora font-mono text-[56px] font-black leading-none tracking-[-3px] sm:text-[68px] lg:text-[76px]" aria-label={members ? `${members.length} active members` : "Active members"}>
+                {members ? <CountUp value={String(members.length)} duration={1.8} /> : "—"}
+              </span>
+              <div className="space-y-0.5">
+                <p className="font-mono text-[15px] font-bold uppercase tracking-wider text-white sm:text-[17px]">Active Members</p>
+                <p className="text-[12px] text-white/50 sm:text-[13px]">Across {TEAM_DOMAINS.length} specialised technical domains</p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.15}>
+              <div className="flex flex-wrap gap-2">
+                {HEX_DOMAINS.map((d) => (
+                  <span key={d.id} className="chip-accent font-mono text-[10px] uppercase tracking-wider px-2.5 py-0.5">
+                    {d.title}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.22}>
+              <Link href="/team" className="btn-glow inline-flex items-center gap-2.5 !px-6 !py-3 font-mono text-[13px] font-bold uppercase tracking-wider" data-cursor-text="Team">
+                Meet the full team <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Reveal>
+          </div>
+
+          {/* Right: honeycomb, nudged to the right. Each hexagon pops out of the centre as it scrolls into view. */}
+          <div className="th-comb relative mx-auto w-full max-w-[520px] lg:ml-auto lg:mr-0 lg:max-w-[560px] lg:translate-x-8 xl:translate-x-14" style={{ aspectRatio: `${W} / ${H}` }}>
+            <Hex info={coreInfo} pos={CORE_TILE} delay={0} open={openKey === coreInfo.key} onToggle={setOpenKey} />
+            {domainInfos.map((info, i) => (
+              <Hex key={info.key} info={info} pos={DOMAIN_TILES[i]} delay={0.25 + i * 0.09} open={openKey === info.key} onToggle={setOpenKey} />
+            ))}
+          </div>
         </div>
 
         {/* Core team */}
-        <Reveal className="mt-14 space-y-6">
+        <Reveal className="mx-auto mt-16 max-w-[900px] space-y-6">
           {groups && core.length > 0 && (
             <div className="th-roster space-y-4">
               {(groups.president.length > 0 || groups.vicePresident.length > 0) && (
