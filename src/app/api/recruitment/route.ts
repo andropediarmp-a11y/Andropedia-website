@@ -1,14 +1,15 @@
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse, after } from "next/server";
 import { allowedEmailDomains } from "@/lib/env";
 import { clientIp, jsonError, readJson } from "@/lib/http";
 import { log } from "@/lib/logger";
 import { getCycleStatus } from "@/lib/recruitment/cycle";
-import { isAllowedDomain } from "@/lib/recruitment/email-key";
+import { emailKey, isAllowedDomain } from "@/lib/recruitment/email-key";
 import { sendConfirmation } from "@/lib/recruitment/email";
-import { markOutboxEmailSent, outboxHasEmail, queueApplication } from "@/lib/recruitment/outbox";
+import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/recruitment/rate-limit";
-import { applicationSchema, type ApplicationInput, type StoredApplication } from "@/lib/recruitment/schema";
-import { appendApplication, emailExists, setEmailStatus, SheetsNotConfiguredError } from "@/lib/recruitment/sheets";
+import { parseApplication, type ApplicationInput, type StoredApplication } from "@/lib/recruitment/schema";
+import { appendApplication, SheetsNotConfiguredError } from "@/lib/recruitment/sheets";
 
 const HOUR = 60 * 60 * 1000;
 const DUPLICATE = "An application with this email has already been submitted. Only one application per email is allowed.";
@@ -28,11 +29,10 @@ export async function POST(request: NextRequest) {
   const cycle = getCycleStatus();
   if (cycle.state !== "open") return jsonError(cycle.message, 403);
 
-  const parsed = applicationSchema.safeParse(body.data);
+  const parsed = parseApplication(body.data);
   if (!parsed.success) {
-    const { fieldErrors } = parsed.error.flatten();
-    const first = Object.values(fieldErrors).flat()[0] ?? "Please check the form and try again.";
-    return jsonError(first, 400, { fieldErrors });
+    const first = Object.values(parsed.fieldErrors).flat()[0] ?? "Please check the form and try again.";
+    return jsonError(first, 400, { fieldErrors: parsed.fieldErrors });
   }
   const input = parsed.data;
 
@@ -69,76 +69,60 @@ async function processApplication(input: ApplicationInput) {
     reference: newReference(),
     submittedAt: new Date().toISOString(),
     name: input.name,
-    email: input.email,
+    registerNo: input.registerNo,
+    department: input.department,
     year: input.year,
+    phone: input.phone,
+    email: input.email,
+    profile: input.profile,
     domain: input.domain,
-    skills: input.skills,
-    motivation: input.motivation,
-    domainAnswer: input.domainAnswer,
-    portfolioUrl: input.portfolioUrl,
+    answers: input.answers,
     consent: true,
   };
 
-  // 1. Duplicate check against the sheet and against applications waiting in the outbox.
-  //    If the sheet can't be reached we carry on and queue; the flush re-checks the sheet.
-  let sheetUsable = true;
+  // 1. The database is the source of truth. The unique emailKey enforces one application per person.
   try {
-    if (await emailExists(input.email)) return jsonError(DUPLICATE, 409);
+    await prisma.application.create({
+      data: {
+        reference: app.reference,
+        emailKey: emailKey(app.email),
+        name: app.name,
+        registerNo: app.registerNo,
+        department: app.department,
+        year: app.year,
+        phone: app.phone,
+        email: app.email,
+        profile: app.profile,
+        domain: app.domain,
+        answers: app.answers,
+        consent: true,
+      },
+    });
   } catch (err) {
-    sheetUsable = false;
-    if (err instanceof SheetsNotConfiguredError) log.warn("Google Sheets is not configured; queueing applications");
-    else log.error("Sheet duplicate check failed; queueing application", err, { reference: app.reference });
-  }
-  try {
-    if (await outboxHasEmail(input.email)) return jsonError(DUPLICATE, 409);
-  } catch (err) {
-    log.error("Outbox duplicate check failed", err, { reference: app.reference });
-  }
-
-  // 2. Save to the sheet (retried inside appendApplication).
-  if (sheetUsable) {
-    try {
-      const row = await appendApplication(app, "pending");
-      after(() => confirmSheetRow(app, row));
-      return NextResponse.json({ success: true, reference: app.reference }, { status: 201 });
-    } catch (err) {
-      log.error("Sheet write failed after retries; queueing application", err, { reference: app.reference });
-    }
-  }
-
-  // 3. Fallback: keep the application in the database so it is never lost.
-  try {
-    if ((await queueApplication(app)) === "duplicate") return jsonError(DUPLICATE, 409);
-    after(() => confirmQueued(app));
-    log.info("Application queued in outbox", { reference: app.reference });
-    return NextResponse.json({ success: true, reference: app.reference, queued: true }, { status: 202 });
-  } catch (err) {
-    log.error("Could not save application anywhere", err, { reference: app.reference });
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return jsonError(DUPLICATE, 409);
+    log.error("Could not save application", err, { reference: app.reference });
     return jsonError(TRY_LATER, 503);
   }
+
+  // 2. After the response: mirror to the Google Sheet (if configured) and email the applicant.
+  after(() => finishApplication(app));
+  return NextResponse.json({ success: true, reference: app.reference }, { status: 201 });
 }
 
-/** Runs after the response: emails the applicant and records the result in the sheet. */
-async function confirmSheetRow(app: StoredApplication, row: number) {
-  let status: "sent" | "failed" = "sent";
+async function finishApplication(app: StoredApplication) {
+  let emailStatus: "sent" | "failed" = "sent";
   try {
     await sendConfirmation(app);
+    await prisma.application.update({ where: { reference: app.reference }, data: { emailSentAt: new Date() } });
   } catch (err) {
-    status = "failed";
+    emailStatus = "failed";
     log.warn("Confirmation email failed", { reference: app.reference }, err);
   }
   try {
-    await setEmailStatus(row, status);
+    await appendApplication(app, emailStatus === "sent" ? "sent" : "failed");
+      await prisma.application.update({ where: { reference: app.reference }, data: { sheetSyncedAt: new Date() } });
   } catch (err) {
-    log.warn("Could not update email_status", { reference: app.reference }, err);
-  }
-}
-
-async function confirmQueued(app: StoredApplication) {
-  try {
-    await sendConfirmation(app);
-    await markOutboxEmailSent(app.reference);
-  } catch (err) {
-    log.warn("Confirmation email failed for queued application", { reference: app.reference }, err);
+    if (err instanceof SheetsNotConfiguredError) return; // the sheet is optional
+    log.warn("Sheet mirror failed; the application is safe in the database", { reference: app.reference }, err);
   }
 }

@@ -161,6 +161,32 @@ model RecruitmentOutbox {
   @@index([sentAt])
 }
 
+// Permanent record of every recruitment application. The database is the source of truth; the
+// Google Sheet (if configured) is a convenience mirror. Holds personal data: super admins only.
+model Application {
+  id            String    @id @default(cuid())
+  reference     String    @unique
+  emailKey      String    @unique // canonical email (Gmail dots/+tags removed): one application per person
+  name          String
+  registerNo    String
+  department    String
+  year          String
+  phone         String
+  email         String
+  profile       String    // LinkedIn / GitHub / Instagram link or handle
+  domain        String    // exactly one of: technical | web | design | media | pr
+  answers       Json      // question id -> answer, for the universal questions and the chosen domain (see lib/recruitment/questions.ts)
+  consent       Boolean   @default(true)
+  status        String    @default("new") // new | shortlisted | accepted | rejected
+  emailSentAt   DateTime?
+  sheetSyncedAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([domain])
+}
+
 // Who changed what: grading, week changes, role and account changes. No foreign key on purpose,
 // so entries survive if an account is later removed.
 model AuditLog {

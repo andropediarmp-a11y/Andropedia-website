@@ -1,7 +1,9 @@
 import { DomainType, User } from "./types";
 
-const SHEET_ID = "1BXNFLQLYXTD4syZQHWp5WtcBIxdPkzjPOKTkBVtg640";
-const PROFILE_SHEET_GID = "160539106";
+// New-member Google Form responses. Only name, email, domain, LinkedIn, photo and bio are read:
+// the sheet also holds phone numbers, dates of birth and register numbers, which stay out of the app.
+const SHEET_ID = "10IU7_iEkeEuSEwa4iVe5la5VnYfdFZBkev3pCX0tVXM";
+const PROFILE_SHEET_GID = "1957261300";
 
 type GvizCell = { v?: string | number | null };
 type GvizResponse = {
@@ -25,8 +27,9 @@ function cellValue(cell: GvizCell | null | undefined): string {
   return String(cell?.v ?? "").trim();
 }
 
-function normalizeDomain(value: string): DomainType {
-  return domainMap[value.toLowerCase()] || "Technical";
+/** Null for anything that is not a real domain (e.g. a stray "core" entry), so that row is skipped. */
+function normalizeDomain(value: string): DomainType | null {
+  return domainMap[value.toLowerCase()] ?? null;
 }
 
 function normalizePhotoUrl(value: string): string {
@@ -46,27 +49,28 @@ export async function getLiveMembers(): Promise<User[]> {
   const body = await response.text();
   const jsonText = body.replace(/^[\s\S]*?setResponse\(/, "").replace(/\);?\s*$/, "");
   const json = JSON.parse(jsonText) as GvizResponse;
-  const seenEmails = new Set<string>();
-
-  return (json.table?.rows || []).flatMap((row): User[] => {
+  // Rows are in submission order. People who filled the form twice keep their latest answers.
+  const byEmail = new Map<string, User>();
+  for (const row of json.table?.rows || []) {
     const cells = row.c || [];
     const email = cellValue(cells[0]).toLowerCase();
-    const name = cellValue(cells[1]);
-    if (!email || !name || seenEmails.has(email)) return [];
-    seenEmails.add(email);
+    const name = cellValue(cells[1]).replace(/\s+/g, " ");
+    const domain = normalizeDomain(cellValue(cells[3]));
+    if (!email || !name || !domain) continue;
 
-    return [{
+    byEmail.set(email, {
       id: `sheet_${email.replace(/[^a-z0-9]+/g, "_")}`,
       name,
       email,
       role: "member",
-      domain: normalizeDomain(cellValue(cells[3])),
+      domain,
       avatar: normalizePhotoUrl(cellValue(cells[4])),
       bio: cellValue(cells[5]),
       linkedin: cellValue(cells[2]),
       points: 0,
       tasksCompleted: 0,
       streakWeeks: 0,
-    }];
-  });
+    });
+  }
+  return [...byEmail.values()];
 }

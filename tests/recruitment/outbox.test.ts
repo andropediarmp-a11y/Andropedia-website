@@ -24,9 +24,10 @@ import { appendApplication, emailExists, findRowByReference, setEmailStatus } fr
 import type { StoredApplication } from "@/lib/recruitment/schema";
 
 const app: StoredApplication = {
-  reference: "REC-AAAA1111", submittedAt: "2026-10-06T10:00:00.000Z", name: "Priya", email: "priya@college.edu",
-  year: "second", domain: "web", skills: "skills text here", motivation: "motivation", domainAnswer: "answer",
-  portfolioUrl: "", consent: true,
+  reference: "REC-AAAA1111", submittedAt: "2026-10-06T10:00:00.000Z", name: "Priya", registerNo: "RA2511026020025",
+  department: "CSE AIML A", year: "second", phone: "9876543210", email: "priya@college.edu",
+  profile: "https://github.com/priya", domain: "web",
+  answers: { why_join: "Genuine passion for the craft", web_faction: "Full-Stack" }, consent: true,
 };
 const queued = (over = {}) => ({ id: "o1", reference: app.reference, payload: app, emailSentAt: null, ...over });
 
