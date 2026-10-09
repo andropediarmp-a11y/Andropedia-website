@@ -17,7 +17,7 @@ const figtree = Figtree({
   display: "swap",
 });
 
-// Heavy condensed display face for the oversized headlines on /about.
+// Heavy condensed display face for the oversized headlines (the domain ribbon on the home page).
 const anton = Anton({
   variable: "--font-display",
   subsets: ["latin"],
@@ -28,15 +28,13 @@ const anton = Anton({
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
   title: { default: "Andropedia | Official Student Technology Club", template: "%s | Andropedia" },
-  description: "Official platform of Andropedia: student technology club driving innovation in Web, Technical, R&D, Design, Media, and PR. Explore our domains, member evaluations, and live leaderboards.",
+  description: "Official platform of Andropedia: student technology club driving innovation in Technical, Web, Design, Media, and PR. Explore our domains, member evaluations, and live leaderboards.",
   keywords: [
     "Andropedia",
     "Student Tech Club",
     "Technology Club",
     "Web Development",
     "Competitive Programming",
-    "R&D",
-    "AI/ML",
     "UI/UX Design",
     "Leaderboard",
     "Weekly Task Evaluation"

@@ -1,6 +1,7 @@
 import { BlurOrb } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { ScoreRing } from "@/components/design/ScoreRing";
+import { CountUp, Stagger, StaggerItem } from "@/components/design/scroll";
 import { HOME_METRICS } from "@/content/home";
 import { ACCENTS, DOMAIN_ACCENT, MEDAL, accentVars } from "@/content/accents";
 import { getLeaderboard, getWeeks } from "@/lib/data-store";
@@ -17,7 +18,7 @@ export async function SprintSnapshot() {
   let sprint: number | null = null;
   try {
     const [board, weeks] = await Promise.all([getLeaderboard("All", "all-time"), getWeeks()]);
-    rows = board.slice(0, 4);
+    rows = board.filter((r) => r.totalScore > 0).slice(0, 4); // nobody graded yet means the empty state, not a list of zeros
     sprint = weeks.find((w) => w.isActive)?.weekNumber ?? null;
   } catch (err) {
     log.error("Home leaderboard unavailable", err);
@@ -48,31 +49,31 @@ export async function SprintSnapshot() {
                   Rankings appear after the first graded sprint.
                 </p>
               ) : (
-                <ol className="mt-3 space-y-2">
+                <Stagger as="ol" className="mt-3 space-y-2" stagger={0.12} delay={0.15}>
                   {rows.map((row) => (
-                    <li key={row.userId} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                    <StaggerItem as="li" key={row.userId} from="left" className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
                       <span className="w-5 text-[14px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "rgba(255,255,255,0.5)" }}>{row.rank}</span>
                       <span className="flex-1 text-[14px] font-medium leading-5 text-white">{row.name}</span>
                       <span className="chip-accent hidden sm:inline-flex" style={accentVars(DOMAIN_ACCENT[row.domain as DomainType])}>{row.domain}</span>
-                      <span className="w-12 text-right text-[15px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "#ffffff" }}>{row.totalScore}</span>
-                    </li>
+                      <span className="w-12 text-right text-[15px] font-semibold" style={{ color: MEDAL[row.rank - 1] ?? "#ffffff" }}><CountUp value={String(row.totalScore)} /></span>
+                    </StaggerItem>
                   ))}
-                </ol>
+                </Stagger>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <Stagger className="grid grid-cols-2 gap-3" stagger={0.1} delay={0.1}>
               {HOME_METRICS.map(({ label, value, icon: Icon, sub }, i) => (
-                <div key={label} className="glass-inner flex flex-col justify-between gap-3 p-4" style={accentVars(METRIC_ACCENTS[i % 4])}>
+                <StaggerItem key={label} className="glass-inner flex flex-col justify-between gap-3 p-4" style={accentVars(METRIC_ACCENTS[i % 4])}>
                   <Icon className="text-a1 h-5 w-5" aria-hidden="true" />
                   <div>
-                    <div className="text-accent text-[30px] font-semibold leading-none tracking-[-1px]">{value}</div>
+                    <div className="text-accent text-[30px] font-semibold leading-none tracking-[-1px]"><CountUp value={value} /></div>
                     <div className="mt-1.5 text-[13px] leading-5 text-white/80">{label}</div>
                     <div className="text-[11px] leading-4 text-white/50">{sub}</div>
                   </div>
-                </div>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           </div>
         </div>
 

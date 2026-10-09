@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { ArrowRight, Check, ChevronDown, MessageSquareText, Rocket, Sparkles, Users } from "lucide-react";
+import { ArrowRight, ChevronDown, MessageSquareText, Rocket, Sparkles, Users } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { ACCENTS, accentVars } from "@/content/accents";
 
 const WHY_ACCENTS = [ACCENTS.blue, ACCENTS.pink, ACCENTS.teal];
-const STEP_ACCENTS = [ACCENTS.blue, ACCENTS.teal, ACCENTS.purple, ACCENTS.pink, ACCENTS.amber];
 import { JoinForm } from "@/components/recruitment/JoinForm";
+import { SelectionStage } from "@/components/recruitment/SelectionStage";
 import { StatusLookup } from "@/components/recruitment/StatusLookup";
-import { ELIGIBILITY, FAQS, PROCESS_STEPS, RECRUITMENT_CYCLE, WHY_JOIN } from "@/content/recruitment";
+import { FAQS, RECRUITMENT_CYCLE, WHY_JOIN } from "@/content/recruitment";
 
 const description =
   "Apply to join Andropedia, the student technology club. See who can apply, how selection works, and submit your application.";
@@ -36,7 +36,7 @@ const WHY_ICONS = [Rocket, MessageSquareText, Users];
 // Static overview rendered on the server; only the application form is a client component.
 export default function JoinPage() {
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-black py-10 sm:py-14 px-4 sm:px-6 lg:px-8 text-white">
+    <div className="relative isolate min-h-screen overflow-x-clip bg-black py-10 sm:py-14 px-4 sm:px-6 lg:px-8 text-white">
       <GridLines variant="hero" />
       <BlurOrb variant="features" size={800} opacity={0.45} position={{ left: "50%", top: "420px" }} />
       <div className="relative max-w-5xl mx-auto space-y-14 sm:space-y-16">
@@ -76,36 +76,7 @@ export default function JoinPage() {
           })}
         </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-6 sm:gap-8" aria-label="Eligibility and selection process">
-          <div className="glass-card p-6 sm:p-8 space-y-4">
-            <h2 className="text-fade-strong text-xl font-semibold">Who can apply</h2>
-            <ul className="space-y-3">
-              {ELIGIBILITY.map((line) => (
-                <li key={line} className="flex gap-3 text-sm text-slate-300 leading-relaxed">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-300" aria-hidden="true" />
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="glass-card p-6 sm:p-8 space-y-5">
-            <h2 className="text-fade-strong text-xl font-semibold">How selection works</h2>
-            <ol className="space-y-5">
-              {PROCESS_STEPS.map((s, i) => (
-                <li key={s.title} className="flex gap-4" style={accentVars(STEP_ACCENTS[i % 5])}>
-                  <span aria-hidden="true" className="chip-accent !h-8 !w-8 shrink-0 justify-center !px-0 text-sm font-bold" style={{ boxShadow: "0 0 18px var(--a1-soft)" }}>
-                    {i + 1}
-                  </span>
-                  <div>
-                    <h3 className="text-accent text-sm font-semibold">{s.title}</h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">{s.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
+        <SelectionStage />
 
         <section id="apply" className="scroll-mt-24" aria-label="Application">
           <JoinForm />

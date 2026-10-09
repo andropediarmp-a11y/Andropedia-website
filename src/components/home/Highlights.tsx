@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BlurOrb } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
+import { Stagger, StaggerItem } from "@/components/design/scroll";
 import { HOME_HIGHLIGHTS } from "@/content/home";
 import { ACCENTS, accentVars } from "@/content/accents";
 
@@ -10,7 +11,7 @@ const CARD_ACCENTS = [ACCENTS.blue, ACCENTS.purple, ACCENTS.teal];
 // "Changelog" frame from the design: a two-tone statement, then flat dark cards.
 export function Highlights() {
   return (
-    <section id="highlights" className="relative isolate overflow-hidden bg-black px-5 py-24 sm:px-10 lg:px-[90px]">
+    <section id="highlights" className="relative isolate overflow-x-clip bg-black px-5 py-24 sm:px-10 lg:px-[90px]">
       <BlurOrb variant="log" size={800} opacity={0.4} position={{ left: "50%", top: "60%" }} />
 
       <div className="relative mx-auto max-w-[1260px] space-y-14">
@@ -33,9 +34,9 @@ export function Highlights() {
           </div>
         </Reveal>
 
-        <ul className="grid gap-5 md:grid-cols-3">
+        <Stagger as="ul" className="grid gap-5 md:grid-cols-3" stagger={0.16}>
           {HOME_HIGHLIGHTS.map((h, i) => (
-            <Reveal as="li" key={h.title} delay={i * 0.08} className="h-full">
+            <StaggerItem as="li" key={h.title} from={i === 0 ? "left" : i === 2 ? "right" : "up"} tilt={3} className="h-full">
               <article className="dark-card flex h-full flex-col justify-between gap-8 p-6 sm:p-[30px]" style={accentVars(CARD_ACCENTS[i % 3])}>
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 30% at 50% 0%, var(--a1-soft), transparent 75%)" }} />
                 <div className="relative space-y-4">
@@ -51,9 +52,9 @@ export function Highlights() {
                   {h.cta} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </article>
-            </Reveal>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       </div>
     </section>
   );

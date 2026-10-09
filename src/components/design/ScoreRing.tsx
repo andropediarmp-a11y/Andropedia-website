@@ -1,4 +1,7 @@
+"use client";
+
 import { useId } from "react";
+import { motion } from "framer-motion";
 
 /** Glass circle with a progress arc and a big number (the "98" score badge from the design). */
 export function ScoreRing({ value, max = 100, label, size = 142, className = "" }: { value: number; max?: number; label?: string; size?: number; className?: string }) {
@@ -22,7 +25,19 @@ export function ScoreRing({ value, max = 100, label, size = 142, className = "" 
           </linearGradient>
         </defs>
         <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
-        <circle cx="50" cy="50" r={r} fill="none" stroke={`url(#${id})`} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${c * pct} ${c}`} />
+        <motion.circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke={`url(#${id})`}
+          strokeWidth="3"
+          strokeLinecap="round"
+          initial={{ strokeDasharray: `0 ${c}` }}
+          whileInView={{ strokeDasharray: `${c * pct} ${c}` }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        />
       </svg>
       <div className="relative text-center">
         <div className="text-aurora text-[44px] font-semibold leading-none tracking-[-2px]">{value}</div>
