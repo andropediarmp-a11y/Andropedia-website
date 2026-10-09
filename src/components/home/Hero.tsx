@@ -1,43 +1,44 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
-import { Marquee } from "@/components/design/Marquee";
+import { AndropediaMark } from "@/components/design/AndropediaMark";
 
-// Hero from the Figma "Framer Course" frame: grid lines + glowing orb, pill badge, big gradient
-// headline, blue glow button, then a glass dashboard card with floating score rings.
+// Hero: Pure black & deep electric blue theme
 export function Hero() {
   return (
     <section className="relative isolate overflow-hidden bg-black pb-16 pt-[80px] sm:pt-[110px]">
       <GridLines variant="hero" />
-      <BlurOrb variant="hero" size={1054} opacity={0.4} position={{ left: "50%", top: "62%" }} />
+      <BlurOrb variant="hero" size={1054} opacity={0.3} position={{ left: "50%", top: "62%" }} />
 
-      <div className="relative mx-auto flex max-w-[700px] flex-col items-center gap-5 px-5 text-center">
+      <div className="relative z-10 mx-auto flex max-w-[850px] flex-col items-center gap-5 px-5 text-center">
         <Link href="/join#how-selection-works" className="btn-glass" data-cursor-text="Join">
           Recruitment 2026 is open
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
 
-        <h1 className="text-[40px] font-medium leading-[1.05] tracking-[-2px] sm:text-[60px] sm:tracking-[-3px]">
-          <span className="text-fade">Pioneering Technology.</span>{" "}
-          <span className="text-aurora">Building Creators.</span>
+        {/* Logo above the word ANDROPEDIA */}
+        <div className="relative flex items-center justify-center">
+          <AndropediaMark
+            className="h-16 w-16 sm:h-20 sm:w-20 text-[#0066ff] drop-shadow-[0_0_25px_rgba(0,102,255,0.85)] transition-transform duration-300 hover:scale-105"
+            glow
+          />
+        </div>
+
+        {/* Main "ANDROPEDIA" hero title */}
+        <h1 className="font-mono font-bold uppercase tracking-[0.08em] text-[clamp(42px,9vw,110px)] leading-[0.9] bg-gradient-to-b from-white via-white/95 to-[#0066ff] bg-clip-text text-transparent filter drop-shadow-[0_0_35px_rgba(0,102,255,0.45)]">
+          ANDROPEDIA
         </h1>
 
-        <p className="max-w-[510px] text-[16px] leading-6 text-white/70">
-          Andropedia is the student technology society where high-velocity engineering, algorithmic mastery and radical
-          creativity converge through weekly sprints and live member evaluations.
+        <p className="font-mono text-[clamp(14px,2vw,24px)] font-bold uppercase tracking-[0.14em] drop-shadow-[0_0_15px_rgba(0,102,255,0.4)] sm:tracking-[0.18em]">
+          <span className="text-white">CREATE !</span>{" "}
+          <span className="text-[#38bdf8]">COLLABORATE !</span>{" "}
+          <span className="text-[#0066ff]">CONQUER !</span>
         </p>
 
-        <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:gap-4">
-          <Link href="/join#how-selection-works" className="btn-glow" data-cursor-text="Join">
-            Join now <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-          <a href="#domains" className="btn-glass !py-[10px]">
-            Explore domains <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </a>
-        </div>
+        <p className="max-w-[620px] font-sans text-[15px] leading-relaxed text-white/85 sm:text-[16px]">
+          Andropedia is more than just a technical club at SRMIST. It&apos;s a space where ideas meet people who are willing to bring them to life.
+        </p>
       </div>
-
-      <Marquee className="relative mt-16" />
     </section>
   );
 }

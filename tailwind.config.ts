@@ -11,38 +11,46 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-figtree)", "Figtree", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
-        // The Figma design has no monospace face; small caps labels use Figtree.
-        mono: ["var(--font-figtree)", "Figtree", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        sans: ["var(--font-inter)", "-apple-system", "BlinkMacSystemFont", "SF Pro", "Inter", "sans-serif"],
+        mono: ["var(--font-space-mono)", "Space Mono", "monospace"],
+        tech: ["var(--font-space-mono)", "Space Mono", "monospace"],
+        display: ["var(--font-space-mono)", "Space Mono", "monospace"],
       },
       colors: {
-        // The previous green accent now maps onto the Figma blue (Foundation/Blue #3395FF) so every
-        // existing `emerald-*` class picks up the new palette.
+        electric: {
+          400: "#3388ff",
+          500: "#0066ff",
+          600: "#0052cc",
+          700: "#003d99",
+          800: "#002966",
+          900: "#001a66",
+          950: "#000d33",
+        },
+        // Mapped to electric blue theme (#0066ff)
         emerald: {
           50: "#eef6ff",
           100: "#d9eaff",
           200: "#b9d8ff",
           300: "#8cbfff",
-          400: "#3395ff",
-          500: "#1f7fe8",
-          600: "#1a66c0",
-          700: "#174f94",
-          800: "#143a6b",
-          900: "#0f2a4d",
-          950: "#0a1a30",
+          400: "#3388ff",
+          500: "#0066ff",
+          600: "#0052cc",
+          700: "#003d99",
+          800: "#002966",
+          900: "#001a66",
+          950: "#000d33",
         },
-        // Teal/cyan -> Figma Foundation/Teal and Indigo
         cyan: {
           300: "#9adbe7",
-          400: "#59c0d2",
-          500: "#3aa6ba",
-          600: "#2d8798",
+          400: "#38bdf8",
+          500: "#0284c7",
+          600: "#0369a1",
         },
         violet: {
-          300: "#a6a5ec",
-          400: "#7978de",
-          500: "#6362c8",
-          600: "#5150a8",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#1d4ed8",
         },
         ink: "#000000",
       },

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { BlurOrb, GridLines } from "@/components/design/Backdrop";
-import { DISPLAY_TYPE, Marquee } from "@/components/design/Marquee";
+import { GlobeBackground } from "@/components/design/GlobeBackground";
+import { AndropediaMark } from "@/components/design/AndropediaMark";
 
 // Landing hero. A photographic human hand (left) and robotic arm (right) reach toward each other and
 // touch at the fingertips in front of a glowing gradient ring. The hands are the focus; a small ANDROPEDIA
@@ -59,8 +59,8 @@ export function HandRobotHero() {
   const robotScale = useTransform(p, [0, 0.6], [1, 1.06]);
   const partOpacity = useTransform(p, [0.3, 0.6], [1, 0.75]);
 
-  // Gradient ring behind the touch point: swells and dims as they part.
-  const ringScale = useTransform(p, [0, 0.6], [1, 1.5]);
+  // Gradient ring behind the touch point: swells and dims as they part (fits outside globe like main branch)
+  const ringScale = useTransform(p, [0, 0.6], [1, 1.35]);
   const ringOpacity = useTransform(p, [0, 0.6], [0.85, 0.3]);
   // Spark exactly at the contact point.
   const sparkScale = useTransform(p, [0, 0.2], [1, 2.4]);
@@ -78,19 +78,17 @@ export function HandRobotHero() {
   const cueOpacity = useTransform(p, [0, 0.12], [1, 0]);
 
   return (
-    <>
-      <section ref={sectionRef} aria-label="Andropedia introduction" className={`relative bg-black ${reduce ? "" : "h-[260svh]"}`}>
-        <div className={`relative isolate h-svh min-h-[640px] overflow-hidden [--hr-w:150vw] sm:[--hr-w:84vw] [--hr-h:calc(var(--hr-w)*0.558)] ${reduce ? "" : "sticky top-0"}`}>
-          <GridLines variant="hero" />
-          <BlurOrb variant="hero" size={1054} opacity={0.4} position={{ left: "50%", top: "50%" }} />
+    <section ref={sectionRef} aria-label="Andropedia introduction" className={`relative bg-black ${reduce ? "" : "h-[260svh]"}`}>
+        <div className={`relative isolate h-svh min-h-[640px] overflow-hidden bg-black [--hr-w:150vw] sm:[--hr-w:84vw] [--hr-h:calc(var(--hr-w)*0.558)] ${reduce ? "" : "sticky top-0"}`}>
+          <GlobeBackground />
 
-          {/* Gradient ring behind the contact point (Andropedia teal -> blue -> purple -> pink). */}
+          {/* Gradient ring outside the globe (fits like in main branch) */}
           <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
             <motion.div style={{ scale: ringScale, opacity: ringOpacity }}>
               <div
                 className="h-[min(78vw,560px)] w-[min(78vw,560px)] rounded-full"
                 style={{
-                  background: "conic-gradient(from 210deg, #5eead4, #3395ff, #af52de, #ff6fb1, #5eead4)",
+                  background: "conic-gradient(from 210deg, #00d4ff, #0066ff, #001a66, #0044cc, #00d4ff)",
                   WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 22px), #000 calc(100% - 21px))",
                   mask: "radial-gradient(farthest-side, transparent calc(100% - 22px), #000 calc(100% - 21px))",
                   filter: "blur(9px)",
@@ -99,20 +97,29 @@ export function HandRobotHero() {
             </motion.div>
           </div>
 
-          {/* Headline: behind the hands. */}
-          {/* (Outer div centres it; the inner motion.div owns the transform so the two never fight.) */}
+          {/* Headline: behind the hands in technical Space Mono font with stark white to electric blue gradient */}
           <div className="absolute inset-x-0 top-1/2 z-0 -translate-y-1/2 px-5">
-            <motion.div style={{ scale: headScale, filter: headBlur, opacity: headDim }} className="flex flex-col items-center gap-3 text-center sm:gap-4">
-              <h1 className={`${DISPLAY_TYPE} text-fade text-[clamp(34px,7.5vw,104px)] tracking-[0.04em]`}>Andropedia</h1>
-              <p className="text-[clamp(13px,1.8vw,22px)] font-medium leading-tight tracking-[-0.5px] sm:tracking-[-1px]">
-                <span className="text-fade">Pioneering Technology.</span> <span className="text-aurora">Building Creators.</span>
+            <motion.div style={{ scale: headScale, filter: headBlur, opacity: headDim }} className="flex flex-col items-center gap-2 text-center sm:gap-3">
+              {/* Logo above the word ANDROPEDIA */}
+              <div className="relative flex items-center justify-center">
+                <AndropediaMark
+                  className="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 text-[#0066ff] drop-shadow-[0_0_25px_rgba(0,102,255,0.85)] transition-transform duration-300 hover:scale-105"
+                  glow
+                />
+              </div>
+
+              <h1 className="font-mono font-bold uppercase tracking-[0.08em] text-[clamp(36px,8vw,110px)] leading-[0.9] bg-gradient-to-b from-white via-white/95 to-[#0066ff] bg-clip-text text-transparent filter drop-shadow-[0_0_35px_rgba(0,102,255,0.45)] select-none">
+                ANDROPEDIA
+              </h1>
+              <p className="font-mono text-[clamp(12px,1.6vw,20px)] font-bold uppercase tracking-[0.14em] drop-shadow-[0_0_15px_rgba(0,102,255,0.4)] sm:tracking-[0.18em]">
+                <span className="text-white">CREATE !</span>{" "}
+                <span className="text-[#38bdf8]">COLLABORATE !</span>{" "}
+                <span className="text-[#0066ff]">CONQUER !</span>
               </p>
             </motion.div>
           </div>
 
-          {/* The hands. Each image is positioned so its index fingertip lands on the stage centre.
-              No z-index or transform on these wrappers on purpose: either would create a stacking context
-              and stop the `screen` blend from reaching the headline and glow behind the images. */}
+          {/* The hands. Each image is positioned so its index fingertip lands on the stage centre. */}
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div className="absolute" style={{ left: `calc(50% - ${HAND_TIP.x} * var(--hr-w))`, top: `calc(50% - ${HAND_TIP.y} * var(--hr-h))`, width: "var(--hr-w)" }}>
               <motion.div className="mix-blend-screen will-change-transform" style={{ x: handX, y: handY, scale: handScale, opacity: partOpacity, transformOrigin: `${HAND_TIP.x * 100}% ${HAND_TIP.y * 100}%` }}>
@@ -135,25 +142,19 @@ export function HandRobotHero() {
             <motion.div style={{ scale: sparkScale, opacity: sparkOpacity }}>
               <div
                 className="animate-pulse-glow h-[110px] w-[110px] rounded-full mix-blend-screen"
-                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(94,234,212,0.7) 22%, rgba(51,149,255,0.4) 45%, transparent 70%)" }}
+                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(0,212,255,0.7) 22%, rgba(0,102,255,0.4) 45%, transparent 70%)" }}
               />
             </motion.div>
           </div>
 
-          {/* Intro copy + buttons, revealed in front once the hands have parted. */}
+          {/* Intro copy, revealed in front once the hands have parted. */}
           <motion.div
             style={{ opacity: subOpacity, y: subY, pointerEvents: subPointer }}
-            className="absolute inset-x-0 top-[calc(50%+96px)] z-10 flex flex-col items-center gap-5 px-5 text-center sm:top-[calc(50%+120px)] lg:top-[calc(50%+150px)]"
+            className="absolute inset-x-0 top-[calc(50%+100px)] z-10 flex flex-col items-center gap-4 px-5 text-center sm:top-[calc(50%+125px)] lg:top-[calc(50%+150px)]"
           >
-            <p className="max-w-[510px] text-[15px] leading-6 text-white/70 sm:text-[16px]">
-              Andropedia is the student technology society where high-velocity engineering, algorithmic mastery and radical
-              creativity converge through weekly sprints and live member evaluations.
+            <p className="max-w-[620px] font-sans text-[14px] leading-relaxed text-white/85 sm:text-[15px] lg:text-[16px]">
+              Andropedia is more than just a technical club at SRMIST. It&apos;s a space where ideas meet people who are willing to bring them to life.
             </p>
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
-              <Link href="/join#how-selection-works" className="btn-glow" data-cursor-text="Join">
-                Join now <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
           </motion.div>
 
           {/* Scroll cue. */}
@@ -164,19 +165,8 @@ export function HandRobotHero() {
             </span>
           </motion.div>
 
-          {/* Bottom row: tagline. */}
-          <div className="absolute inset-x-0 bottom-0 z-10 mx-auto flex max-w-[1180px] flex-col items-center gap-4 px-5 pb-6 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pb-9">
-            <div className="hidden max-w-[300px] sm:block">
-              <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/50">Andropedia</p>
-              <p className="pt-1.5 text-[15px] leading-[22px] text-white/80">Where human creativity meets machine intelligence, one weekly sprint at a time.</p>
-            </div>
-          </div>
+
         </div>
       </section>
-
-      <div className="bg-black pb-16">
-        <Marquee className="relative" />
-      </div>
-    </>
-  );
-}
+    );
+  }

@@ -11,13 +11,13 @@ export interface Accent {
 }
 
 export const ACCENTS = {
-  blue: { name: "blue", a1: "#3395ff", a2: "#8cbfff" },
-  teal: { name: "teal", a1: "#2dd4bf", a2: "#8ff0e1" },
-  purple: { name: "purple", a1: "#af52de", a2: "#d9a5f5" },
-  pink: { name: "pink", a1: "#ff5fa2", a2: "#ffa6cd" },
-  amber: { name: "amber", a1: "#ffb020", a2: "#ffd98a" },
-  coral: { name: "coral", a1: "#ff6b57", a2: "#ffb0a4" },
-  indigo: { name: "indigo", a1: "#7978de", a2: "#b3b2f2" },
+  blue: { name: "blue", a1: "#0066ff", a2: "#8cbfff" },
+  teal: { name: "teal", a1: "#38bdf8", a2: "#bae6fd" },
+  purple: { name: "purple", a1: "#3b82f6", a2: "#93c5fd" },
+  pink: { name: "pink", a1: "#0284c7", a2: "#7dd3fc" },
+  amber: { name: "amber", a1: "#0052cc", a2: "#8cbfff" },
+  coral: { name: "coral", a1: "#0284c7", a2: "#60a5fa" },
+  indigo: { name: "indigo", a1: "#1d4ed8", a2: "#93c5fd" },
 } satisfies Record<string, Accent>;
 
 export const DOMAIN_ACCENT: Record<DomainType, Accent> = {

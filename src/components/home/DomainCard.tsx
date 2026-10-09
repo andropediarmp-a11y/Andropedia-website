@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { DOMAIN_ACCENT, accentVars } from "@/content/accents";
 import type { HomeDomain } from "@/content/home";
 
@@ -39,12 +37,6 @@ export function DomainCard({ d, featured = false }: { d: HomeDomain; featured?: 
           </li>
         ))}
       </ul>
-
-      <div className="relative mt-auto pt-2">
-        <Link href={`/domains?tab=${encodeURIComponent(d.id === "RD" ? "R&D" : d.id)}`} className="btn-ghost accent" aria-label={`Explore the ${d.title} track`}>
-          Explore track <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
     </article>
   );
 }

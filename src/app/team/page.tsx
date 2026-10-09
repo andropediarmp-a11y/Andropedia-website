@@ -116,29 +116,28 @@ export default function TeamPage() {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-black text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
-      <GridLines variant="hero" />
-      <BlurOrb variant="features" size={800} opacity={0.4} position={{ left: "50%", top: "380px" }} />
       <div className="relative max-w-6xl mx-auto space-y-14">
         {/* Header */}
-        <header className="text-center max-w-3xl mx-auto space-y-3">
+        <header className="text-center max-w-3xl mx-auto space-y-4">
           <div className="chip">
             <Users className="w-3.5 h-3.5" />
             OUR TEAM
           </div>
-          <h1 className="text-fade text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
-            Meet the people of Andropedia
+          <h1 className="font-mono text-[36px] sm:text-[54px] lg:text-[62px] font-bold uppercase leading-[1.08] tracking-tight">
+            <span className="text-fade">Meet the people of </span>
+            <span className="text-aurora">Andropedia</span>
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <p className="text-white/70 text-sm sm:text-base font-sans max-w-2xl mx-auto">
             The core team that runs the club, and the leads, co-leads and members of every domain.
           </p>
         </header>
 
         {/* Jump links */}
-        <nav aria-label="Team sections" className="sticky top-[60px] z-30 -mx-4 px-4 py-2 bg-black/60 backdrop-blur-xl border-y border-white/10">
+        <nav aria-label="Team sections" className="sticky top-[60px] z-30 -mx-4 px-4 py-2.5 bg-black/80 backdrop-blur-xl border-y border-white/10">
           <ul className="flex flex-wrap items-center justify-center gap-2">
             {[{ href: "#core", label: "Core" }, ...TEAM_DOMAINS.map((d) => ({ href: `#${d.slug}`, label: d.label }))].map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="pill-link !px-3 !py-1 !text-[13px] border border-white/10">
+                <a href={l.href} className="pill-link font-mono uppercase tracking-wider !px-3.5 !py-1.5 !text-[12px] border border-white/10 hover:border-sky-400/50 hover:text-sky-300">
                   {l.label}
                 </a>
               </li>
@@ -160,8 +159,8 @@ export default function TeamPage() {
             {/* ---------- Core ---------- */}
             <section id="core" className="scroll-mt-32 space-y-8" aria-label="Core team">
               <div className="text-center space-y-1">
-                <h2 className="text-aurora text-[36px] sm:text-[50px] font-medium leading-[1.1] tracking-[-2px]">Core team</h2>
-                <p className="text-sm text-slate-400">President, Vice President and the Chief of every domain.</p>
+                <h2 className="text-aurora font-mono text-[30px] sm:text-[42px] font-bold uppercase leading-tight tracking-tight">Core team</h2>
+                <p className="text-sm text-white/60">President, Vice President and the Chief of every domain.</p>
               </div>
 
               {!hasCore && <Empty>The core team will be announced soon.</Empty>}
@@ -194,10 +193,10 @@ export default function TeamPage() {
               <section key={domain.id} id={domain.slug} className="scroll-mt-32 space-y-6" style={accentVars(DOMAIN_ACCENT[domain.id])} aria-label={`${domain.label} team`}>
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-white/10 pb-3">
                   <div>
-                    <h2 className="text-accent text-[30px] sm:text-[40px] font-medium leading-[1.1] tracking-[-1.5px]">{domain.label}</h2>
-                    <p className="text-sm text-slate-400">{domain.blurb}</p>
+                    <h2 className="text-accent font-mono text-[28px] sm:text-[38px] font-bold uppercase leading-tight tracking-tight">{domain.label}</h2>
+                    <p className="text-sm text-white/70">{domain.blurb}</p>
                   </div>
-                  <span className="text-xs font-mono text-slate-500">{total} {total === 1 ? "member" : "members"}</span>
+                  <span className="text-xs font-mono uppercase tracking-wider text-sky-400">{total} {total === 1 ? "member" : "members"}</span>
                 </div>
 
                 {total === 0 ? (
