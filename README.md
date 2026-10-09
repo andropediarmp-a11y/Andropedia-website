@@ -4,7 +4,7 @@
 [![React 19](https://img.shields.io/badge/React-19.2-blue?style=flat&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![Framer Motion](https://img.shields.io/badge/Framer_Motion-12-purple?style=flat)](https://www.framer.com/motion/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-13-purple?style=flat)](https://www.framer.com/motion/)
 
 > **Pioneering Technology. Building Creators.**  
 > The official, production-ready website and weekly sprint evaluation platform for the **Andropedia** student technology club.
@@ -17,30 +17,29 @@ The platform is designed with a **frontend-heavy, zero-friction backend architec
 - **Full-Stack Next.js App Router**: Marketing pages and backend API endpoints live in a single unified repository, enabling 1-click deployment to **Vercel** or **Netlify** with zero separate backend server maintenance.
 - **Buttery 60+ FPS Custom Cursor**: Dual-layer cursor (precise inner dot + outer lerp ring) running on `requestAnimationFrame` with hover state awareness, magnetic chip triggers, and automatic disabling on touch screens.
 - **Interactive Cyber Aesthetic**: Constellation particle canvas hero, glassmorphic bento cards, neon glow borders, and fluid Framer Motion transitions.
-- **Dual-Storage Zero-Config Engine**: Works out-of-the-box with pre-seeded data for all 6 club domains, while supplying a complete **Prisma schema** for connecting to PostgreSQL (Supabase, Neon, Railway).
+- **Postgres through Prisma**: Supabase Postgres holds members, sprints, applications, events and projects; the schema and migrations live in `prisma/`.
+- **Scroll storytelling**: pinned, scroll-driven sections (hero, domain wheel, recruitment train) on desktop, with plain static layouts on phones and for reduced-motion users.
 
 ---
 
-## 🏛️ Six Core Domains
+## 🏛️ Domains
 
-1. **Technical**: Low-level systems programming (Rust, C++), competitive programming (ICPC track), and distributed architectures.
-2. **Web**: Next.js App Router, real-time WebSockets, microservices, edge computing, and cloud deployment.
-3. **R&D / AI Labs**: Applied Machine Learning, lightweight Vision Transformers (ViT), edge model quantization, and research papers.
-4. **Design & UX**: Cyberpunk design systems in Figma, spatial 3D assets, WCAG accessibility tokens, and physics micro-interactions.
-5. **Media & VFX**: Cinematic trailers, 3D motion typography, video podcast production, and event recaps.
-6. **Public Relations**: Corporate sponsorships, collegiate alliances, community operations, and hackathon organization.
+Five domains are open to applicants and shown publicly, in this order: **Technical**, **Web Development**, **Design**, **Media**, **PR**. Each is one vertex of the Andropedia logo.
+
+**R&D / AI Labs** is internal: nobody applies to it directly. Members join one of the five domains and are moved to R&D later, so R&D stays in the member list, team page and portal but not in recruitment or the public domain pages.
 
 ---
 
 ## ⚡ Core Features
 
 ### 🌐 Public Marketing Experience
-- **Landing Page (`/`)**: Hero with interactive particle matrix, live sprint indicator, club metrics counter, 6 domain overview cards, featured open-source tools, member testimonials, and recruitment CTA.
-- **Domains Deep-Dive (`/domains`)**: Tabbed interactive explorer with domain leads, tech stack badges, weekly curriculum roadmap, and notable projects.
-- **Team Directory (`/team`)**: Core council, domain leads, and members with role badges, domain filters, and GitHub/LinkedIn links.
-- **Projects Showcase (`/projects`)**: Searchable project cards with tech tags, stars counter, live demos, and source code links.
-- **Events & Hackathons (`/events`)**: Flagship hackathons (*AndroHacks 2026*), workshops, and live RSVP seat reservation.
-- **Recruitment Application (`/join`)**: Interactive candidate application form with domain preference selector and FAQ accordion.
+- **Landing page (`/`)**: the hero is the home page. A human hand and a robot arm touch at the fingertips; scrolling parts them and reveals the ANDROPEDIA headline. It continues into pinned storytelling sections, including a **domain wheel** where the Andropedia logo is the progress bar (it lights from grey to blue as you scroll through the five domains, and shines at the end).
+- **Navigation**: no bar. The "Andropedia" wordmark goes home, **Recruitment 2026 is open** (top right) goes to the train on `/join`, and a handle at the top centre drops a **half rotary dial**: press a numbered hole, pull it round to the stop and let go to dial the page (Home, Domains, Events, Projects, Team, Join now, Portal login). Plain links under the dial cover keyboards and screen readers. Home always lands on the hero.
+- **Domains (`/domains`)**: tabbed explorer for the five public domains.
+- **Team (`/team`)**: core council, leads and members with role badges; Lead and Co-Lead share a row unless a domain has two co-leads.
+- **Projects (`/projects`)**: project cards with tech tags, demos and source links.
+- **Events (`/events`)**: AndroHacks, CodeSprint and CloudCon, currently shown as past events with "Date to be announced" until real details are added (Portal -> Admin -> Events, **Edit**). `npm run events:club` adds the three entries and never overwrites edits.
+- **Recruitment (`/join`)**: "Who can apply", then the **recruitment train**: a scroll-driven train that stops at each of the five selection steps, with the reasons to join underneath. Every join link goes straight to the train; the application form, status lookup and FAQ follow.
 
 ### 🏆 Member & Admin Evaluation Portal
 - **Register-number login** (username and password are the member's register number) with server-side sessions; every portal API checks the session and role on the server.
@@ -50,7 +49,7 @@ The platform is designed with a **frontend-heavy, zero-friction backend architec
 - **Live Leaderboard Podium (`/portal/leaderboard`)**:
   - Top 3 3D-styled Podium (Gold, Silver, Bronze) with crown badges.
   - Interactive confetti trigger on podium click.
-  - Filter by Domain (All, Technical, Web, R&D, Design, Media, PR).
+  - Filter by Domain.
   - Filter by Timeframe (All-Time, Current Week, Monthly).
   - Full ranking table with rank changes (+1, -1), streak counters, and badges.
 - **Super Admin Console (`/portal/admin`)**: Toggle weekly submission windows and audit club-wide member rosters.
@@ -65,9 +64,10 @@ The platform is designed with a **frontend-heavy, zero-friction backend architec
 
 ### 2. Clone & Install
 ```bash
-git clone https://github.com/your-org/andropedia-web.git
-cd andropedia-web
+git clone https://github.com/andropediarmp-a11y/Andropedia-website.git
+cd Andropedia-website
 npm install
+cp .env.example .env   # then fill in the values (ask a maintainer; never commit .env)
 ```
 
 ### 3. Run Development Server
@@ -76,6 +76,18 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 🤝 Contributing
+
+- `main` is the official, deployable branch. Don't push to it directly.
+- Make a branch per piece of work (for example `yourname/pr-page`), commit small and clear, push it and open a **pull request** into `main`. A maintainer reviews and merges.
+- Pull the latest `main` before you branch: `git pull origin main`.
+- Before opening a PR run `npx tsc --noEmit`, `npm run lint` and `npm test`.
+- Secrets (`.env`, database URLs, `AUTH_SECRET`) are shared privately and never go in git. Prefer your own database or a Supabase branch over the live one.
+- Write access to the repository is granted by a maintainer under Settings -> Collaborators.
+- This Next.js version has breaking changes from older ones: read the relevant guide in `node_modules/next/dist/docs/` before changing framework-level code (see `AGENTS.md`).
 
 ---
 
