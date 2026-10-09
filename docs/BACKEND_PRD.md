@@ -10,6 +10,25 @@
 
 ---
 
+## Implementation status (2026-10-09)
+
+Read this first: it supersedes the older text below where they differ.
+
+| Area | As built |
+|---|---|
+| Recruitment storage | **Postgres is the source of truth** (`Application` table, one row per person via a unique canonical `emailKey`). The Google Sheet (written through the Apps Script web app or the Sheets API) is a **mirror** written right after the applicant gets their reference. The sheet has ~40 columns (see `docs/applicants-sheet-headers.csv`), not the 12 in section 2.7.1. |
+| Recruitment retry | `npm run recruitment:retry` or `GET /api/cron/recruitment-flush` (bearer `CRON_SECRET`) copies rows missing from the sheet and re-sends missing confirmation emails. The outbox table is gone. |
+| Recruitment admin (R11) | Built after all: Portal -> Admin -> Recruitment applicants (filter, answers, status, optional decision email, CSV). Applicants check status on `/join`. |
+| Auth (R4) | Register number + password (the password starts as the register number, stored as a salted, secret-mixed scrypt hash) with database sessions, instead of Supabase Auth. Register numbers come from the Google Form sheet. Only existing active members can log in. Any email provider works: there is no domain restriction on applications, RSVPs or members. |
+| Members (R7, R12) | Sheet import script, plus an Add member form that emails a welcome. Role, position, domain and active changes; deactivating signs the person out everywhere. |
+| Rate limiting | Shared through Postgres (`RateLimit`), in-memory fallback. |
+| Events (R14), Projects (R16) | Built, with admin screens. Projects start empty (no invented content). |
+| Notifications (R15) | Task graded, application status changed, member welcome, RSVP confirmation. |
+| Admin route names | `/api/admin/members[/:id]` (the PRD says `/users`). |
+| Not built | R17 file uploads (needs Supabase Storage), R18 Sentry error tracking (needs an account/DSN), Cloudflare Turnstile (only if spam appears). |
+
+---
+
 ## Part 1 — Audit: What's Broken Today
 
 **Summary:** The site has a complete-looking frontend, but its backend is a demo. The site stores no data permanently, the server never checks who you are, and several forms look like they work but send nothing anywhere. Prisma and a Postgres schema are in the repo but are never used.
@@ -128,7 +147,7 @@ Andropedia runs weekly sprints, evaluations, a leaderboard, events and recruitme
 | Concern | Recommendation | Why |
 |---|---|---|
 | Database | **Supabase Postgres** via **Prisma** (already in the repo) | Prisma and the Supabase config are already set up; free tier is enough for a club |
-| Auth | **Supabase Auth** with email magic link / OTP, limited to the college email domain | No passwords to store; ties identity to college email; works server-side with `@supabase/ssr` |
+| Auth | **Supabase Auth** with email magic link / OTP, any email address that an admin has added as a member | No passwords to store; ties identity to college email; works server-side with `@supabase/ssr` |
 | Session | HTTP-only cookie session read on the server in every API route and server component | Replaces the `localStorage` user (A2–A4) |
 | Authorization | One `requireUser(role?, domain?)` helper used by every protected route | One place for role and domain checks |
 | Validation | **Zod** schemas shared by forms and API routes | Fixes S7; one source of truth for input rules |

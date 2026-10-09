@@ -4,15 +4,13 @@
 
 export const RECRUITMENT_CYCLE = "Recruitment 2026";
 
-export type DomainId = "technical" | "web" | "rd" | "design" | "media" | "pr";
+export type { DomainId } from "@/lib/recruitment/questions";
+import type { DomainId } from "@/lib/recruitment/questions";
 
 export interface RecruitDomain {
   id: DomainId;
   name: string;
   desc: string;
-  /** Domain-specific question asked in step 3 of the form. */
-  question: string;
-  placeholder: string;
 }
 
 export const RECRUIT_DOMAINS: RecruitDomain[] = [
@@ -20,43 +18,26 @@ export const RECRUIT_DOMAINS: RecruitDomain[] = [
     id: "technical",
     name: "Technical",
     desc: "C++, Rust, systems, DSA and competitive programming.",
-    question: "Describe a hard technical or algorithmic problem you solved. What was your approach?",
-    placeholder: "e.g. a contest problem, a performance bug, or a systems project and how you cracked it...",
   },
   {
     id: "web",
     name: "Web",
     desc: "Next.js, TypeScript, cloud, APIs and microservices.",
-    question: "Tell us about a web project you built or want to build. Which stack would you use and why?",
-    placeholder: "e.g. what it does, the stack, and one decision you would defend...",
-  },
-  {
-    id: "rd",
-    name: "R&D",
-    desc: "Machine learning, PyTorch, vision and research papers.",
-    question: "Which paper, model or research idea excites you most, and what would you try with it?",
-    placeholder: "e.g. a paper you read, what you understood, and an experiment you would run...",
   },
   {
     id: "design",
     name: "Design",
     desc: "UI/UX, Figma systems, 3D assets and micro-interactions.",
-    question: "Pick a product you use daily. What is one thing you would redesign, and how?",
-    placeholder: "e.g. the problem you see, your idea, and who it helps. Share portfolio links above.",
   },
   {
     id: "media",
     name: "Media",
     desc: "Cinematography, After Effects, VFX and video podcasts.",
-    question: "Describe a video, edit or visual piece you made or admire. What made it work?",
-    placeholder: "e.g. the idea, the tools you used, and what you would improve...",
   },
   {
     id: "pr",
     name: "Public Relations",
     desc: "Sponsorships, hackathon logistics and community alliances.",
-    question: "How would you get 200 students to attend a club event? Outline your plan.",
-    placeholder: "e.g. channels, partners, timeline and how you would measure success...",
   },
 ];
 

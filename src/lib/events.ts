@@ -21,6 +21,8 @@ export interface PublicEvent {
   teamMax: number | null;
   prize: string | null;
   registrationOpen: boolean;
+  /** The real date is not known yet. The date is hidden and the event counts as past. */
+  dateTbc: boolean;
   /** Reservations (people for individual events, teams for team events). */
   rsvpCount: number;
   /** null when there is no seat limit. */
@@ -49,10 +51,11 @@ export interface Attendee {
 
 /** Pure: what visitors can do with an event right now. */
 export function eventStatus(
-  e: { startsAt: Date; endsAt: Date | null; capacity: number | null; registrationOpen: boolean },
+  e: { startsAt: Date; endsAt: Date | null; capacity: number | null; registrationOpen: boolean; dateTbc?: boolean },
   rsvpCount: number,
   now: Date = new Date()
 ): EventStatus {
+  if (e.dateTbc) return "past"; // no real date yet: never open for registration
   if ((e.endsAt ?? e.startsAt) < now) return "past";
   if (!e.registrationOpen) return "closed";
   if (e.capacity != null && rsvpCount >= e.capacity) return "full";
@@ -73,6 +76,7 @@ function toAdmin(e: DbEvent, rsvpCount: number, now = new Date()): AdminEvent {
     teamMax: e.teamMax,
     prize: e.prize,
     registrationOpen: e.registrationOpen,
+    dateTbc: e.dateTbc,
     isPublished: e.isPublished,
     rsvpCount,
     seatsLeft: e.capacity == null ? null : Math.max(0, e.capacity - rsvpCount),
@@ -125,6 +129,7 @@ export async function createEvent(input: EventCreateInput, actorId: string): Pro
       prize: input.prize || null,
       isPublished: input.isPublished ?? false,
       registrationOpen: input.registrationOpen ?? true,
+      dateTbc: input.dateTbc ?? false,
     },
   });
   await recordAudit({ actorId, action: "event.create", target: created.id, meta: { title: created.title } });
@@ -166,6 +171,7 @@ export async function updateEvent(id: string, patch: EventPatchInput, actorId: s
       ...(patch.prize !== undefined ? { prize: patch.prize || null } : {}),
       ...(patch.isPublished !== undefined ? { isPublished: patch.isPublished } : {}),
       ...(patch.registrationOpen !== undefined ? { registrationOpen: patch.registrationOpen } : {}),
+      ...(patch.dateTbc !== undefined ? { dateTbc: patch.dateTbc } : {}),
     },
   });
   await recordAudit({ actorId, action: "event.update", target: id, meta: { fields: Object.keys(patch) } });

@@ -15,7 +15,8 @@ export interface HomeDomain {
   stats: string;
 }
 
-export const HOME_DOMAINS: HomeDomain[] = [
+/** All six domains, including R&D. R&D is not recruited into directly (members are moved there later), so only the team honeycomb uses this list. */
+export const HEX_DOMAINS: HomeDomain[] = [
   {
     id: "Technical", apiDomain: "Technical", title: "Technical", subtitle: "Algorithms & Core Systems", icon: Cpu,
     description: "Competitive programming, distributed architectures, low-level systems in Rust/C++, and DSA olympiads.",
@@ -48,8 +49,11 @@ export const HOME_DOMAINS: HomeDomain[] = [
   },
 ];
 
+/** The five domains people can join, in the order they are shown: Technical, Web, Design, Media, PR. */
+export const HOME_DOMAINS: HomeDomain[] = HEX_DOMAINS.filter((d) => d.id !== "RD");
+
 export const HOME_METRICS: Array<{ label: string; value: string; icon: LucideIcon; sub: string }> = [
-  { label: "Active Members", value: "48+", icon: Users, sub: "Across 6 domains" },
+  { label: "Active Members", value: "48+", icon: Users, sub: "Across 5 domains" },
   { label: "Weekly Tasks Evaluated", value: "240+", icon: CheckCircle2, sub: "Strict rubric scoring" },
   { label: "Hackathon Podiums", value: "14", icon: Trophy, sub: "National & regional wins" },
   { label: "Open-Source Projects", value: "18+", icon: Zap, sub: "Deployed & live" },
@@ -88,13 +92,13 @@ export const HOME_HIGHLIGHTS = [
 export const ABOUT_POINTS = [
   { title: "Weekly task cycles", text: "Hands-on challenges graded under comprehensive rubrics by domain leads." },
   { title: "Real-time transparency", text: "A live leaderboard that fosters healthy competition across the club." },
-  { title: "Cross-domain synergy", text: "Web, R&D, Design, Media, Technical and PR working as one team." },
+  { title: "Cross-domain synergy", text: "Technical, Web, Design, Media and PR working as one team." },
 ];
 
-/** Demo rows for the leaderboard mock-up on the home page. */
-export const DEMO_LEADERBOARD = [
-  { rank: 1, name: "Aarav Sharma", domain: "Web", score: 382 },
-  { rank: 2, name: "Diya Patel", domain: "R&D", score: 374 },
-  { rank: 3, name: "Rohan Varma", domain: "Technical", score: 365 },
-  { rank: 4, name: "Sneha Mukherjee", domain: "Design", score: 358 },
+/** The week in a sprint, shown as a card on the home page (day label, title, description). */
+export const SPRINT_STEPS: Array<{ day: string; title: string; text: string }> = [
+  { day: "Mon", title: "Prompt released", text: "Domain leads publish this week's challenge." },
+  { day: "Tue-Fri", title: "Build & submit", text: "Members ship a repo, demo or Figma file." },
+  { day: "Weekend", title: "Evaluation", text: "Leads score on depth, innovation, completion, docs." },
+  { day: "Sun night", title: "Leaderboard moves", text: "Points update live for the whole club." },
 ];

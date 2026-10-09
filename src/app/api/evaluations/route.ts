@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { evaluateTask, ForbiddenError, NotFoundError } from "@/lib/data-store";
+import { sendGradedNotice } from "@/lib/graded-email";
 import { readJson } from "@/lib/http";
+import { log } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 
 const criterion = z.number().int().min(0).max(25);
 
@@ -51,6 +54,17 @@ export async function POST(request: NextRequest) {
     if (!updatedTask) {
       return NextResponse.json({ success: false, error: "Task not found" }, { status: 404 });
     }
+    // Tell the member after the response goes out; a mail problem must never undo a grade.
+    after(async () => {
+      try {
+        const member = await prisma.user.findUnique({ where: { id: updatedTask.userId }, select: { name: true, email: true } });
+        if (member?.email) {
+          await sendGradedNotice(member, { title: updatedTask.title, weekNumber: updatedTask.weekNumber }, { score: parsed.data.score, feedback: parsed.data.feedback });
+        }
+      } catch (err) {
+        log.warn("Graded notice email failed", { taskId: updatedTask.id }, err);
+      }
+    });
     return NextResponse.json({ success: true, task: updatedTask });
   } catch (error) {
     if (error instanceof NotFoundError) {

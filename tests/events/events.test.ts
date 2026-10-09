@@ -34,6 +34,9 @@ describe("eventStatus", () => {
     const past = { ...base, startsAt: new Date("2026-10-01T10:00:00Z"), endsAt: new Date("2026-10-02T10:00:00Z"), registrationOpen: false };
     expect(eventStatus(past, 3, NOW)).toBe("past");
   });
+  it("is always past when the date is not announced, even with a future start and open reservations", () => {
+    expect(eventStatus({ ...base, dateTbc: true }, 0, NOW)).toBe("past");
+  });
   it("uses the end time for multi-day events", () => {
     const running = { ...base, startsAt: new Date("2026-10-09T10:00:00Z"), endsAt: new Date("2026-10-11T10:00:00Z") };
     expect(eventStatus(running, 0, NOW)).toBe("open");
@@ -44,6 +47,11 @@ describe("event schemas", () => {
   const event = { title: "Hack Night", type: "Workshop", description: "Build something in one evening.", location: "Lab 2", startsAt: "2026-10-20T10:00:00Z" };
 
   it("accepts a minimal event", () => expect(eventCreateSchema.safeParse(event).success).toBe(true));
+  it("accepts the date-not-announced flag on create and patch", () => {
+    expect(eventCreateSchema.safeParse({ ...event, dateTbc: true }).success).toBe(true);
+    expect(eventPatchSchema.safeParse({ dateTbc: false }).success).toBe(true);
+    expect(eventCreateSchema.safeParse({ ...event, dateTbc: "yes" }).success).toBe(false);
+  });
   it("rejects a bad date", () => expect(eventCreateSchema.safeParse({ ...event, startsAt: "soon" }).success).toBe(false));
   it("rejects zero or fractional capacity", () => {
     expect(eventCreateSchema.safeParse({ ...event, capacity: 0 }).success).toBe(false);
@@ -74,7 +82,6 @@ const result = { rsvpId: "r1", event: { id: "ev1", title: "Hack Night", location
 beforeEach(() => {
   resetRateLimits();
   h.afterTasks.length = 0;
-  delete process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS;
   vi.mocked(rsvpToEvent).mockResolvedValue(result);
   vi.mocked(sendRsvpConfirmation).mockResolvedValue(undefined);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -130,12 +137,6 @@ describe("POST /api/events/:id/rsvp", () => {
     expect(res.status).toBe(201);
     expect(rsvpToEvent).not.toHaveBeenCalled();
     expect(sendRsvpConfirmation).not.toHaveBeenCalled();
-  });
-
-  it("only accepts allowed email domains when configured", async () => {
-    process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS = "college.edu";
-    expect((await rsvp({ name: "Out Sider", email: "out@gmail.com" })).status).toBe(400);
-    expect((await rsvp(person)).status).toBe(201);
   });
 
   it("rate-limits one IP after 10 reservations an hour", async () => {
@@ -215,11 +216,4 @@ describe("POST /api/events/:id/rsvp (team)", () => {
     expect(rsvpTeam).not.toHaveBeenCalled();
   });
 
-  it("checks the email domain of every member when configured", async () => {
-    process.env.RECRUITMENT_ALLOWED_EMAIL_DOMAINS = "college.edu";
-    const outsider = { ...team, members: [member(1), { ...member(2), email: "m2@gmail.com" }, member(3)] };
-    expect((await rsvp(outsider)).status).toBe(400);
-    expect(rsvpTeam).not.toHaveBeenCalled();
-    expect((await rsvp(team)).status).toBe(201);
-  });
 });

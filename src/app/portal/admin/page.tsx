@@ -13,6 +13,11 @@ import { useAuth } from "@/lib/auth-context";
 import { Week, User, ClubPosition, RoleType } from "@/lib/types";
 import { PortalAccessGate } from "@/components/portal/PortalAccessGate";
 import { EventsAdmin } from "@/components/portal/EventsAdmin";
+import { ApplicantsAdmin } from "@/components/portal/ApplicantsAdmin";
+import { ProjectsAdmin } from "@/components/portal/ProjectsAdmin";
+import { AuditAdmin } from "@/components/portal/AuditAdmin";
+import { WeekCreate } from "@/components/portal/WeekCreate";
+import { MemberCreate } from "@/components/portal/MemberCreate";
 
 const POSITION_OPTIONS: Array<[ClubPosition, string]> = [
   ["member", "Member"],
@@ -134,9 +139,18 @@ export default function AdminPage() {
           )}
 
           <div className="rounded-[28px] border border-sky-400/10 bg-white/[0.04] p-6 shadow-[0_18px_50px_rgba(2,6,23,0.45)] sm:p-8">
-            <div className="mb-5">
-              <h2 className="text-xl font-bold text-white">Sprint cycles</h2>
-              <p className="mt-1 text-xs text-slate-400">Open or close a sprint week. Only one week is open at a time; members can submit only to the open week.</p>
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-white">Sprint cycles</h2>
+                <p className="mt-1 text-xs text-slate-400">Open or close a sprint week. Only one week is open at a time; members can submit only to the open week.</p>
+              </div>
+              <WeekCreate
+                nextNumber={weeks.reduce((max, w) => Math.max(max, w.weekNumber), 0) + 1}
+                onCreated={(text) => {
+                  setNotice({ type: "success", text });
+                  void loadData();
+                }}
+              />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -187,6 +201,13 @@ export default function AdminPage() {
                 </Link>
               </div>
             </div>
+
+            <MemberCreate
+              onCreated={(member) => {
+                setMembers((prev) => [...prev, member]);
+                setNotice({ type: "success", text: `${member.name} can now log in with their register number.` });
+              }}
+            />
 
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
@@ -260,7 +281,10 @@ export default function AdminPage() {
               </table>
             </div>
           </div>
+          <ApplicantsAdmin />
           <EventsAdmin />
+          <ProjectsAdmin />
+          <AuditAdmin names={Object.fromEntries(members.map((m) => [m.id, m.name]))} />
         </motion.div>
       </div>
     </PortalAccessGate>

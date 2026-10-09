@@ -20,7 +20,6 @@ Now: build passes, `eslint` reports 0 errors and 13 warnings, 85 tests pass.
 - [x] high: Request bodies now have size limits (16 KB to 32 KB) and return 413.
 - [ ] medium: Rate limits are still in memory per server instance. Added `Retry-After` and an `x-real-ip` fallback, but a durable limiter (database or Redis) is the real fix on serverless hosting. Login codes are already limited per email in the database.
 - [x] medium: Client IP now falls back to `x-real-ip`.
-- [x] medium: Optional email-domain allow-list (`RECRUITMENT_ALLOWED_EMAIL_DOMAINS`).
 - [x] medium: Environment is validated centrally (`src/lib/env.ts`); problems are reported by `/api/health` (detailed list only with the bearer secret).
 - [x] medium: Query parameters on `/api/tasks` and `/api/leaderboard` are validated.
 - [ ] low: `/api/member-photo/[id]` has no rate limit.
@@ -66,3 +65,10 @@ Now: build passes, `eslint` reports 0 errors and 13 warnings, 85 tests pass.
 - [x] high: 85 tests (`npm test`): validation, deadline rules, email normalisation, rate limiter, sheet row building and formula injection, retries, http helpers, env checks, the full application route (success, duplicates, simultaneous submissions, validation, honeypot, rate limit, allow-list, closed and not-yet-open, outbox fallback, total failure) and the outbox flush.
 - [ ] medium: No component tests for the form (would need jsdom and testing-library). The form was exercised by hand in a real browser instead.
 - [ ] medium: Google Sheets and SMTP calls are tested through fakes only. They have never run against a real sheet or mail provider.
+
+## Update (2026-10-09)
+- The recruitment outbox was removed. `Application` rows are the source of truth; `npm run recruitment:retry` re-syncs rows with no Sheet copy or no confirmation email.
+- Rate limits are now shared through Postgres (`RateLimit`), falling back to memory if the database is down. This closes the "in memory per instance" item above.
+- Added: applicant status lookup, admin applicant review with decision emails, `Project` model and API (the `/projects` page no longer ships invented projects), real home-page leaderboard, graded-task emails, add-member and create-week forms, audit log viewer.
+- Tests now cover login codes, sessions, the role guard, task submission, grading and every admin route.
+- Still open: the new migrations (`drop_recruitment_outbox`, `rate_limit`, `projects`) have not been applied to the live database, and mail and the Sheet have not been checked end to end against the real services.

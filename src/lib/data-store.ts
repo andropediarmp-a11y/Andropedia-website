@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { hashPassword, normalizeRegisterNo } from "./password";
 import { prisma } from "./prisma";
 import {
   User, Week, Task, Evaluation, LeaderboardEntry, DomainType, RoleType, ClubPosition,
@@ -405,6 +406,37 @@ export async function updateWeek(id: string, patch: WeekInput, actorId: string):
 }
 
 // ---------------------------------------------------------------- member management (super admin)
+
+export interface NewMember {
+  name: string;
+  email: string;
+  /** Login username; the starting password is the same value. */
+  registerNo: string;
+  domain: DomainType;
+  role?: RoleType;
+  position?: ClubPosition;
+}
+
+/** Adds a member who can log in with their register number (password = register number). Email and register number must be new. */
+export async function createMember(actorId: string, input: NewMember): Promise<User> {
+  const domain = toDbDomain(input.domain);
+  const position = toDbPosition(input.position ?? "member");
+  if (!domain || !position) throw new NotFoundError("Unknown position or domain");
+  const email = input.email.trim().toLowerCase();
+  const registerNo = normalizeRegisterNo(input.registerNo);
+  const clash = await prisma.user.findFirst({ where: { OR: [{ email }, { registerNo }] }, select: { email: true } });
+  if (clash) throw new ConflictError(clash.email === email ? "A member with this email already exists." : "A member with this register number already exists.");
+  try {
+    const created = await prisma.user.create({
+      data: { name: input.name.trim(), email, registerNo, passwordHash: hashPassword(registerNo), domain, position, role: ROLE_TO_DB[input.role ?? "member"] },
+    });
+    await recordAudit({ actorId, action: "member.create", target: created.id, meta: { role: input.role ?? "member", domain: input.domain } });
+    return mapUser(created);
+  } catch (err) {
+    if ((err as { code?: string }).code === "P2002") throw new ConflictError("A member with this email or register number already exists.");
+    throw err;
+  }
+}
 
 /** Changes a member's permission role, team position, domain or active status, with safety rules. */
 export async function updateMember(actorId: string, id: string, patch: MemberPatch): Promise<User> {

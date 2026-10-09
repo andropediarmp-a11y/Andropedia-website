@@ -10,7 +10,6 @@ const COLUMNS = [
     links: [
       { name: "Technical", href: "/domains?tab=Technical" },
       { name: "Web Development", href: "/domains?tab=Web" },
-      { name: "R&D / AI Labs", href: "/domains?tab=R%26D" },
       { name: "Design & UX", href: "/domains?tab=Design" },
       { name: "Media & VFX", href: "/domains?tab=Media" },
       { name: "Public Relations", href: "/domains?tab=PR" },

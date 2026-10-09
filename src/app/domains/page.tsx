@@ -7,7 +7,6 @@ import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { 
   Cpu, 
   Globe, 
-  Code2, 
   Palette, 
   Video, 
   Megaphone, 
@@ -24,7 +23,7 @@ function DomainsContent() {
   // The URL's ?tab= picks the tab; a click overrides it until the URL's tab changes.
   const tabParam = searchParams.get("tab");
   const [choice, setChoice] = useState<{ forParam: string | null; tab: string } | null>(null);
-  const activeTab = choice && choice.forParam === tabParam ? choice.tab : tabParam || "Technical";
+  const requested = choice && choice.forParam === tabParam ? choice.tab : tabParam || "Technical";
   const setActiveTab = (tab: string) => setChoice({ forParam: tabParam, tab });
 
   const domainData: Record<string, {
@@ -110,41 +109,6 @@ function DomainsContent() {
           title: "Andropedia Club Platform",
           desc: "The very platform you are using — built with Next.js, Framer Motion, and real-time member evaluations.",
           tags: ["Next.js", "TypeScript", "Tailwind CSS"],
-          link: "https://github.com"
-        }
-      ]
-    },
-    "R&D": {
-      title: "Research & Development / AI Labs",
-      tagline: "Frontier Machine Intelligence, Computer Vision & Emerging Paradigms",
-      icon: Code2,
-      lead: {
-        name: "Diya Patel",
-        role: "Research Lead, R&D",
-        avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-        bio: "Deep Learning researcher specializing in Vision Transformers and edge model quantization.",
-        github: "https://github.com",
-        linkedin: "https://linkedin.com",
-      },
-      description: "The R&D division explores theoretical breakthroughs and converts them into deployed prototypes. Focus areas include Transformer architectures, computer vision, quantized inference on edge hardware, and zero-knowledge proofs.",
-      techStack: ["PyTorch", "Python", "Hugging Face", "ONNX Runtime", "CUDA", "TensorFlow", "FastAPI"],
-      curriculum: [
-        { week: "Sprint 1", topic: "Attention Mechanisms & Transformer Fine-Tuning" },
-        { week: "Sprint 2", topic: "Quantization (FP16/INT8) & ONNX WebGL Inference" },
-        { week: "Sprint 3", topic: "Computer Vision: Real-time Object Tracking" },
-        { week: "Sprint 4", topic: "Decentralized Federated Learning on Edge Devices" },
-      ],
-      notableProjects: [
-        {
-          title: "EdgeViT Gesture Parser",
-          desc: "Distilled Vision Transformer performing real-time hand gesture parsing in the browser at 60 FPS.",
-          tags: ["PyTorch", "ONNX", "WebGL"],
-          link: "https://github.com"
-        },
-        {
-          title: "NeuroDoc QA Engine",
-          desc: "Retrieval-augmented generation agent for searching and summarizing technical research papers.",
-          tags: ["LangChain", "Vector DB", "FastAPI"],
           link: "https://github.com"
         }
       ]
@@ -249,7 +213,8 @@ function DomainsContent() {
     }
   };
 
-  const currentDomain = domainData[activeTab] || domainData["Technical"];
+  const activeTab = requested in domainData ? requested : "Technical"; // e.g. an old ?tab=R%26D link
+  const currentDomain = domainData[activeTab];
   const CurrentIcon = currentDomain.icon;
 
   return (
@@ -311,7 +276,7 @@ function DomainsContent() {
             </div>
 
             <Link
-              href="/join"
+              href="/join#how-selection-works"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all shrink-0"
             >
               <span>Apply for {activeTab}</span>

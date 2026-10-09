@@ -3,6 +3,7 @@ import { Figtree, Anton } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { MainShell } from "@/components/layout/MainShell";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/ui/MotionProvider";
@@ -16,7 +17,7 @@ const figtree = Figtree({
   display: "swap",
 });
 
-// Heavy condensed display face for the oversized headlines on /about.
+// Heavy condensed display face for the oversized headlines (the domain ribbon on the home page).
 const anton = Anton({
   variable: "--font-display",
   subsets: ["latin"],
@@ -27,15 +28,13 @@ const anton = Anton({
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
   title: { default: "Andropedia | Official Student Technology Club", template: "%s | Andropedia" },
-  description: "Official platform of Andropedia: student technology club driving innovation in Web, Technical, R&D, Design, Media, and PR. Explore our domains, member evaluations, and live leaderboards.",
+  description: "Official platform of Andropedia: student technology club driving innovation in Technical, Web, Design, Media, and PR. Explore our domains, member evaluations, and live leaderboards.",
   keywords: [
     "Andropedia",
     "Student Tech Club",
     "Technology Club",
     "Web Development",
     "Competitive Programming",
-    "R&D",
-    "AI/ML",
     "UI/UX Design",
     "Leaderboard",
     "Weekly Task Evaluation"
@@ -65,7 +64,7 @@ export default function RootLayout({
           <AuthProvider>
             <CustomCursor />
             <Navbar />
-            <main id="top" className="flex-1 pt-[60px] flex flex-col">{children}</main>
+            <MainShell>{children}</MainShell>
             <Footer />
           </AuthProvider>
         </MotionProvider>

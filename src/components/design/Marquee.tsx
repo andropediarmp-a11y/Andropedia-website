@@ -3,7 +3,7 @@ import { HOME_DOMAINS } from "@/content/home";
 // Oversized, tightly set display type (inspired by bold display typefaces such as Saint Regus).
 export const DISPLAY_TYPE = "font-[family-name:var(--font-display)] uppercase leading-[0.86] tracking-[-0.01em]";
 
-/** Slow, endless ribbon of the six domain names in outlined display type. Purely decorative. */
+/** Slow, endless ribbon of the domain names in outlined display type. Purely decorative. */
 export function Marquee({ className = "" }: { className?: string }) {
   const words = HOME_DOMAINS.map((d) => d.title);
   const row = [...words, ...words];

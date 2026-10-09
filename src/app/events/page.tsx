@@ -20,6 +20,7 @@ const dateFmt = new Intl.DateTimeFormat("en-IN", { dateStyle: "long", timeStyle:
 const dayFmt = new Intl.DateTimeFormat("en-IN", { dateStyle: "long", timeZone: "Asia/Kolkata" });
 
 function when(e: PublicEvent) {
+  if (e.dateTbc) return "Date to be announced";
   const start = new Date(e.startsAt);
   if (!e.endsAt) return dateFmt.format(start);
   const end = new Date(e.endsAt);
@@ -27,6 +28,7 @@ function when(e: PublicEvent) {
 }
 
 function seats(e: PublicEvent) {
+  if (e.dateTbc) return null; // nothing to say about seats for an event with no details yet
   if (e.teamMax != null) {
     const size = e.teamMin === e.teamMax ? `${e.teamMax}` : `${e.teamMin}-${e.teamMax}`;
     const teams = e.capacity == null ? `${e.rsvpCount} teams registered` : e.status === "full" ? `Full (${e.capacity} teams)` : `${e.seatsLeft} of ${e.capacity} team spots left`;
@@ -138,8 +140,8 @@ function RsvpDialog({ event, onClose, onDone }: { event: PublicEvent; onClose: (
               <input className={field} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required maxLength={80} placeholder="Your name" autoFocus />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-white/70">College email</span>
-              <input className={field} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required maxLength={160} placeholder="you@college.edu" />
+              <span className="text-xs font-medium text-white/70">Email</span>
+              <input className={field} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required maxLength={160} placeholder="you@example.com" />
             </label>
             {/* Honeypot: hidden from people, irresistible to bots. */}
             <input tabIndex={-1} autoComplete="off" aria-hidden="true" value={website} onChange={(e) => setWebsite(e.target.value)} className="absolute left-[-9999px] h-0 w-0 opacity-0" name="website" />
@@ -185,7 +187,14 @@ export default function Events() {
   };
 
   const upcoming = (events ?? []).filter((e) => e.status !== "past");
-  const past = (events ?? []).filter((e) => e.status === "past").reverse();
+  // Past events: dated ones newest first, then the ones with no date yet in the order they were added.
+  const past = (events ?? [])
+    .filter((e) => e.status === "past")
+    .sort((a, b) =>
+      a.dateTbc !== b.dateTbc
+        ? a.dateTbc ? 1 : -1
+        : a.dateTbc ? Date.parse(a.startsAt) - Date.parse(b.startsAt) : Date.parse(b.startsAt) - Date.parse(a.startsAt)
+    );
   const currentList = activeTab === "upcoming" ? upcoming : past;
 
   const tab = (id: "upcoming" | "past", label: string, count: number) => (
@@ -251,7 +260,7 @@ export default function Events() {
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-mono pt-2">
                     <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-emerald-400" /><span>{when(ev)}</span></div>
                     <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-cyan-400" /><span>{ev.location}</span></div>
-                    <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-400" /><span>{seats(ev)}</span></div>
+                    {seats(ev) && <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-400" /><span>{seats(ev)}</span></div>}
                     {ev.prize && (
                       <div className="flex items-center gap-1.5 text-amber-300 font-semibold"><Trophy className="w-3.5 h-3.5" /><span>{ev.prize}</span></div>
                     )}

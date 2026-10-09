@@ -3,28 +3,38 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, ArrowRight, CalendarClock, CheckCircle2, Copy, Lock, Send } from "lucide-react";
-import { type DomainId, RECRUIT_DOMAINS } from "@/content/recruitment";
+import { RECRUIT_DOMAINS } from "@/content/recruitment";
 import { ToastRegion, useToasts } from "@/components/ui/Toast";
 import { DOMAIN_ACCENT, accentVars } from "@/content/accents";
 import type { DomainType } from "@/lib/types";
+import {
+  ALL_QUESTION_IDS,
+  DOMAIN_IDS,
+  DOMAIN_QUESTIONS,
+  OTHER,
+  OTHER_PREFIX,
+  UNIVERSAL_QUESTIONS,
+  validateAnswers,
+  type DomainId,
+  type Question,
+} from "@/lib/recruitment/questions";
 
-const ID_TO_DOMAIN: Record<DomainId, DomainType> = { technical: "Technical", web: "Web", rd: "R&D", design: "Design", media: "Media", pr: "PR" };
+const ID_TO_DOMAIN: Record<DomainId, DomainType> = { technical: "Technical", web: "Web", design: "Design", media: "Media", pr: "PR" };
 
-type Field =
-  | "name" | "email" | "year" | "portfolioUrl"
-  | "domain"
-  | "domainAnswer" | "skills" | "motivation"
-  | "consent";
+type Answer = string | string[];
 
 interface FormData {
   name: string;
-  email: string;
+  registerNo: string;
+  department: string;
   year: string;
-  portfolioUrl: string;
+  phone: string;
+  email: string;
+  profile: string;
   domain: DomainId | "";
-  domainAnswer: string;
-  skills: string;
-  motivation: string;
+  /** Raw answers by question id. For a choice with "Other" picked, the value is "Other" and the text is in `other`. */
+  answers: Record<string, Answer>;
+  other: Record<string, string>;
   consent: boolean;
   website: string; // honeypot, hidden from real users
 }
@@ -36,33 +46,57 @@ interface CycleInfo {
   message: string;
 }
 
-const STEPS = ["Your details", "Choose domain", "Your answers", "Review & submit"];
-const STEP_FIELDS: Field[][] = [
-  ["name", "email", "year", "portfolioUrl"],
-  ["domain"],
-  ["domainAnswer", "skills", "motivation"],
-  ["consent"],
-];
+const STEPS = ["Basics", "Vibe check", "Choose domain", "Domain round", "Review"];
+const LAST_STEP = STEPS.length - 1;
+const BASIC_KEYS = ["name", "registerNo", "department", "year", "phone", "email", "profile"] as const;
 const YEARS = ["first", "second", "third", "fourth", "other"];
 const YEAR_LABELS: Record<string, string> = {
   first: "1st Year", second: "2nd Year", third: "3rd Year", fourth: "4th Year", other: "Other",
 };
-const DOMAIN_IDS = RECRUIT_DOMAINS.map((d) => d.id) as string[];
 
-/** DOM id to focus for each field when it has an error. */
-const FIELD_ID: Record<Field, string> = {
-  name: "name", email: "email", year: "year", portfolioUrl: "portfolio",
-  domain: `domain-${RECRUIT_DOMAINS[0].id}`,
-  domainAnswer: "domainAnswer", skills: "skills", motivation: "motivation", consent: "consent",
-};
+const ALL_QUESTIONS: Question[] = [...UNIVERSAL_QUESTIONS, ...DOMAIN_IDS.flatMap((d) => DOMAIN_QUESTIONS[d])];
+const QUESTION_BY_ID = new Map(ALL_QUESTIONS.map((q) => [q.id, q]));
+const UNIVERSAL_IDS = new Set(UNIVERSAL_QUESTIONS.map((q) => q.id));
+
+const domainQuestions = (d: DomainId | "") => (d ? DOMAIN_QUESTIONS[d] : []);
+
+/** Fields shown on each step, in order (used to find the step and field of an error). */
+function stepKeys(step: number, domain: DomainId | ""): string[] {
+  if (step === 0) return [...BASIC_KEYS];
+  if (step === 1) return UNIVERSAL_QUESTIONS.map((q) => q.id);
+  if (step === 2) return ["domain"];
+  if (step === 3) return domainQuestions(domain).map((q) => q.id);
+  return ["consent"];
+}
+
+/** DOM id to focus for a field that has an error. */
+function focusId(key: string): string {
+  if (key === "domain") return `domain-${RECRUIT_DOMAINS[0].id}`;
+  if (key === "consent") return "consent";
+  const q = QUESTION_BY_ID.get(key);
+  if (!q) return `f-${key}`;
+  if (q.kind === "choice" || q.kind === "multi") return `q-${q.id}-0`;
+  if (q.kind === "scale") return `q-${q.id}-${q.from}`;
+  return `q-${q.id}`;
+}
 
 const EMPTY: FormData = {
-  name: "", email: "", year: "second", portfolioUrl: "", domain: "",
-  domainAnswer: "", skills: "", motivation: "", consent: false, website: "",
+  name: "", registerNo: "", department: "", year: "second", phone: "", email: "", profile: "",
+  domain: "", answers: {}, other: {}, consent: false, website: "",
 };
 
+/** The answers as the server expects them: "Other" choices carry their text. */
+function composeAnswers(f: FormData): Record<string, Answer> {
+  const out: Record<string, Answer> = {};
+  for (const [id, value] of Object.entries(f.answers)) {
+    const q = QUESTION_BY_ID.get(id);
+    out[id] = q?.kind === "choice" && q.other && value === OTHER ? `${OTHER_PREFIX}${(f.other[id] ?? "").trim()}` : value;
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------- draft autosave
-const DRAFT_KEY = "andropedia_recruitment_draft_v1";
+const DRAFT_KEY = "andropedia_recruitment_draft_v2";
 const DRAFT_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 interface Draft { form: FormData; step: number }
 
@@ -71,25 +105,44 @@ function loadDraft(): Draft | null {
     const raw = window.localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
     const d = JSON.parse(raw);
-    if (d?.v !== 1 || typeof d.savedAt !== "number" || Date.now() - d.savedAt > DRAFT_MAX_AGE_MS) return null;
+    if (d?.v !== 2 || typeof d.savedAt !== "number" || Date.now() - d.savedAt > DRAFT_MAX_AGE_MS) return null;
     const f = d.form ?? {};
     const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+    const answers: Record<string, Answer> = {};
+    const other: Record<string, string> = {};
+    for (const id of ALL_QUESTION_IDS) {
+      const v = f.answers?.[id];
+      if (typeof v === "string") answers[id] = v.slice(0, 1200);
+      else if (Array.isArray(v)) answers[id] = v.filter((x: unknown) => typeof x === "string").slice(0, 10);
+      if (typeof f.other?.[id] === "string") other[id] = f.other[id].slice(0, 200);
+    }
+    const domain: FormData["domain"] = DOMAIN_IDS.includes(f.domain) ? f.domain : "";
+    // Keep only the chosen domain's answers, so a restored draft can never carry two domains.
+    const allowed = new Set([...UNIVERSAL_IDS, ...domainQuestions(domain).map((q) => q.id)]);
+    for (const id of Object.keys(answers)) {
+      if (!allowed.has(id)) {
+        delete answers[id];
+        delete other[id];
+      }
+    }
     const form: FormData = {
       name: str(f.name, 80),
-      email: str(f.email, 160),
+      registerNo: str(f.registerNo, 30),
+      department: str(f.department, 60),
       year: YEARS.includes(f.year) ? f.year : "second",
-      portfolioUrl: str(f.portfolioUrl, 300),
-      domain: DOMAIN_IDS.includes(f.domain) ? f.domain : "",
-      domainAnswer: str(f.domainAnswer, 800),
-      skills: str(f.skills, 800),
-      motivation: str(f.motivation, 1200),
+      phone: str(f.phone, 20),
+      email: str(f.email, 160),
+      profile: str(f.profile, 300),
+      domain,
+      answers,
+      other,
       consent: false, // consent is always asked again
       website: "",
     };
-    const filled = form.name || form.email || form.domain || form.domainAnswer || form.skills || form.motivation;
+    const filled = form.name || form.email || form.domain || Object.keys(answers).length > 0;
     if (!filled) return null;
-    const step = Number.isInteger(d.step) ? Math.min(Math.max(d.step, 0), 2) : 0;
-    return { form, step: step === 2 && !form.domain ? 1 : step };
+    const step = Number.isInteger(d.step) ? Math.min(Math.max(d.step, 0), LAST_STEP - 1) : 0;
+    return { form, step: step >= 3 && !form.domain ? 2 : step };
   } catch {
     return null; // storage unavailable or corrupt: just start fresh
   }
@@ -99,7 +152,7 @@ function saveDraft(form: FormData, step: number) {
   try {
     const { consent, website, ...rest } = form;
     void consent; void website;
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ v: 1, savedAt: Date.now(), step, form: rest }));
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ v: 2, savedAt: Date.now(), step, form: rest }));
   } catch {
     /* storage full or blocked: autosave is best-effort */
   }
@@ -114,22 +167,24 @@ function clearDraft() {
 }
 
 // ---------------------------------------------------------------- validation (mirrors the server)
-function validate(f: FormData, step: number): Partial<Record<Field, string>> {
-  const e: Partial<Record<Field, string>> = {};
+type Errors = Record<string, string | undefined>;
+
+function validate(f: FormData, step: number): Errors {
+  const e: Errors = {};
   const len = (v: string) => v.trim().length;
   if (step === 0) {
+    const digits = f.phone.replace(/\D/g, "").length;
     if (len(f.name) < 2) e.name = "Enter your full name.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) e.email = "Enter a valid college email.";
-    const url = f.portfolioUrl.trim();
-    if (url && !(/^https?:\/\//i.test(url) && URL.canParse(url))) e.portfolioUrl = "Enter a valid http(s) link.";
+    if (len(f.registerNo) < 3) e.registerNo = "Enter your register / roll number.";
+    if (len(f.department) < 2) e.department = "Enter your department.";
+    if (!/^\+?[\d\s\-()]{10,20}$/.test(f.phone.trim()) || digits < 10 || digits > 15) e.phone = "Enter a valid phone / WhatsApp number.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) e.email = "Enter a valid email address.";
+    if (len(f.profile) < 3) e.profile = "Share a LinkedIn, GitHub or Instagram link or handle.";
   }
-  if (step === 1 && !f.domain) e.domain = "Choose the domain you want to join.";
-  if (step === 2) {
-    if (len(f.domainAnswer) < 20) e.domainAnswer = "Please write at least 20 characters.";
-    if (len(f.skills) < 20) e.skills = "Please write at least 20 characters.";
-    if (len(f.motivation) < 40) e.motivation = "Please write at least 40 characters.";
-  }
-  if (step === 3 && !f.consent) e.consent = "Consent is required to submit.";
+  if (step === 1) Object.assign(e, validateAnswers("technical", composeAnswers(f), "universal").errors);
+  if (step === 2 && !f.domain) e.domain = "Choose the domain you want to join.";
+  if (step === 3 && f.domain) Object.assign(e, validateAnswers(f.domain, composeAnswers(f), "domain").errors);
+  if (step === 4 && !f.consent) e.consent = "Consent is required to submit.";
   return e;
 }
 
@@ -137,6 +192,7 @@ function validate(f: FormData, step: number): Partial<Record<Field, string>> {
 const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70";
 const inputClass = `w-full px-4 py-3 bg-black/40 border border-white/15 rounded-xl text-base sm:text-sm text-white placeholder:text-white/40 shadow-[inset_0_0_30px_rgba(204,215,255,0.06)] focus:outline-none focus:border-emerald-400 aria-[invalid=true]:border-rose-400/70 transition-colors ${ring}`;
 const labelClass = "text-xs font-mono text-slate-300 uppercase tracking-wider";
+const questionClass = "text-sm font-medium text-slate-100 leading-snug";
 const primaryBtn = `btn-glow w-full sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed ${ring}`;
 
 function FieldError({ id, message }: { id: string; message?: string }) {
@@ -157,6 +213,147 @@ function useMounted() {
 
 const formatDate = (iso: string) =>
   new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+
+// ---------------------------------------------------------------- one question
+interface QuestionFieldProps {
+  q: Question;
+  value: Answer | undefined;
+  otherText: string;
+  error?: string;
+  onChange: (value: Answer) => void;
+  onOtherText: (text: string) => void;
+}
+
+function QuestionField({ q, value, otherText, error, onChange, onOtherText }: QuestionFieldProps) {
+  const id = `q-${q.id}`;
+  const star = q.required ? " *" : "";
+  const describedBy = [error ? `${id}-error` : "", q.hint ? `${id}-hint` : ""].filter(Boolean).join(" ") || undefined;
+  const text = typeof value === "string" ? value : "";
+
+  const heading = (htmlFor?: string) => (
+    <>
+      {htmlFor ? (
+        <label htmlFor={htmlFor} className={questionClass}>{q.label}{star}</label>
+      ) : (
+        <legend className={questionClass}>{q.label}{star}</legend>
+      )}
+      {q.hint && <p id={`${id}-hint`} className="text-xs text-slate-400">{q.hint}</p>}
+    </>
+  );
+
+  if (q.kind === "text" || q.kind === "textarea" || q.kind === "url") {
+    const common = {
+      id,
+      "aria-required": q.required || undefined,
+      "aria-invalid": error ? (true as const) : undefined,
+      "aria-describedby": describedBy,
+      maxLength: q.maxLen,
+      value: text,
+      className: inputClass,
+      placeholder: "placeholder" in q ? q.placeholder : undefined,
+    };
+    return (
+      <div className="space-y-2">
+        {heading(id)}
+        {q.kind === "textarea" ? (
+          <textarea {...common} rows={q.maxLen > 500 ? 4 : 3} onChange={(e) => onChange(e.target.value)} />
+        ) : (
+          <input {...common} type={q.kind === "url" ? "url" : "text"} inputMode={q.kind === "url" ? "url" : undefined}
+            onChange={(e) => onChange(e.target.value)} />
+        )}
+        <div className="flex">
+          <FieldError id={id} message={error} />
+          {q.kind === "textarea" && (
+            <span className="text-[10px] font-mono text-slate-400 ml-auto" aria-hidden="true">{text.length}/{q.maxLen}</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (q.kind === "choice") {
+    const options = q.other ? [...q.options, OTHER] : q.options;
+    return (
+      <fieldset className="space-y-2" aria-describedby={describedBy}>
+        {heading()}
+        <div className="grid gap-2">
+          {options.map((opt, i) => {
+            const checked = value === opt;
+            return (
+              <label key={opt}
+                className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-emerald-400/70 ${
+                  checked ? "border-emerald-400/70 bg-emerald-500/10 text-white" : "border-white/10 bg-black/30 text-slate-300 hover:border-white/25"
+                }`}>
+                <input id={`${id}-${i}`} type="radio" name={id} value={opt} checked={checked}
+                  onChange={() => onChange(opt)} className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500" />
+                <span>{opt}</span>
+              </label>
+            );
+          })}
+        </div>
+        {q.other && value === OTHER && (
+          <input type="text" maxLength={200} value={otherText} aria-label={`${q.label} (other)`} placeholder="Tell us in a few words"
+            aria-invalid={error ? true : undefined} onChange={(e) => onOtherText(e.target.value)} className={inputClass} />
+        )}
+        <FieldError id={id} message={error} />
+      </fieldset>
+    );
+  }
+
+  if (q.kind === "multi") {
+    const picked = Array.isArray(value) ? value : [];
+    return (
+      <fieldset className="space-y-2" aria-describedby={describedBy}>
+        {heading()}
+        <div className="grid gap-2">
+          {q.options.map((opt, i) => {
+            const checked = picked.includes(opt);
+            return (
+              <label key={opt}
+                className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-emerald-400/70 ${
+                  checked ? "border-emerald-400/70 bg-emerald-500/10 text-white" : "border-white/10 bg-black/30 text-slate-300 hover:border-white/25"
+                }`}>
+                <input id={`${id}-${i}`} type="checkbox" checked={checked}
+                  onChange={() => onChange(checked ? picked.filter((p) => p !== opt) : [...picked, opt])}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500" />
+                <span>{opt}</span>
+              </label>
+            );
+          })}
+        </div>
+        <FieldError id={id} message={error} />
+      </fieldset>
+    );
+  }
+
+  // scale
+  const steps = Array.from({ length: q.to - q.from + 1 }, (_, i) => q.from + i);
+  return (
+    <fieldset className="space-y-2" aria-describedby={describedBy}>
+      {heading()}
+      <div className="flex flex-wrap gap-2">
+        {steps.map((n) => {
+          const checked = text === String(n);
+          return (
+            <label key={n}
+              className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-emerald-400/70 ${
+                checked ? "border-emerald-400/70 bg-emerald-500/20 text-white" : "border-white/10 bg-black/30 text-slate-300 hover:border-white/25"
+              }`}>
+              <input id={`${id}-${n}`} type="radio" name={id} value={n} checked={checked} aria-label={`${n} of ${q.to}`}
+                onChange={() => onChange(String(n))} className="sr-only" />
+              <span aria-hidden="true">{n}</span>
+            </label>
+          );
+        })}
+      </div>
+      <p className="flex justify-between gap-4 text-[11px] text-slate-400">
+        <span>{q.from}: {q.lowLabel}</span>
+        <span className="text-right">{q.to}: {q.highLabel}</span>
+      </p>
+      <FieldError id={id} message={error} />
+    </fieldset>
+  );
+}
 
 // ---------------------------------------------------------------- cycle banner
 function CycleBanner({ cycle, daysLeft }: { cycle: CycleInfo; daysLeft: number | null }) {
@@ -216,11 +413,10 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
   const [form, setForm] = useState<FormData>(initialDraft?.form ?? EMPTY);
   const [step, setStep] = useState(initialDraft?.step ?? 0);
   const [restored, setRestored] = useState(initialDraft !== null);
-  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
   const [reference, setReference] = useState("");
-  const [queued, setQueued] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [cycle, setCycle] = useState<CycleInfo | null>(null);
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -231,6 +427,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
   const firstRender = useRef(true);
 
   const domain = RECRUIT_DOMAINS.find((d) => d.id === form.domain);
+  const questionsForDomain = domainQuestions(form.domain);
 
   // Autosave (debounced). Not while showing the confirmation screen.
   useEffect(() => {
@@ -258,12 +455,33 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
       firstRender.current = false;
       return;
     }
-    headingRef.current?.focus();
+    headingRef.current?.focus({ preventScroll: true });
   }, [step]);
 
-  const set = <K extends keyof FormData>(key: K, value: FormData[K]) => {
+  const clearError = (key: string) => setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));
+
+  const setField = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => (prev[key as Field] ? { ...prev, [key]: undefined } : prev));
+    clearError(key);
+  };
+  const setAnswer = (id: string, value: Answer) => {
+    setForm((prev) => ({ ...prev, answers: { ...prev.answers, [id]: value } }));
+    clearError(id);
+  };
+  const setOther = (id: string, text: string) => {
+    setForm((prev) => ({ ...prev, other: { ...prev.other, [id]: text } }));
+    clearError(id);
+  };
+
+  // Only one domain per application: switching domain drops the previous domain's answers.
+  const chooseDomain = (id: DomainId) => {
+    setForm((prev) => {
+      if (prev.domain === id) return prev;
+      const keep = (rec: Record<string, never> | Record<string, unknown>) =>
+        Object.fromEntries(Object.entries(rec).filter(([k]) => UNIVERSAL_IDS.has(k)));
+      return { ...prev, domain: id, answers: keep(prev.answers) as FormData["answers"], other: keep(prev.other) as FormData["other"] };
+    });
+    clearError("domain");
   };
 
   const goToStep = (next: number) => {
@@ -272,16 +490,16 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const focusFirstError = (found: Partial<Record<Field, string>>, fields: Field[]) => {
-    const first = fields.find((f) => found[f]);
-    if (first) window.setTimeout(() => document.getElementById(FIELD_ID[first])?.focus(), 0);
+  const focusFirstError = (found: Errors, keys: string[]) => {
+    const first = keys.find((k) => found[k]);
+    if (first) window.setTimeout(() => document.getElementById(focusId(first))?.focus(), 0);
   };
 
   const handleNext = () => {
     const found = validate(form, step);
     setErrors(found);
     if (Object.keys(found).length === 0) goToStep(step + 1);
-    else focusFirstError(found, STEP_FIELDS[step]);
+    else focusFirstError(found, stepKeys(step, form.domain));
   };
 
   const startOver = () => {
@@ -303,12 +521,17 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
   };
 
   const submit = async () => {
-    const found = validate(form, 3);
+    const found = validate(form, LAST_STEP);
     setErrors(found);
     if (Object.keys(found).length > 0) {
-      focusFirstError(found, STEP_FIELDS[3]);
+      focusFirstError(found, stepKeys(LAST_STEP, form.domain));
       return;
     }
+    if (!form.domain) return;
+
+    // Send the universal answers plus the chosen domain's only, as typed (multi-selects stay lists).
+    const allowed = new Set([...UNIVERSAL_IDS, ...domainQuestions(form.domain).map((q) => q.id)]);
+    const answers = Object.fromEntries(Object.entries(composeAnswers(form)).filter(([id]) => allowed.has(id)));
 
     setSubmitting(true);
     setServerError("");
@@ -318,13 +541,14 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
-          email: form.email,
+          registerNo: form.registerNo,
+          department: form.department,
           year: form.year,
+          phone: form.phone,
+          email: form.email,
+          profile: form.profile,
           domain: form.domain,
-          skills: form.skills,
-          motivation: form.motivation,
-          domainAnswer: form.domainAnswer,
-          portfolioUrl: form.portfolioUrl,
+          answers,
           consent: form.consent,
           website: form.website,
         }),
@@ -334,7 +558,6 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
       if (res.ok && data?.success) {
         clearDraft();
         setReference(data.reference);
-        setQueued(Boolean(data.queued));
         setSubmitted(true);
         topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
@@ -346,7 +569,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
       } else if (res.status === 409) {
         setErrors({ email: data?.error || "An application with this email already exists." });
         goToStep(0);
-        window.setTimeout(() => document.getElementById("email")?.focus(), 0);
+        window.setTimeout(() => document.getElementById("f-email")?.focus(), 0);
       } else if (res.status === 429) {
         const wait = Number(res.headers.get("Retry-After"));
         setServerError(
@@ -354,13 +577,13 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
         );
       } else if (data?.fieldErrors) {
         const fe = data.fieldErrors as Record<string, string[]>;
-        const mapped: Partial<Record<Field, string>> = {};
-        for (const key of Object.keys(fe)) mapped[key as Field] = fe[key][0];
-        const firstStep = STEP_FIELDS.findIndex((fields) => fields.some((f) => mapped[f]));
+        const mapped: Errors = {};
+        for (const key of Object.keys(fe)) mapped[key] = fe[key][0];
+        const firstStep = [0, 1, 2, 3].find((s) => stepKeys(s, form.domain).some((k) => mapped[k]));
         setErrors(mapped);
-        if (firstStep >= 0 && firstStep !== 3) {
+        if (firstStep !== undefined) {
           goToStep(firstStep);
-          focusFirstError(mapped, STEP_FIELDS[firstStep]);
+          focusFirstError(mapped, stepKeys(firstStep, form.domain));
         }
         setServerError(data.error || "Please check the highlighted fields.");
       } else {
@@ -388,11 +611,9 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
             <p className="text-slate-300 text-sm leading-relaxed">
               Thank you for applying to Andropedia, <span className="text-emerald-400 font-semibold">{form.name}</span>.
               Our <span className="text-emerald-400 font-semibold">{domain?.name}</span> domain leads will review it.
-              {queued
-                ? " Your application is safely saved; your confirmation email may take a little longer than usual. "
-                : " We've emailed a confirmation to "}
-              {!queued && <span className="text-emerald-400 font-semibold break-all">{form.email}</span>}
-              {!queued && ". "}
+              {" "}We&apos;re sending a confirmation email to{" "}
+              <span className="text-emerald-400 font-semibold break-all">{form.email}</span>. It usually arrives within a minute;
+              if you don&apos;t see it, check your spam folder and keep the reference ID below.{" "}
               Shortlisted candidates will be contacted by email.
             </p>
             <p className="text-xs font-mono text-slate-400 flex items-center justify-center gap-2 flex-wrap">
@@ -416,15 +637,24 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
   }
 
   // ---- the multi-step form
-  const err = (f: Field) => errors[f];
-  const a11y = (f: Field, id: string, extra?: string) => ({
+  const err = (key: string) => errors[key];
+  const a11y = (key: string, id: string) => ({
     id,
-    "aria-invalid": err(f) ? (true as const) : undefined,
-    "aria-describedby": [err(f) ? `${id}-error` : "", extra ?? ""].filter(Boolean).join(" ") || undefined,
+    "aria-invalid": err(key) ? (true as const) : undefined,
+    "aria-describedby": err(key) ? `${id}-error` : undefined,
   });
-  const counter = (v: string, max: number) => (
-    <span className="text-[10px] font-mono text-slate-400 ml-auto" aria-hidden="true">{v.length}/{max}</span>
-  );
+  const renderQuestion = (q: Question) => {
+    const v = form.answers[q.id];
+    return (
+      <QuestionField key={q.id} q={q} value={v} otherText={form.other[q.id] ?? ""} error={err(q.id)}
+        onChange={(value) => setAnswer(q.id, value)} onOtherText={(text) => setOther(q.id, text)} />
+    );
+  };
+  const answerText = (q: Question) => {
+    const v = composeAnswers(form)[q.id];
+    const text = Array.isArray(v) ? v.join(", ") : (v ?? "");
+    return text || "Not answered";
+  };
 
   return (
     <>
@@ -432,7 +662,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (step < 3) handleNext(); // Enter in a field moves on instead of submitting early
+          if (step < LAST_STEP) handleNext(); // Enter in a field moves on instead of submitting early
           else void submit();
         }}
         noValidate
@@ -454,8 +684,9 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
             <li key={label} className="flex-1 space-y-2" aria-current={i === step ? "step" : undefined}>
               <div className={`h-1.5 rounded-full transition-colors ${i <= step ? "bg-emerald-400" : "bg-white/10"}`} />
               <span className={`block text-[10px] sm:text-xs font-mono uppercase tracking-wider ${i === step ? "text-emerald-300" : "text-slate-400"}`}>
-                <span className="sr-only">Step {i + 1} of 4: </span>
-                <span className="hidden sm:inline" aria-hidden="true">{i + 1}. </span>{label}
+                <span className="sr-only">Step {i + 1} of {STEPS.length}: </span>
+                <span className="hidden sm:inline" aria-hidden="true">{i + 1}. </span>
+                <span className={i === step ? "" : "hidden sm:inline"}>{label}</span>
               </span>
             </li>
           ))}
@@ -470,46 +701,74 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
         {step === 0 && (
           <div className="space-y-6">
             <div className="border-b border-white/10 pb-4">
-              <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">Your details</h2>
-              <p className="text-xs text-slate-400">Use an email you check often: your confirmation and updates go there. One application per email.</p>
+              <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">The basic bureaucracy</h2>
+              <p className="text-xs text-slate-400">Fill this out before your Wi-Fi cuts out. One application per email.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label htmlFor="name" className={labelClass}>Full Name *</label>
-                <input {...a11y("name", "name")} aria-required="true" type="text" autoComplete="name" enterKeyHint="next" placeholder="e.g. Maya Nair"
-                  value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} />
-                <FieldError id="name" message={err("name")} />
+                <label htmlFor="f-name" className={labelClass}>Full Name *</label>
+                <input {...a11y("name", "f-name")} aria-required="true" type="text" autoComplete="name" enterKeyHint="next" placeholder="The one on your ID card, not your gamer tag"
+                  value={form.name} onChange={(e) => setField("name", e.target.value)} className={inputClass} />
+                <FieldError id="f-name" message={err("name")} />
               </div>
               <div className="space-y-2">
-                <label htmlFor="email" className={labelClass}>College Email *</label>
-                <input {...a11y("email", "email")} aria-required="true" type="email" inputMode="email" autoComplete="email" enterKeyHint="next" placeholder="name@student.college.edu"
-                  value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass} />
-                <FieldError id="email" message={err("email")} />
+                <label htmlFor="f-registerNo" className={labelClass}>Register / Roll Number *</label>
+                <input {...a11y("registerNo", "f-registerNo")} aria-required="true" type="text" autoComplete="off" enterKeyHint="next" placeholder="e.g. RA2511026020025"
+                  value={form.registerNo} onChange={(e) => setField("registerNo", e.target.value)} className={inputClass} />
+                <FieldError id="f-registerNo" message={err("registerNo")} />
               </div>
               <div className="space-y-2">
-                <label htmlFor="year" className={labelClass}>Academic Year *</label>
-                <select {...a11y("year", "year")} value={form.year} onChange={(e) => set("year", e.target.value)} className={inputClass}>
+                <label htmlFor="f-department" className={labelClass}>Department &amp; Section *</label>
+                <input {...a11y("department", "f-department")} aria-required="true" type="text" autoComplete="off" enterKeyHint="next" placeholder="e.g. CSE AIML A"
+                  value={form.department} onChange={(e) => setField("department", e.target.value)} className={inputClass} />
+                <FieldError id="f-department" message={err("department")} />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="f-year" className={labelClass}>Year *</label>
+                <select {...a11y("year", "f-year")} value={form.year} onChange={(e) => setField("year", e.target.value)} className={inputClass}>
                   {YEARS.map((y) => (
-                    <option key={y} value={y}>{y === "other" ? "Other" : `${YEAR_LABELS[y]} (${{ first: "Freshman", second: "Sophomore", third: "Junior", fourth: "Senior" }[y]})`}</option>
+                    <option key={y} value={y}>{YEAR_LABELS[y]}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-2">
-                <label htmlFor="portfolio" className={labelClass}>GitHub / Portfolio link</label>
-                <input {...a11y("portfolioUrl", "portfolio")} type="url" inputMode="url" autoComplete="url" enterKeyHint="next" placeholder="https://github.com/yourhandle"
-                  value={form.portfolioUrl} onChange={(e) => set("portfolioUrl", e.target.value)} className={inputClass} />
-                <FieldError id="portfolio" message={err("portfolioUrl")} />
+                <label htmlFor="f-phone" className={labelClass}>Phone / WhatsApp Number *</label>
+                <input {...a11y("phone", "f-phone")} aria-required="true" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" placeholder="The one you actually check at midnight"
+                  value={form.phone} onChange={(e) => setField("phone", e.target.value)} className={inputClass} />
+                <FieldError id="f-phone" message={err("phone")} />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="f-email" className={labelClass}>Email Address *</label>
+                <input {...a11y("email", "f-email")} aria-required="true" type="email" inputMode="email" autoComplete="email" enterKeyHint="next" placeholder="Ideally not the inbox drowning in circulars"
+                  value={form.email} onChange={(e) => setField("email", e.target.value)} className={inputClass} />
+                <FieldError id="f-email" message={err("email")} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <label htmlFor="f-profile" className={labelClass}>LinkedIn / GitHub / Instagram *</label>
+                <input {...a11y("profile", "f-profile")} aria-required="true" type="text" autoComplete="off" enterKeyHint="next" placeholder="Drop whichever shows off your best side; we will stalk it"
+                  value={form.profile} onChange={(e) => setField("profile", e.target.value)} className={inputClass} />
+                <FieldError id="f-profile" message={err("profile")} />
               </div>
             </div>
           </div>
         )}
 
         {step === 1 && (
+          <div className="space-y-6">
+            <div className="border-b border-white/10 pb-4">
+              <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">Universal vibe check</h2>
+              <p className="text-xs text-slate-400">Everyone answers these. There are no wrong answers, only revealing ones.</p>
+            </div>
+            {UNIVERSAL_QUESTIONS.map(renderQuestion)}
+          </div>
+        )}
+
+        {step === 2 && (
           <fieldset className="space-y-6">
             <legend className="sr-only">Choose your domain</legend>
             <div className="border-b border-white/10 pb-4">
               <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">Choose your domain</h2>
-              <p className="text-xs text-slate-400">Pick the track you most want to be evaluated in. You can still collaborate across domains later.</p>
+              <p className="text-xs text-slate-400">Pick exactly one. It decides the questions you answer next, and the track you are evaluated in.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {RECRUIT_DOMAINS.map((d) => (
@@ -528,7 +787,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
                     <input
                       id={`domain-${d.id}`} type="radio" name="domain" value={d.id} checked={form.domain === d.id}
                       aria-describedby={err("domain") ? "domain-error" : undefined}
-                      onChange={() => set("domain", d.id)} className="accent-emerald-500 h-4 w-4"
+                      onChange={() => chooseDomain(d.id)} className="accent-emerald-500 h-4 w-4"
                     />
                   </span>
                   <span className="text-[11px] text-slate-300 leading-snug">{d.desc}</span>
@@ -539,35 +798,17 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
           </fieldset>
         )}
 
-        {step === 2 && domain && (
+        {step === 3 && domain && (
           <div className="space-y-6">
             <div className="border-b border-white/10 pb-4">
-              <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">Your answers</h2>
-              <p className="text-xs text-slate-400">Be specific and honest. We read every answer. Your progress is saved on this device as you type.</p>
+              <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">{domain.name} round</h2>
+              <p className="text-xs text-slate-400">Be specific and honest. We read every answer. Your progress is saved on this device as you go.</p>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="domainAnswer" className={labelClass}>{domain.name} question *</label>
-              <p id="domainAnswer-hint" className="text-sm text-slate-200">{domain.question}</p>
-              <textarea {...a11y("domainAnswer", "domainAnswer", "domainAnswer-hint")} aria-required="true" rows={4} maxLength={800} placeholder={domain.placeholder}
-                value={form.domainAnswer} onChange={(e) => set("domainAnswer", e.target.value)} className={inputClass} />
-              <div className="flex"><FieldError id="domainAnswer" message={err("domainAnswer")} />{counter(form.domainAnswer, 800)}</div>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="skills" className={labelClass}>Relevant experience or prior projects *</label>
-              <textarea {...a11y("skills", "skills")} aria-required="true" rows={3} maxLength={800} placeholder="Technologies, frameworks, competitions or past projects..."
-                value={form.skills} onChange={(e) => set("skills", e.target.value)} className={inputClass} />
-              <div className="flex"><FieldError id="skills" message={err("skills")} />{counter(form.skills, 800)}</div>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="motivation" className={labelClass}>Why do you want to join Andropedia? *</label>
-              <textarea {...a11y("motivation", "motivation")} aria-required="true" rows={4} maxLength={1200} placeholder="What excites you about our weekly sprints, culture and club projects?"
-                value={form.motivation} onChange={(e) => set("motivation", e.target.value)} className={inputClass} />
-              <div className="flex"><FieldError id="motivation" message={err("motivation")} />{counter(form.motivation, 1200)}</div>
-            </div>
+            {questionsForDomain.map(renderQuestion)}
           </div>
         )}
 
-        {step === 3 && (
+        {step === LAST_STEP && (
           <div className="space-y-6">
             <div className="border-b border-white/10 pb-4">
               <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-white outline-none">Review &amp; submit</h2>
@@ -576,36 +817,35 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
               {[
                 ["Name", form.name],
-                ["Email", form.email],
+                ["Register no.", form.registerNo],
+                ["Department", form.department],
                 ["Year", YEAR_LABELS[form.year]],
+                ["Phone", form.phone],
+                ["Email", form.email],
+                ["Profile", form.profile],
                 ["Domain", domain?.name ?? ""],
-                ["Portfolio", form.portfolioUrl || "None"],
               ].map(([k, v]) => (
                 <div key={k}>
                   <dt className="text-[10px] font-mono uppercase tracking-wider text-slate-400">{k}</dt>
                   <dd className="text-slate-200 break-words">{v}</dd>
                 </div>
               ))}
-              {[
-                [domain?.question ?? "Domain question", form.domainAnswer],
-                ["Experience", form.skills],
-                ["Why Andropedia", form.motivation],
-              ].map(([k, v]) => (
-                <div key={k} className="sm:col-span-2">
-                  <dt className="text-[10px] font-mono uppercase tracking-wider text-slate-400">{k}</dt>
-                  <dd className="text-slate-200 whitespace-pre-wrap break-words">{v}</dd>
+              {[...UNIVERSAL_QUESTIONS, ...questionsForDomain].map((q) => (
+                <div key={q.id} className="sm:col-span-2">
+                  <dt className="text-[10px] font-mono uppercase tracking-wider text-slate-400">{q.label}</dt>
+                  <dd className="text-slate-200 whitespace-pre-wrap break-words">{answerText(q)}</dd>
                 </div>
               ))}
             </dl>
 
             {/* Honeypot: hidden from people and screen readers, bots tend to fill it */}
             <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true"
-              value={form.website} onChange={(e) => set("website", e.target.value)} className="hidden" />
+              value={form.website} onChange={(e) => setField("website", e.target.value)} className="hidden" />
 
             <div className="space-y-2">
               <label className="flex items-start gap-3 text-sm text-slate-300 leading-relaxed cursor-pointer">
                 <input {...a11y("consent", "consent")} aria-required="true" type="checkbox" checked={form.consent}
-                  onChange={(e) => set("consent", e.target.checked)} className={`mt-1 h-4 w-4 accent-emerald-500 ${ring}`} />
+                  onChange={(e) => setField("consent", e.target.checked)} className={`mt-1 h-4 w-4 accent-emerald-500 ${ring}`} />
                 <span>I agree that Andropedia may store my application details and contact me by email about my application. *</span>
               </label>
               <FieldError id="consent" message={err("consent")} />
@@ -621,7 +861,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
             </button>
           ) : <span className="hidden sm:block" />}
 
-          {step < 3 ? (
+          {step < LAST_STEP ? (
             <button type="submit" className={primaryBtn}>
               Continue <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>

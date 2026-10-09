@@ -10,36 +10,18 @@ const inputClass =
 
 export default function LoginPage() {
   const router = useRouter();
-  const { requestCode, verifyCode } = useAuth();
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"email" | "code">("email");
+  const { login } = useAuth();
+  const [registerNo, setRegisterNo] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [infoMsg, setInfoMsg] = useState("");
 
-  const handleSendCode = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setLoading(true);
-    setErrorMsg("");
-    setInfoMsg("");
-
-    const result = await requestCode(email);
-    if (result.ok) {
-      setStep("code");
-      setInfoMsg("If that email belongs to a club member, we've sent a 6-digit code. It expires in 10 minutes.");
-    } else {
-      setErrorMsg(result.error);
-    }
-    setLoading(false);
-  };
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
-    const result = await verifyCode(email, code);
+    const result = await login(registerNo, password);
     if ("user" in result) {
       router.push(getPortalDestinationForUser(result.user));
     } else {
@@ -78,7 +60,7 @@ export default function LoginPage() {
         <div className="glass-card w-full max-w-md justify-self-center p-6 sm:p-9 lg:max-w-none">
           <div className="mb-7 space-y-1.5 text-center">
             <h2 className="text-aurora text-[28px] font-semibold leading-9 tracking-[-1px]">Welcome back</h2>
-            <p className="text-[13px] leading-5 text-white/50">Sign in with a one-time code sent to your email</p>
+            <p className="text-[13px] leading-5 text-white/50">Sign in with your register number</p>
           </div>
 
           {errorMsg && (
@@ -88,81 +70,47 @@ export default function LoginPage() {
             </div>
           )}
 
-          {infoMsg && (
-            <div role="status" className="mb-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3 text-[13px] text-emerald-100">
-              {infoMsg}
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <label htmlFor="login-regno" className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/60">
+                Register number
+              </label>
+              <input
+                id="login-regno"
+                type="text"
+                value={registerNo}
+                onChange={(e) => setRegisterNo(e.target.value)}
+                className={`${inputClass} uppercase`}
+                placeholder="RA2511026020025"
+                autoComplete="username"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={30}
+                required
+              />
             </div>
-          )}
+            <div className="space-y-1.5">
+              <label htmlFor="login-password" className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/60">
+                Password
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputClass}
+                autoComplete="current-password"
+                maxLength={60}
+                required
+              />
+              <p className="text-[12px] leading-4 text-white/40">Your password is your register number, unless an admin told you otherwise.</p>
+            </div>
 
-          {step === "email" ? (
-            <form onSubmit={handleSendCode} className="space-y-5">
-              <div className="space-y-1.5">
-                <label htmlFor="login-email" className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/60">
-                  College email
-                </label>
-                <input
-                  id="login-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="name@college.edu"
-                  autoComplete="email"
-                  required
-                />
-              </div>
-
-              <button type="submit" disabled={loading} className="btn-glow w-full disabled:opacity-60">
-                {loading ? "Sending code..." : "Email me a login code"}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyCode} className="space-y-5">
-              <div className="space-y-1.5">
-                <label htmlFor="login-code" className="break-all text-[12px] font-medium uppercase tracking-[0.08em] text-white/60">
-                  6-digit code sent to {email}
-                </label>
-                <input
-                  id="login-code"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="\d{6}"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  className={`${inputClass} text-center text-xl tracking-[0.5em]`}
-                  placeholder="------"
-                  autoComplete="one-time-code"
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <button type="submit" disabled={loading || code.length !== 6} className="btn-glow w-full disabled:opacity-60">
-                {loading ? "Verifying..." : "Enter member portal"}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </button>
-
-              <div className="flex items-center justify-between text-[13px] text-white/60">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep("email");
-                    setCode("");
-                    setErrorMsg("");
-                    setInfoMsg("");
-                  }}
-                  className="rounded hover:text-white"
-                >
-                  Use a different email
-                </button>
-                <button type="button" onClick={() => handleSendCode()} disabled={loading} className="rounded hover:text-white disabled:opacity-60">
-                  Resend code
-                </button>
-              </div>
-            </form>
-          )}
+            <button type="submit" disabled={loading} className="btn-glow w-full disabled:opacity-60">
+              {loading ? "Signing in..." : "Enter member portal"}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </form>
         </div>
       </div>
     </div>

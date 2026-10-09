@@ -1,13 +1,35 @@
 import { GoogleAuth } from "google-auth-library";
+import { callWebApp, webAppConfig } from "../web-app";
 import { emailKey } from "./email-key";
+import { ALL_QUESTION_IDS } from "./questions";
 import type { StoredApplication } from "./schema";
 
-// Column contract (docs/BACKEND_PRD.md section 2.7.1). The website only appends rows
-// and only ever writes columns A-L. Admins may add their own columns to the right (from M).
+// Column contract. Row 1 is written automatically on first use: the fixed columns, then one
+// column per question (the id from questions.ts; a column stays blank for applicants who did not
+// get that question because they chose another domain), then consent and email_status.
+// The website only appends rows and only writes these columns. Admins may add their own
+// working columns to the right of email_status.
 export const HEADERS = [
-  "reference", "submitted_at", "name", "email", "year", "domain",
-  "skills", "motivation", "portfolio_url", "consent", "email_status", "domain_answer",
+  "reference", "submitted_at", "name", "register_no", "department", "year", "phone", "email", "profile", "domain",
+  ...ALL_QUESTION_IDS,
+  "consent", "email_status",
 ] as const;
+
+/** 0-based index -> spreadsheet column letters (0 = A, 26 = AA). */
+export function colLetter(index: number): string {
+  let n = index;
+  let out = "";
+  do {
+    out = String.fromCharCode(65 + (n % 26)) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+
+const COL = (name: (typeof HEADERS)[number]) => colLetter(HEADERS.indexOf(name));
+const LAST_COL = colLetter(HEADERS.length - 1);
+const EMAIL_COL = COL("email");
+const STATUS_COL = COL("email_status");
 
 export type EmailStatus = "pending" | "sent" | "failed";
 
@@ -15,6 +37,14 @@ const API = "https://sheets.googleapis.com/v4/spreadsheets";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export class SheetsNotConfiguredError extends Error {}
+
+/** True when applications can be mirrored to a sheet at all (Apps Script web app or service account). */
+export function sheetMirrorConfigured(): boolean {
+  return webAppConfig() !== null || !!(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY && process.env.RECRUITMENT_SHEET_ID);
+}
+
+/** The web app skips a reference it already wrote, so only the service-account path needs a lookup first. */
+export const mirrorNeedsLookup = () => webAppConfig() === null;
 
 function config() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -79,10 +109,13 @@ export async function withRetry<T>(
 // Spreadsheets run values starting with = + - @ as formulas; neutralise them.
 export const safe = (v: string) => (/^[=+\-@]/.test(v) ? `'${v}` : v);
 
-export function toRow(app: StoredApplication, status: EmailStatus): string[] {
+export function toRow(app: StoredApplication, status: EmailStatus, escape = true): string[] {
+  const safe_ = escape ? safe : (v: string) => v; // the web app stores every cell as plain text, so no escaping there
   return [
-    app.reference, app.submittedAt, safe(app.name), safe(app.email), app.year, app.domain,
-    safe(app.skills), safe(app.motivation), safe(app.portfolioUrl), app.consent ? "TRUE" : "FALSE", status, safe(app.domainAnswer),
+    app.reference, app.submittedAt, safe_(app.name), safe_(app.registerNo), safe_(app.department), app.year,
+    safe_(app.phone), safe_(app.email), safe_(app.profile), app.domain,
+    ...ALL_QUESTION_IDS.map((id) => safe_(app.answers[id] ?? "")),
+    app.consent ? "TRUE" : "FALSE", status,
   ];
 }
 
@@ -92,7 +125,7 @@ let headersVerified = false;
 async function ensureHeaders(): Promise<void> {
   if (headersVerified) return;
   const { sheetId, tab } = config();
-  const range = encodeURIComponent(`${tab}!A1:L1`);
+  const range = encodeURIComponent(`${tab}!A1:${LAST_COL}1`);
   const res = await request<{ values?: string[][] }>({ url: `${API}/${sheetId}/values/${range}` });
   if (!res.data.values?.[0]?.some((c) => c?.trim())) {
     await request({
@@ -119,6 +152,14 @@ export async function findRowByReference(reference: string): Promise<number | nu
  * (a previous attempt may have succeeded even though its response was lost).
  */
 export async function appendApplication(app: StoredApplication, status: EmailStatus = "pending"): Promise<number> {
+  if (webAppConfig()) {
+    // The script skips a reference it has already written, so a retry never adds a second row.
+    return withRetry(async () => {
+      const reply = await callWebApp({ action: "append", row: toRow(app, status, false) });
+      if (typeof reply.row !== "number") throw Object.assign(new Error("Web app returned no row number"), { status: 400 });
+      return reply.row;
+    });
+  }
   const { sheetId, tab } = config();
   await withRetry(() => ensureHeaders());
 
@@ -127,7 +168,7 @@ export async function appendApplication(app: StoredApplication, status: EmailSta
       const existing = await findRowByReference(app.reference);
       if (existing) return existing;
     }
-    const range = encodeURIComponent(`${tab}!A:L`);
+    const range = encodeURIComponent(`${tab}!A:${LAST_COL}`);
     const res = await request<{ updates?: { updatedRange?: string } }>({
       url: `${API}/${sheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
       method: "POST",
@@ -141,7 +182,7 @@ export async function appendApplication(app: StoredApplication, status: EmailSta
 
 export async function setEmailStatus(row: number, status: EmailStatus): Promise<void> {
   const { sheetId, tab } = config();
-  const range = encodeURIComponent(`${tab}!K${row}`);
+  const range = encodeURIComponent(`${tab}!${STATUS_COL}${row}`);
   await withRetry(() =>
     request({ url: `${API}/${sheetId}/values/${range}?valueInputOption=RAW`, method: "PUT", data: { values: [[status]] } })
   );
@@ -150,24 +191,27 @@ export async function setEmailStatus(row: number, status: EmailStatus): Promise<
 /** True if an application with this email (Gmail dots/+tags ignored) is already in the sheet. */
 export async function emailExists(email: string): Promise<boolean> {
   const { sheetId, tab } = config();
-  const range = encodeURIComponent(`${tab}!D2:D`);
+  const range = encodeURIComponent(`${tab}!${EMAIL_COL}2:${EMAIL_COL}`);
   const res = await withRetry(() => request<{ values?: string[][] }>({ url: `${API}/${sheetId}/values/${range}` }));
   const target = emailKey(email);
   return (res.data.values ?? []).some((r) => emailKey((r[0] ?? "").replace(/^'/, "")) === target);
 }
 
-/** Reads every data row (A-L) with its sheet row number. Used by the resend script. */
+/** Reads every data row with its sheet row number. Used by the resend script. */
 export async function readApplications(): Promise<Array<{ row: number; app: StoredApplication; status: string }>> {
   const { sheetId, tab } = config();
-  const range = encodeURIComponent(`${tab}!A2:L`);
+  const range = encodeURIComponent(`${tab}!A2:${LAST_COL}`);
   const res = await withRetry(() => request<{ values?: string[][] }>({ url: `${API}/${sheetId}/values/${range}` }));
+  const at = (r: string[], name: (typeof HEADERS)[number]) => r[HEADERS.indexOf(name)] ?? "";
   return (res.data.values ?? []).map((r, i) => ({
     row: i + 2,
-    status: r[10] ?? "",
+    status: at(r, "email_status"),
     app: {
-      reference: r[0] ?? "", submittedAt: r[1] ?? "", name: r[2] ?? "", email: r[3] ?? "",
-      year: r[4] ?? "", domain: r[5] ?? "", skills: r[6] ?? "", motivation: r[7] ?? "",
-      portfolioUrl: r[8] ?? "", consent: r[9] === "TRUE", domainAnswer: r[11] ?? "",
+      reference: at(r, "reference"), submittedAt: at(r, "submitted_at"), name: at(r, "name"),
+      registerNo: at(r, "register_no"), department: at(r, "department"), year: at(r, "year"),
+      phone: at(r, "phone"), email: at(r, "email"), profile: at(r, "profile"), domain: at(r, "domain"),
+      answers: Object.fromEntries(ALL_QUESTION_IDS.map((id) => [id, r[HEADERS.indexOf(id as never)] ?? ""]).filter(([, v]) => v)),
+      consent: at(r, "consent") === "TRUE",
     },
   }));
 }

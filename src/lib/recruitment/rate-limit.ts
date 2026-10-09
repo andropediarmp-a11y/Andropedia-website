@@ -1,6 +1,6 @@
-// In-memory sliding window. Per server instance only: on serverless hosts this is
-// best-effort protection against bursts, not a hard guarantee. Durable limits live in the
-// database (login codes are limited per email there).
+// In-memory sliding window, used as the fallback for the shared database limiter (lib/rate-limit-db.ts).
+// best-effort protection against bursts.
+
 const hits = new Map<string, number[]>();
 
 export interface RateResult {

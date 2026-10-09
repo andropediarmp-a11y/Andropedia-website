@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { handleDataError } from "@/lib/api-errors";
-import { allowedEmailDomains } from "@/lib/env";
 import { sendRsvpConfirmation, sendTeamConfirmation } from "@/lib/events-email";
 import { rsvpSchema, teamRsvpSchema } from "@/lib/events-schema";
 import { markRsvpEmailSent, rsvpTeam, rsvpToEvent } from "@/lib/events";
 import { clientIp, jsonError, readJson } from "@/lib/http";
 import { log } from "@/lib/logger";
-import { isAllowedDomain } from "@/lib/recruitment/email-key";
-import { checkRateLimit } from "@/lib/recruitment/rate-limit";
+import { rateLimit } from "@/lib/rate-limit-db";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -26,15 +24,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!body.ok) return body.response;
   const isTeam = typeof body.data === "object" && body.data !== null && "members" in body.data;
 
-  const limit = checkRateLimit(`rsvp-ip:${clientIp(request)}`, 10, HOUR);
+  const limit = await rateLimit(`rsvp-ip:${clientIp(request)}`, 10, HOUR);
   const tooMany = () =>
     jsonError("Too many registrations. Please try again later.", 429, { headers: { "Retry-After": String(limit.retryAfterSec) } });
-
-  const allowed = allowedEmailDomains();
-  const wrongDomain = () => {
-    const message = "Please use your college email address.";
-    return jsonError(message, 400, { fieldErrors: { email: [message] } });
-  };
 
   if (isTeam) {
     const parsed = teamRsvpSchema.safeParse(body.data);
@@ -47,7 +39,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Honeypot: pretend success, store nothing, send nothing.
     if (input.website) return NextResponse.json({ success: true }, { status: 201 });
     if (limit.limited) return tooMany();
-    if (input.members.some((m) => !isAllowedDomain(m.email, allowed))) return wrongDomain();
 
     try {
       const { rsvpId, event } = await rsvpTeam(id, { teamName: input.teamName, members: input.members });
@@ -79,7 +70,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Honeypot: pretend success, store nothing, send nothing.
   if (input.website) return NextResponse.json({ success: true }, { status: 201 });
   if (limit.limited) return tooMany();
-  if (!isAllowedDomain(input.email, allowed)) return wrongDomain();
 
   try {
     const { rsvpId, event } = await rsvpToEvent(id, { name: input.name, email: input.email });

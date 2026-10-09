@@ -1,13 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Download, Eye, EyeOff, Lock, LockOpen, Plus, Trash2, Users } from "lucide-react";
+import { Download, Eye, EyeOff, Lock, LockOpen, Pencil, Plus, Trash2, Users } from "lucide-react";
 import type { AdminEvent, Attendee } from "@/lib/events";
 
 const fmt = new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" });
 
 const input = "w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-emerald-400/60 focus:outline-none";
-const blank = { title: "", type: "Workshop", description: "", location: "", startsAt: "", endsAt: "", capacity: "", teamMin: "", teamMax: "", prize: "" };
+const blank = { title: "", type: "Workshop", description: "", location: "", startsAt: "", endsAt: "", capacity: "", teamMin: "", teamMax: "", prize: "", dateTbc: false };
+
+/** An ISO time as the value of a datetime-local input (the admin's own time zone). */
+const toLocalInput = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
 
 type Notice = { type: "error" | "success"; text: string } | null;
 
@@ -16,6 +24,7 @@ export function EventsAdmin() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [form, setForm] = useState(blank);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
   const [attendees, setAttendees] = useState<{ eventId: string; list: Attendee[] } | null>(null);
@@ -54,32 +63,53 @@ export function EventsAdmin() {
     }
   };
 
+  // Fills the form with an existing event so its details can be completed or corrected.
+  const startEdit = (ev: AdminEvent) => {
+    setEditingId(ev.id);
+    setForm({
+      title: ev.title,
+      type: ev.type,
+      description: ev.description,
+      location: ev.location,
+      startsAt: ev.dateTbc ? "" : toLocalInput(ev.startsAt),
+      endsAt: toLocalInput(ev.endsAt),
+      capacity: ev.capacity != null ? String(ev.capacity) : "",
+      teamMin: ev.teamMin != null ? String(ev.teamMin) : "",
+      teamMax: ev.teamMax != null ? String(ev.teamMax) : "",
+      prize: ev.prize ?? "",
+      dateTbc: ev.dateTbc,
+    });
+    setShowForm(true);
+    setNotice(null);
+  };
+
+  const closeForm = () => {
+    setForm(blank);
+    setEditingId(null);
+    setShowForm(false);
+  };
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.startsAt) return setNotice({ type: "error", text: "Choose a start date and time." });
-    const done = await call(
-      "create",
-      "/api/admin/events",
-      "POST",
-      {
-        title: form.title,
-        type: form.type,
-        description: form.description,
-        location: form.location,
-        startsAt: new Date(form.startsAt).toISOString(),
-        endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
-        capacity: form.capacity ? Number(form.capacity) : null,
-        teamMin: form.teamMin ? Number(form.teamMin) : null,
-        teamMax: form.teamMax ? Number(form.teamMax) : null,
-        prize: form.prize || null,
-        isPublished: false,
-      },
-      "Event saved as a draft. Publish it when it is ready."
-    );
-    if (done) {
-      setForm(blank);
-      setShowForm(false);
-    }
+    if (!form.dateTbc && !form.startsAt) return setNotice({ type: "error", text: "Choose a start date and time, or tick \"Date not announced yet\"." });
+    const fields = {
+      title: form.title,
+      type: form.type,
+      description: form.description,
+      location: form.location,
+      endsAt: !form.dateTbc && form.endsAt ? new Date(form.endsAt).toISOString() : null,
+      capacity: form.capacity ? Number(form.capacity) : null,
+      teamMin: form.teamMin ? Number(form.teamMin) : null,
+      teamMax: form.teamMax ? Number(form.teamMax) : null,
+      prize: form.prize || null,
+      dateTbc: form.dateTbc,
+      // With no announced date the stored start is just a placeholder (the page never shows it).
+      ...(form.startsAt ? { startsAt: new Date(form.startsAt).toISOString() } : {}),
+    };
+    const done = editingId
+      ? await call("save", `/api/admin/events/${editingId}`, "PATCH", fields, "Event updated.")
+      : await call("create", "/api/admin/events", "POST", { ...fields, startsAt: fields.startsAt ?? new Date().toISOString(), isPublished: false }, "Event saved as a draft. Publish it when it is ready.");
+    if (done) closeForm();
   };
 
   const showAttendees = async (id: string) => {
@@ -105,7 +135,7 @@ export function EventsAdmin() {
           <h2 className="text-xl font-bold text-white">Events & reservations</h2>
           <p className="mt-1 text-xs text-slate-400">Create events, publish them to the public Events page, and see who reserved a seat.</p>
         </div>
-        <button type="button" onClick={() => setShowForm((v) => !v)} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-400">
+        <button type="button" onClick={() => (showForm ? closeForm() : setShowForm(true))} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-400">
           <Plus className="h-4 w-4" /> New event
         </button>
       </div>
@@ -123,8 +153,12 @@ export function EventsAdmin() {
           <textarea className={`${input} sm:col-span-2`} placeholder="Description (10+ characters)" value={form.description} onChange={set("description")} required minLength={10} maxLength={2000} rows={3} />
           <input className={input} placeholder="Location" value={form.location} onChange={set("location")} required maxLength={160} />
           <input className={input} placeholder="Prize or perk (optional)" value={form.prize} onChange={set("prize")} maxLength={160} />
-          <label className="space-y-1 text-xs text-slate-400">Starts<input className={input} type="datetime-local" value={form.startsAt} onChange={set("startsAt")} required /></label>
-          <label className="space-y-1 text-xs text-slate-400">Ends (optional)<input className={input} type="datetime-local" value={form.endsAt} onChange={set("endsAt")} /></label>
+          <label className="flex items-center gap-2 text-xs text-slate-300 sm:col-span-2">
+            <input type="checkbox" checked={form.dateTbc} onChange={(e) => setForm((f) => ({ ...f, dateTbc: e.target.checked }))} className="accent-emerald-400" />
+            Date not announced yet (shows &ldquo;Date to be announced&rdquo; and lists it under Past Events)
+          </label>
+          <label className="space-y-1 text-xs text-slate-400">Starts<input className={input} type="datetime-local" value={form.startsAt} onChange={set("startsAt")} required={!form.dateTbc} disabled={form.dateTbc} /></label>
+          <label className="space-y-1 text-xs text-slate-400">Ends (optional)<input className={input} type="datetime-local" value={form.endsAt} onChange={set("endsAt")} disabled={form.dateTbc} /></label>
           <input className={input} type="number" min={1} placeholder="Seat or team limit (empty = unlimited)" value={form.capacity} onChange={set("capacity")} />
           <div className="grid grid-cols-2 gap-3">
             <input className={input} type="number" min={1} max={10} placeholder="Min team size" aria-label="Minimum team size" value={form.teamMin} onChange={set("teamMin")} />
@@ -132,8 +166,8 @@ export function EventsAdmin() {
           </div>
           <p className="text-xs text-slate-500 sm:col-span-2">Leave both team sizes empty for a normal event where each person reserves a seat. Fill both to make it a team event.</p>
           <div className="flex items-end justify-end gap-2 sm:col-span-2">
-            <button type="button" onClick={() => setShowForm(false)} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-300 hover:text-white">Cancel</button>
-            <button type="submit" disabled={busy === "create"} className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-400 disabled:opacity-60">Save draft</button>
+            <button type="button" onClick={closeForm} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-300 hover:text-white">Cancel</button>
+            <button type="submit" disabled={busy === "create" || busy === "save"} className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-400 disabled:opacity-60">{editingId ? "Save changes" : "Save draft"}</button>
           </div>
         </form>
       )}
@@ -148,7 +182,7 @@ export function EventsAdmin() {
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-white">{ev.title}</p>
                   <p className="text-xs text-slate-400">
-                    {fmt.format(new Date(ev.startsAt))} · {ev.location} · {ev.rsvpCount}{ev.capacity ? ` / ${ev.capacity}` : ""} {ev.teamMax != null ? `teams (of ${ev.teamMin === ev.teamMax ? ev.teamMax : `${ev.teamMin}-${ev.teamMax}`})` : "reserved"}
+                    {ev.dateTbc ? "Date to be announced" : fmt.format(new Date(ev.startsAt))} · {ev.location} · {ev.rsvpCount}{ev.capacity ? ` / ${ev.capacity}` : ""} {ev.teamMax != null ? `teams (of ${ev.teamMin === ev.teamMax ? ev.teamMax : `${ev.teamMin}-${ev.teamMax}`})` : "reserved"}
                   </p>
                   <p className="mt-1 flex flex-wrap gap-2 text-[10px] font-mono uppercase tracking-wider">
                     <span className={ev.isPublished ? "text-emerald-300" : "text-amber-300"}>{ev.isPublished ? "Published" : "Draft"}</span>
@@ -161,6 +195,9 @@ export function EventsAdmin() {
                   </button>
                   <button type="button" disabled={busy === `reg:${ev.id}`} onClick={() => call(`reg:${ev.id}`, `/api/admin/events/${ev.id}`, "PATCH", { registrationOpen: !ev.registrationOpen })} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10">
                     {ev.registrationOpen ? <><Lock className="h-3.5 w-3.5" /> Close reservations</> : <><LockOpen className="h-3.5 w-3.5" /> Reopen reservations</>}
+                  </button>
+                  <button type="button" onClick={() => startEdit(ev)} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10">
+                    <Pencil className="h-3.5 w-3.5" /> Edit
                   </button>
                   <button type="button" onClick={() => showAttendees(ev.id)} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10">
                     <Users className="h-3.5 w-3.5" /> Attendees

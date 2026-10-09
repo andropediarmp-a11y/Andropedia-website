@@ -28,7 +28,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const resTasks = await fetch(`/api/tasks?userId=${currentUser?.id || "usr_1"}`);
+        const resTasks = await fetch("/api/tasks") // the server returns only this member's tasks;
         const dataTasks = await resTasks.json();
         if (dataTasks.success) {
           setTasks(dataTasks.tasks);

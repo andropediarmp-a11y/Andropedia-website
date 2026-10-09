@@ -1,78 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
-import { FolderGit2, ExternalLink, Star, Search,} from "lucide-react";
+import { FolderGit2, ExternalLink, Search } from "lucide-react";
 import { GithubIcon } from "@/components/ui/SocialIcons";
+
+interface Project {
+  id: string;
+  title: string;
+  domain: string;
+  description: string;
+  tags: string[];
+  github: string | null;
+  live: string | null;
+  status: string;
+}
 
 export default function ProjectsPage() {
   const [selectedDomain, setSelectedDomain] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
 
-  const projects = [
-    {
-      id: "proj_1",
-      title: "Vortex-Edge: Real-time Webhook Hub",
-      domain: "Web",
-      description: "Distributed webhook ingestion and fan-out engine running on edge runtimes with Redis stream buffering and automated exponential backoff.",
-      tags: ["Next.js", "TypeScript", "Redis", "Cloudflare Workers"],
-      github: "https://github.com",
-      live: "https://vortex-edge.demo.app",
-      stars: 1240,
-      status: "Live & Open Source"
-    },
-    {
-      id: "proj_2",
-      title: "EdgeViT: Micro Gesture Transformer",
-      domain: "R&D",
-      description: "Distilled Vision Transformer achieving 98.2% accuracy in hand gesture parsing with FP16 WebGL quantization running at 60 FPS in browsers.",
-      tags: ["PyTorch", "ONNX", "WebGL", "TypeScript"],
-      github: "https://github.com",
-      live: "https://edgevit.demo.app",
-      stars: 890,
-      status: "Research Prototype"
-    },
-    {
-      id: "proj_3",
-      title: "Lock-Free B-Tree Engine in Rust",
-      domain: "Technical",
-      description: "Concurrent lock-free B-Tree implementation using epoch-based memory reclamation for ultra-high throughput write and scan operations.",
-      tags: ["Rust", "Atomic Primitives", "Concurrency", "Linux"],
-      github: "https://github.com",
-      stars: 670,
-      status: "Production Library"
-    },
-    {
-      id: "proj_4",
-      title: "AndroUI Cyberpunk Design System",
-      domain: "Design",
-      description: "Full-scale dark mode component architecture in Figma and React with WCAG AAA accessible contrast modes and fluid CSS micro-animations.",
-      tags: ["Figma", "Design Tokens", "Tailwind CSS", "Storybook"],
-      live: "https://androui.demo.app",
-      stars: 450,
-      status: "Design System"
-    },
-    {
-      id: "proj_5",
-      title: "AndroOJ - Distributed Judge",
-      domain: "Technical",
-      description: "Sandboxed competitive programming execution engine supporting 12 languages with Linux cgroups security isolation and automated memory profiling.",
-      tags: ["Go", "Docker", "Linux Cgroups", "gRPC"],
-      github: "https://github.com",
-      stars: 520,
-      status: "Campus Deployment"
-    },
-    {
-      id: "proj_6",
-      title: "Sponsorship & Partnership Hub",
-      domain: "PR",
-      description: "Dynamic portal tracking corporate outreach, grant allocations, mentor allocations, and hackathon prize bounties across 15+ sponsors.",
-      tags: ["Next.js", "PostgreSQL", "Tailwind CSS"],
-      github: "https://github.com",
-      stars: 210,
-      status: "Internal Operations"
-    }
-  ];
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data?.success) throw new Error("load failed");
+        setProjects(data.projects);
+        setState("ready");
+      })
+      .catch(() => setState("error"));
+  }, []);
 
   const domains = ["All", "Web", "Technical", "R&D", "Design", "PR"];
 
@@ -133,6 +92,18 @@ export default function ProjectsPage() {
           </div>
         </div>
 
+        {state !== "ready" || filtered.length === 0 ? (
+          <p className="text-center text-sm text-white/60 py-16">
+            {state === "loading"
+              ? "Loading projects..."
+              : state === "error"
+                ? "We couldn't load the projects right now. Please try again shortly."
+                : projects.length === 0
+                  ? "Our members' projects will be showcased here soon."
+                  : "No projects match your search."}
+          </p>
+        ) : null}
+
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((proj) => (
@@ -145,10 +116,6 @@ export default function ProjectsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                     {proj.domain}
-                  </span>
-                  <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                    <span>{proj.stars}</span>
                   </span>
                 </div>
 

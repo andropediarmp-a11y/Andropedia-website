@@ -12,7 +12,7 @@ export function Hero() {
       <BlurOrb variant="hero" size={1054} opacity={0.4} position={{ left: "50%", top: "62%" }} />
 
       <div className="relative mx-auto flex max-w-[700px] flex-col items-center gap-5 px-5 text-center">
-        <Link href="/join" className="btn-glass" data-cursor-text="Join">
+        <Link href="/join#how-selection-works" className="btn-glass" data-cursor-text="Join">
           Recruitment 2026 is open
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
@@ -28,7 +28,7 @@ export function Hero() {
         </p>
 
         <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:gap-4">
-          <Link href="/join" className="btn-glow" data-cursor-text="Join">
+          <Link href="/join#how-selection-works" className="btn-glow" data-cursor-text="Join">
             Join now <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Link>
           <a href="#domains" className="btn-glass !py-[10px]">

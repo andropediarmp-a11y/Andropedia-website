@@ -11,7 +11,8 @@ const CACHE = { "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-re
 async function membersFromSheet() {
   const live = await getLiveMembers();
   return live.map((m) => {
-    const { email, ...publicFields } = m;
+    const { email, registerNo, ...publicFields } = m;
+    void registerNo;
     return { ...publicFields, position: LEADERSHIP[email] ?? "member" };
   });
 }
