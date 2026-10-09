@@ -210,18 +210,16 @@ export default function Events() {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-black text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
-      <GridLines variant="hero" />
-      <BlurOrb variant="features" size={800} opacity={0.35} position={{ left: "50%", top: "360px" }} />
       <div className="relative max-w-7xl mx-auto space-y-10">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="chip">
             <Calendar className="w-3.5 h-3.5" />
             HACKATHONS & WORKSHOPS
           </div>
-          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
-            <span className="text-fade">Events &</span> <span className="text-aurora">hackathons</span>
+          <h1 className="font-mono text-[36px] sm:text-[54px] lg:text-[62px] font-bold uppercase leading-[1.08] tracking-tight">
+            <span className="text-fade">Events & </span><span className="text-aurora">Hackathons</span>
           </h1>
-          <p className="text-white/70 text-base leading-6">
+          <p className="text-white/70 text-base leading-6 font-sans">
             Participate in flagship hackathons, intense algorithmic battles, and technical workshops organized by Andropedia.
           </p>
         </div>

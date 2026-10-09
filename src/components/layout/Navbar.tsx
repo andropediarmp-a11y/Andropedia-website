@@ -22,12 +22,10 @@ interface MenuItem {
 }
 
 const ITEMS: MenuItem[] = [
-  { name: "Home", href: "/", accent: ACCENTS.blue },
-  { name: "Domains", href: "/#domains", accent: ACCENTS.teal },
+  { name: "Join us", href: "/join#how-selection-works", accent: ACCENTS.indigo },
   { name: "Events", href: "/events", accent: ACCENTS.purple },
-  { name: "Projects", href: "/projects", accent: ACCENTS.pink },
-  { name: "Team", href: "/team", accent: ACCENTS.amber },
-  { name: "Join now", href: "/join#how-selection-works", accent: ACCENTS.indigo },
+  { name: "Teams", href: "/domains", accent: ACCENTS.teal },
+  { name: "Members", href: "/team", accent: ACCENTS.amber },
 ];
 
 export function Navbar() {
@@ -78,10 +76,7 @@ export function Navbar() {
     };
   }, [open, close]);
 
-  const portalItem: MenuItem = currentUser
-    ? { name: "Portal", href: getPortalDestinationForUser(currentUser), accent: ACCENTS.coral }
-    : { name: "Portal login", href: "/portal/login", accent: ACCENTS.coral };
-  const items = [...ITEMS, portalItem];
+  const items = ITEMS;
 
   // Home always lands on the hero: from another page it opens "/", and on the home page itself it jumps back to the top.
   const isHome = (href: string) => href === "/";
@@ -101,26 +96,8 @@ export function Navbar() {
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       <div className="flex items-start justify-between px-4 pt-3 sm:px-6 sm:pt-4">
-        {/* ---------- left: logo card (also opens the dial) and the wordmark ---------- */}
-        <div ref={cardRef} className="pointer-events-auto relative flex items-center gap-3" onMouseEnter={enter} onMouseLeave={leave}>
-          <button
-            type="button"
-            onClick={() => {
-              if (pinned) close();
-              else setPinned(true);
-            }}
-            onFocus={() => setHovered(true)}
-            aria-expanded={open}
-            aria-haspopup="true"
-            aria-controls="site-menu"
-            aria-label="Site menu"
-            data-cursor-text="Menu"
-            className="group relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/[0.06] shadow-[inset_0_0_20px_rgba(204,215,255,0.08)] backdrop-blur-[12px] transition-colors hover:border-white/40 hover:bg-white/[0.12] focus-visible:ring-2 focus-visible:ring-emerald-400/70"
-          >
-            <Terminal className="h-5 w-5 text-white transition-transform group-hover:scale-110" aria-hidden="true" />
-            <span aria-hidden="true" className="absolute -bottom-1 left-1/2 h-[3px] w-5 -translate-x-1/2 rounded-full bg-gradient-to-r from-teal-300 via-blue-400 to-fuchsia-400 opacity-80" />
-          </button>
-
+        {/* ---------- left: logo only, touching/clicking returns to home page ---------- */}
+        <div ref={cardRef} className="pointer-events-auto relative flex items-center" onMouseEnter={enter} onMouseLeave={leave}>
           <Link
             href="/"
             onClick={(e) => {
@@ -130,20 +107,20 @@ export function Navbar() {
               }
               close();
             }}
-            className="rounded-md p-1 text-[18px] font-bold leading-none tracking-[-0.9px] text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.65)]"
             data-cursor-text="Home"
             aria-label="Andropedia home"
+            className="group flex items-center justify-center p-1 transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400"
           >
-            Andropedia
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Andropedia"
+              className="h-10 w-auto object-contain drop-shadow-[0_0_16px_rgba(0,102,255,0.75)] transition-all duration-300 group-hover:drop-shadow-[0_0_24px_rgba(0,212,255,0.95)]"
+            />
           </Link>
         </div>
 
-        {/* ---------- right: recruitment ---------- */}
-        <Link href="/join#how-selection-works" className="btn-glass pointer-events-auto" data-cursor-text="Apply">
-          <span className="hidden sm:inline">Recruitment 2026 is open</span>
-          <span className="sm:hidden">Recruitment open</span>
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        <div className="w-10" />
       </div>
 
       {/* ---------- centre: the half dial, with a slim handle that peeks out when it is closed ---------- */}
@@ -186,45 +163,6 @@ export function Navbar() {
                 }}
                 onSelect={(item) => goTo(item.href)}
               />
-              <p className="mt-2 text-center text-[11px] leading-4 text-white/45">Hold a number, pull it round to the stop, then let go.</p>
-
-              {/* the same pages as plain links: for keyboards, screen readers and anyone who prefers to just click */}
-              <ul className="mx-auto mt-2 grid w-[min(94vw,430px)] grid-cols-3 gap-x-1 gap-y-0.5 rounded-2xl border border-white/10 bg-black/60 p-2 backdrop-blur-xl">
-                {items.map((item, i) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      onClick={(e) => {
-                        if (isHome(item.href) && pathname === "/") {
-                          e.preventDefault();
-                          jumpToHero();
-                        }
-                        close();
-                      }}
-                      style={accentVars(item.accent)}
-                      data-cursor-text={item.name}
-                      className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-[12.5px] font-medium text-white/80 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
-                    >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-mono text-[11px]" style={{ borderColor: "var(--a1-line)", color: "var(--a2)" }}>
-                        {i + 1}
-                      </span>
-                      <span className="truncate">{item.name}</span>
-                    </Link>
-                  </li>
-                ))}
-                {currentUser && (
-                  <li className="col-span-3 border-t border-white/10 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] font-medium text-white/60 hover:bg-white/[0.07] hover:text-white"
-                    >
-                      <LogOut className="h-4 w-4" aria-hidden="true" />
-                      Log out
-                    </button>
-                  </li>
-                )}
-              </ul>
             </motion.nav>
           )}
         </AnimatePresence>
