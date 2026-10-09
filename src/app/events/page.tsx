@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
-import { Calendar, MapPin, Users, Trophy, Sparkles, Check, X, Loader2 } from "lucide-react";
+import { Calendar, MapPin, Trophy, Sparkles, Check, X, Loader2 } from "lucide-react";
 import { TeamDialog } from "@/components/events/TeamDialog";
 import type { EventStatus, PublicEvent } from "@/lib/events";
 
@@ -25,18 +25,6 @@ function when(e: PublicEvent) {
   if (!e.endsAt) return dateFmt.format(start);
   const end = new Date(e.endsAt);
   return dayFmt.format(start) === dayFmt.format(end) ? `${dateFmt.format(start)} - ${end.toLocaleTimeString("en-IN", { timeStyle: "short", timeZone: "Asia/Kolkata" })}` : `${dayFmt.format(start)} - ${dayFmt.format(end)}`;
-}
-
-function seats(e: PublicEvent) {
-  if (e.dateTbc) return null; // nothing to say about seats for an event with no details yet
-  if (e.teamMax != null) {
-    const size = e.teamMin === e.teamMax ? `${e.teamMax}` : `${e.teamMin}-${e.teamMax}`;
-    const teams = e.capacity == null ? `${e.rsvpCount} teams registered` : e.status === "full" ? `Full (${e.capacity} teams)` : `${e.seatsLeft} of ${e.capacity} team spots left`;
-    return `Teams of ${size} · ${teams}`;
-  }
-  if (e.capacity == null) return `${e.rsvpCount} going`;
-  if (e.status === "full") return `Full (${e.capacity} seats)`;
-  return `${e.seatsLeft} of ${e.capacity} seats left`;
 }
 
 function loadReserved(): string[] {
@@ -160,7 +148,7 @@ export default function Events() {
   const [events, setEvents] = useState<PublicEvent[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
-  const [reserved, setReserved] = useState<string[]>([]);
+  const [, setReserved] = useState<string[]>([]);
   const [dialogFor, setDialogFor] = useState<PublicEvent | null>(null);
 
   const load = useCallback(() => {
@@ -210,24 +198,31 @@ export default function Events() {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-black text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <GridLines variant="hero" />
+      <BlurOrb variant="features" size={800} opacity={0.35} position={{ left: "50%", top: "360px" }} />
       <div className="relative max-w-7xl mx-auto space-y-10">
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <div className="text-center max-w-3xl mx-auto space-y-3">
           <div className="chip">
             <Calendar className="w-3.5 h-3.5" />
             HACKATHONS & WORKSHOPS
           </div>
-          <h1 className="font-mono text-[36px] sm:text-[54px] lg:text-[62px] font-bold uppercase leading-[1.08] tracking-tight">
-            <span className="text-fade">Events & </span><span className="text-aurora">Hackathons</span>
+          <h1 className="text-[40px] sm:text-[60px] font-medium leading-[1.05] tracking-[-2px] sm:tracking-[-3px]">
+            <span className="text-fade">Events &</span> <span className="text-aurora">hackathons</span>
           </h1>
-          <p className="text-white/70 text-base leading-6 font-sans">
+          <p className="text-white/70 text-base leading-6">
             Participate in flagship hackathons, intense algorithmic battles, and technical workshops organized by Andropedia.
           </p>
         </div>
 
         <div className="flex items-center justify-center gap-2">
           {tab("upcoming", "Upcoming Events", upcoming.length)}
-          {tab("past", "Past Events", past.length)}
+          {tab("past", "The Archive", past.length)}
         </div>
+        {activeTab === "past" && (
+          <p className="-mt-4 text-center text-xs font-mono uppercase tracking-[0.18em] text-emerald-300/70">
+            Dream. Design. Develop. · Where we&apos;ve been
+          </p>
+        )}
 
         {loadError && <p role="alert" className="text-center text-sm text-amber-300">We could not load events right now. Please refresh in a moment.</p>}
         {!events && !loadError && <p className="text-center text-xs font-mono uppercase tracking-[0.18em] text-slate-500">Loading events...</p>}
@@ -239,9 +234,7 @@ export default function Events() {
 
         <div className="space-y-6 max-w-5xl mx-auto">
           {currentList.map((ev) => {
-            const isReserved = reserved.includes(ev.id);
             const badge = BADGE[ev.status];
-            const canReserve = ev.status === "open" && !isReserved;
             return (
               <div
                 key={ev.id}
@@ -254,40 +247,16 @@ export default function Events() {
                     <span className={`text-xs font-mono font-medium px-2.5 py-0.5 rounded-full border ${badge.color}`}>{badge.label}</span>
                   </div>
                   <h2 className="text-2xl font-bold text-white hover:text-emerald-300 transition-colors">{ev.title}</h2>
-                  <p className="text-sm text-slate-300 leading-relaxed">{ev.description}</p>
+                  <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{ev.description}</p>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-mono pt-2">
                     <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-emerald-400" /><span>{when(ev)}</span></div>
                     <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-cyan-400" /><span>{ev.location}</span></div>
-                    {seats(ev) && <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-400" /><span>{seats(ev)}</span></div>}
                     {ev.prize && (
                       <div className="flex items-center gap-1.5 text-amber-300 font-semibold"><Trophy className="w-3.5 h-3.5" /><span>{ev.prize}</span></div>
                     )}
                   </div>
                 </div>
 
-                {activeTab === "upcoming" && (
-                  <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3">
-                    <button
-                      onClick={() => canReserve && setDialogFor(ev)}
-                      disabled={!canReserve}
-                      className={`w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                        isReserved
-                          ? "bg-slate-800 text-emerald-400 border border-emerald-500/40"
-                          : canReserve
-                            ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
-                            : "bg-slate-800 text-slate-500 border border-white/10 cursor-not-allowed"
-                      }`}
-                    >
-                      {isReserved ? (
-                        <><Check className="w-4 h-4" /><span>{ev.teamMax != null ? "Team Registered" : "Seat Reserved"}</span></>
-                      ) : canReserve ? (
-                        <><Sparkles className="w-4 h-4" /><span>{ev.teamMax != null ? "Register Team" : "Reserve Seat"}</span></>
-                      ) : (
-                        <span>{ev.status === "full" ? "Event Full" : "Registrations Closed"}</span>
-                      )}
-                    </button>
-                  </div>
-                )}
               </div>
             );
           })}

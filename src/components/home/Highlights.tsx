@@ -17,11 +17,11 @@ export function Highlights() {
       <div className="relative mx-auto max-w-[1260px] space-y-14">
         <Reveal className="max-w-[720px] space-y-7">
           <p className="text-[24px] font-medium leading-[1.25] tracking-[-1.2px] text-white sm:text-[30px]">
-            <span style={{ color: ACCENTS.blue.a2 }}>Hackathons,</span>{" "}
-            <span style={{ color: ACCENTS.purple.a2 }}>sprints</span> and{" "}
-            <span style={{ color: ACCENTS.teal.a2 }}>open source.</span>{" "}
+            <span style={{ color: ACCENTS.blue.a2 }}>Cloud,</span>{" "}
+            <span style={{ color: ACCENTS.purple.a2 }}>code</span> and{" "}
+            <span style={{ color: ACCENTS.teal.a2 }}>design.</span>{" "}
             <span className="text-[#606060]">
-              Here is what the club is building and shipping right now, and where you can join in.
+              Here is a look at the flagship events and contests the club has run, and where you can join in next.
             </span>
           </p>
           <div className="flex flex-wrap items-center gap-3">
