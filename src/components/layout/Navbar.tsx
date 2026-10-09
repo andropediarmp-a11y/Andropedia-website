@@ -1,39 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, LogOut, Terminal } from "lucide-react";
+import { ChevronRight, LogOut, Terminal } from "lucide-react";
 import { ACCENTS, accentVars, type Accent } from "@/content/accents";
+import { RotaryDial } from "./RotaryDial";
 import { getPortalDestinationForUser, useAuth } from "@/lib/auth-context";
 
-// A hidden navigation: no bar. The "Andropedia" wordmark goes home, a small glass logo card opens
-// the menu (on hover, keyboard focus or tap), and "Join now" sits alone in the top-right corner.
+// A hidden navigation: no bar. The "Andropedia" wordmark goes home and the Recruitment link sits in the
+// top-right corner. The menu is the lower half of a rotary phone dial hanging from the top-centre of the
+// screen: a slim handle shows there, and hovering it (or the logo card, or tapping, or keyboard focus) drops
+// the dial down. Every page is a numbered hole: press and hold one, pull it round to the finger stop and let
+// go to dial that page. Plain links under the dial do the same for keyboards.
 
 interface MenuItem {
   name: string;
-  hint: string;
   href: string;
   accent: Accent;
 }
 
 const ITEMS: MenuItem[] = [
-  { name: "About", hint: "Who we are", href: "/about", accent: ACCENTS.blue },
-  { name: "Domains", hint: "Six places to build", href: "/#domains", accent: ACCENTS.teal },
-  { name: "Events", hint: "Hackathons and workshops", href: "/events", accent: ACCENTS.purple },
-  { name: "Projects", hint: "What we have shipped", href: "/projects", accent: ACCENTS.pink },
-  { name: "Team", hint: "The people behind it", href: "/team", accent: ACCENTS.amber },
+  { name: "Home", href: "/", accent: ACCENTS.blue },
+  { name: "Domains", href: "/#domains", accent: ACCENTS.teal },
+  { name: "Events", href: "/events", accent: ACCENTS.purple },
+  { name: "Projects", href: "/projects", accent: ACCENTS.pink },
+  { name: "Team", href: "/team", accent: ACCENTS.amber },
 ];
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const reduce = useReducedMotion();
   const { currentUser, logout } = useAuth();
   const [hovered, setHovered] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dialRef = useRef<HTMLDivElement>(null);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const dragging = useRef(false);
   const open = hovered || pinned;
 
   const close = useCallback(() => {
@@ -42,6 +48,17 @@ export function Navbar() {
     setPinned(false);
   }, []);
 
+  const enter = () => {
+    clearTimeout(leaveTimer.current);
+    setHovered(true);
+  };
+  const leave = () => {
+    clearTimeout(leaveTimer.current);
+    leaveTimer.current = setTimeout(() => {
+      if (!dragging.current) setHovered(false);
+    }, 200);
+  };
+
   // Escape and a click or tap anywhere else close the menu.
   useEffect(() => {
     if (!open) return;
@@ -49,7 +66,8 @@ export function Navbar() {
       if (e.key === "Escape") close();
     };
     const onPointer = (e: PointerEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) close();
+      const inside = (el: HTMLElement | null) => el?.contains(e.target as Node);
+      if (!inside(cardRef.current) && !inside(dialRef.current)) close();
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onPointer);
@@ -60,9 +78,18 @@ export function Navbar() {
   }, [open, close]);
 
   const portalItem: MenuItem = currentUser
-    ? { name: "Portal", hint: `Signed in as ${currentUser.name.split(" ")[0]}`, href: getPortalDestinationForUser(currentUser), accent: ACCENTS.coral }
-    : { name: "Portal login", hint: "Members only", href: "/portal/login", accent: ACCENTS.coral };
+    ? { name: "Portal", href: getPortalDestinationForUser(currentUser), accent: ACCENTS.coral }
+    : { name: "Portal login", href: "/portal/login", accent: ACCENTS.coral };
   const items = [...ITEMS, portalItem];
+
+  // Home always lands on the hero: from another page it opens "/", and on the home page itself it jumps back to the top.
+  const isHome = (href: string) => href === "/";
+  const jumpToHero = () => window.scrollTo({ top: 0, behavior: "instant" });
+  const goTo = (href: string) => {
+    close();
+    if (isHome(href) && pathname === "/") jumpToHero();
+    else router.push(href);
+  };
 
   const handleLogout = async () => {
     await logout(); // ends the server session, then clears local state
@@ -73,18 +100,8 @@ export function Navbar() {
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       <div className="flex items-start justify-between px-4 pt-3 sm:px-6 sm:pt-4">
-        <div
-          ref={wrapRef}
-          className="pointer-events-auto relative flex items-center gap-3"
-          onMouseEnter={() => {
-            clearTimeout(leaveTimer.current);
-            setHovered(true);
-          }}
-          onMouseLeave={() => {
-            clearTimeout(leaveTimer.current);
-            leaveTimer.current = setTimeout(() => setHovered(false), 180);
-          }}
-        >
+        {/* ---------- left: logo card (also opens the dial) and the wordmark ---------- */}
+        <div ref={cardRef} className="pointer-events-auto relative flex items-center gap-3" onMouseEnter={enter} onMouseLeave={leave}>
           <button
             type="button"
             onClick={() => {
@@ -105,71 +122,111 @@ export function Navbar() {
 
           <Link
             href="/"
-            onClick={close}
+            onClick={(e) => {
+              if (pathname === "/") {
+                e.preventDefault();
+                jumpToHero();
+              }
+              close();
+            }}
             className="rounded-md p-1 text-[18px] font-bold leading-none tracking-[-0.9px] text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.65)]"
             data-cursor-text="Home"
             aria-label="Andropedia home"
           >
             Andropedia
           </Link>
-
-          <AnimatePresence>
-            {open && (
-              <motion.nav
-                id="site-menu"
-                aria-label="Main"
-                initial={reduce ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.96, filter: "blur(6px)" }}
-                animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.97, filter: "blur(4px)" }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                style={{ transformOrigin: "top left" }}
-                className="absolute left-0 top-full mt-3 w-[min(92vw,340px)] overflow-hidden rounded-3xl border border-white/15 bg-black/70 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_0_60px_rgba(204,215,255,0.06)] backdrop-blur-2xl"
-              >
-                <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(51,149,255,0.35),transparent_70%)]" />
-                <ul className="relative">
-                  {items.map((item, i) => (
-                    <motion.li
-                      key={item.name}
-                      initial={reduce ? false : { opacity: 0, x: -14 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: reduce ? 0 : 0.04 + i * 0.045, duration: 0.25, ease: "easeOut" }}
-                    >
-                      <Link
-                        href={item.href}
-                        onClick={close}
-                        style={accentVars(item.accent)}
-                        data-cursor-text={item.name}
-                        className="group/item relative flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors hover:bg-white/[0.07] focus-visible:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
-                      >
-                        <span className="font-mono text-[11px] tabular-nums text-white/35 transition-colors group-hover/item:text-[var(--a2)]">{String(i + 1).padStart(2, "0")}</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[17px] font-semibold leading-tight tracking-[-0.4px] text-white transition-transform duration-200 group-hover/item:translate-x-1">{item.name}</span>
-                          <span className="block truncate text-[12px] leading-4 text-white/45">{item.hint}</span>
-                        </span>
-                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[var(--a1)] opacity-60 shadow-[0_0_10px_var(--a1)] transition-all group-hover/item:scale-150 group-hover/item:opacity-100" />
-                        <ArrowUpRight className="h-4 w-4 -translate-x-1 text-white/0 transition-all group-hover/item:translate-x-0 group-hover/item:text-[var(--a2)]" aria-hidden="true" />
-                      </Link>
-                    </motion.li>
-                  ))}
-                </ul>
-                {currentUser && (
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="relative mt-1 flex w-full items-center gap-2 rounded-2xl border-t border-white/10 px-3 py-2.5 text-left text-[13px] font-medium text-white/60 hover:bg-white/[0.07] hover:text-white"
-                  >
-                    <LogOut className="h-4 w-4" aria-hidden="true" />
-                    Log out
-                  </button>
-                )}
-              </motion.nav>
-            )}
-          </AnimatePresence>
         </div>
 
-        <Link href="/join" className="btn-glass pointer-events-auto" data-cursor-text="Join">
-          Join now
+        {/* ---------- right: recruitment ---------- */}
+        <Link href="/join" className="btn-glass pointer-events-auto" data-cursor-text="Apply">
+          <span className="hidden sm:inline">Recruitment 2026 is open</span>
+          <span className="sm:hidden">Recruitment open</span>
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
+      </div>
+
+      {/* ---------- centre: the half dial, with a slim handle that peeks out when it is closed ---------- */}
+      <div ref={dialRef} className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2" onMouseEnter={enter} onMouseLeave={leave}>
+        {!open && (
+          <button
+            type="button"
+            onClick={() => setPinned(true)}
+            onFocus={() => setHovered(true)}
+            aria-label="Open the dial menu"
+            aria-haspopup="true"
+            aria-controls="site-menu"
+            data-cursor-text="Dial"
+            className="group flex h-7 w-36 items-start justify-center rounded-b-full border border-t-0 border-white/20 bg-white/[0.06] pt-1.5 shadow-[inset_0_0_20px_rgba(204,215,255,0.08)] backdrop-blur-[12px] transition-all hover:h-9 hover:border-white/40 hover:bg-white/[0.12] focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+          >
+            {/* six tiny holes: a hint of what is inside */}
+            <span aria-hidden="true" className="flex items-center gap-1.5">
+              {items.map((item) => (
+                <span key={item.name} className="h-1.5 w-1.5 rounded-full opacity-80 transition-opacity group-hover:opacity-100" style={{ background: item.accent.a1 }} />
+              ))}
+            </span>
+          </button>
+        )}
+
+        <AnimatePresence>
+          {open && (
+            <motion.nav
+              id="site-menu"
+              aria-label="Main"
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: -60, scale: 0.9 }}
+              animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -40, scale: 0.94 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24, mass: 0.8 }}
+              style={{ transformOrigin: "top center" }}
+            >
+              <RotaryDial
+                items={items}
+                onDragChange={(d) => {
+                  dragging.current = d;
+                }}
+                onSelect={(item) => goTo(item.href)}
+              />
+              <p className="mt-2 text-center text-[11px] leading-4 text-white/45">Hold a number, pull it round to the stop, then let go.</p>
+
+              {/* the same pages as plain links: for keyboards, screen readers and anyone who prefers to just click */}
+              <ul className="mx-auto mt-2 grid w-[min(92vw,380px)] grid-cols-3 gap-x-1 gap-y-0.5 rounded-2xl border border-white/10 bg-black/60 p-2 backdrop-blur-xl">
+                {items.map((item, i) => (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      onClick={(e) => {
+                        if (isHome(item.href) && pathname === "/") {
+                          e.preventDefault();
+                          jumpToHero();
+                        }
+                        close();
+                      }}
+                      style={accentVars(item.accent)}
+                      data-cursor-text={item.name}
+                      className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-[12.5px] font-medium text-white/80 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-mono text-[11px]" style={{ borderColor: "var(--a1-line)", color: "var(--a2)" }}>
+                        {i + 1}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  </li>
+                ))}
+                {currentUser && (
+                  <li className="col-span-3 border-t border-white/10 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] font-medium text-white/60 hover:bg-white/[0.07] hover:text-white"
+                    >
+                      <LogOut className="h-4 w-4" aria-hidden="true" />
+                      Log out
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );

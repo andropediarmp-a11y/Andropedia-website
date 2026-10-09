@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { BlurOrb, GridLines } from "@/components/design/Backdrop";
-import { Marquee } from "@/components/design/Marquee";
+import { DISPLAY_TYPE, Marquee } from "@/components/design/Marquee";
 
 // Landing hero. A photographic human hand (left) and robotic arm (right) reach toward each other and
 // touch at the fingertips in front of a glowing gradient ring. The headline sits BEHIND them, partly
@@ -102,12 +102,11 @@ export function HandRobotHero() {
           {/* Headline: behind the hands. */}
           {/* (Outer div centres it; the inner motion.div owns the transform so the two never fight.) */}
           <div className="absolute inset-x-0 top-1/2 z-0 -translate-y-1/2 px-5">
-            <motion.div style={{ scale: headScale, filter: headBlur, opacity: headDim }} className="flex justify-center text-center">
-              <h1 className="max-w-[1000px] text-[44px] font-medium leading-[1.02] tracking-[-2px] sm:text-[76px] sm:tracking-[-3.5px] lg:text-[96px] lg:tracking-[-4.5px]">
-                <span className="text-fade">Pioneering Technology.</span>
-                <br />
-                <span className="text-aurora">Building Creators.</span>
-              </h1>
+            <motion.div style={{ scale: headScale, filter: headBlur, opacity: headDim }} className="flex flex-col items-center gap-3 text-center sm:gap-4">
+              <h1 className={`${DISPLAY_TYPE} text-fade text-[clamp(64px,17vw,230px)] tracking-[0.02em]`}>Andropedia</h1>
+              <p className="text-[clamp(15px,2.4vw,28px)] font-medium leading-tight tracking-[-0.5px] sm:tracking-[-1px]">
+                <span className="text-fade">Pioneering Technology.</span> <span className="text-aurora">Building Creators.</span>
+              </p>
             </motion.div>
           </div>
 
@@ -144,7 +143,7 @@ export function HandRobotHero() {
           {/* Intro copy + buttons, revealed in front once the hands have parted. */}
           <motion.div
             style={{ opacity: subOpacity, y: subY, pointerEvents: subPointer }}
-            className="absolute inset-x-0 top-[calc(50%+104px)] z-10 flex flex-col items-center gap-5 px-5 text-center sm:top-[calc(50%+142px)] lg:top-[calc(50%+158px)]"
+            className="absolute inset-x-0 top-[calc(50%+96px)] z-10 flex flex-col items-center gap-5 px-5 text-center sm:top-[calc(50%+120px)] lg:top-[calc(50%+150px)]"
           >
             <p className="max-w-[510px] text-[15px] leading-6 text-white/70 sm:text-[16px]">
               Andropedia is the student technology society where high-velocity engineering, algorithmic mastery and radical
@@ -156,14 +155,6 @@ export function HandRobotHero() {
               </Link>
             </div>
           </motion.div>
-
-          {/* Recruitment badge, sitting just above the ring (the ring is min(78vw, 560px) wide, centred on the stage). */}
-          <div className="absolute inset-x-0 z-10 flex justify-center px-5" style={{ bottom: "calc(50% + min(39vw, 280px) + 16px)" }}>
-            <Link href="/join" className="btn-glass" data-cursor-text="Join">
-              Recruitment 2026 is open
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
 
           {/* Scroll cue. */}
           <motion.div style={{ opacity: cueOpacity }} className="pointer-events-none absolute inset-x-0 bottom-8 z-10 flex justify-center sm:bottom-[104px]" aria-hidden="true">
