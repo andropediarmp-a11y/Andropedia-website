@@ -18,6 +18,9 @@ type GvizResponse = {
 
 const domainMap: Record<string, DomainType> = {
   technical: "Technical",
+  // Core team members (President and so on) pick "core" in the form. Their domain is only a fallback;
+  // what shows them on the Core team is their position, which an admin sets.
+  core: "Technical",
   web: "Web",
   "r&d": "R&D",
   "r & d": "R&D",

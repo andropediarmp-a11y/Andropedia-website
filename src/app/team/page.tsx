@@ -314,21 +314,36 @@ export default function TeamPage() {
                   <Empty>No one is listed in {domain.label} yet.</Empty>
                 ) : (
                   <>
-                    {leads.length > 0 && (
+                    {/* Lead and Co-Lead sit side by side. With two or more Co-Leads they get a row each instead. */}
+                    {coLeads.length < 2 && leads.length + coLeads.length > 0 ? (
                       <div className="space-y-3">
-                        <SubHeading icon={Shield}>{leads.length > 1 ? "Leads" : "Lead"}</SubHeading>
+                        <SubHeading icon={Shield}>
+                          {[leads.length > 1 ? "Leads" : leads.length === 1 ? "Lead" : "", coLeads.length === 1 ? "Co-Lead" : ""].filter(Boolean).join(" & ")}
+                        </SubHeading>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                           {leads.map((m) => <MemberCard key={m.id} onSelect={select} member={m} size="medium" title={`${POSITION_LABELS.lead}, ${domain.label}`} accent={DOMAIN_ACCENT[domain.id]} />)}
-                        </div>
-                      </div>
-                    )}
-                    {coLeads.length > 0 && (
-                      <div className="space-y-3">
-                        <SubHeading icon={Star}>{coLeads.length > 1 ? "Co-Leads" : "Co-Lead"}</SubHeading>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                           {coLeads.map((m) => <MemberCard key={m.id} onSelect={select} member={m} size="medium" title={`${POSITION_LABELS.co_lead}, ${domain.label}`} accent={DOMAIN_ACCENT[domain.id]} />)}
                         </div>
                       </div>
+                    ) : (
+                      <>
+                        {leads.length > 0 && (
+                          <div className="space-y-3">
+                            <SubHeading icon={Shield}>{leads.length > 1 ? "Leads" : "Lead"}</SubHeading>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                              {leads.map((m) => <MemberCard key={m.id} onSelect={select} member={m} size="medium" title={`${POSITION_LABELS.lead}, ${domain.label}`} accent={DOMAIN_ACCENT[domain.id]} />)}
+                            </div>
+                          </div>
+                        )}
+                        {coLeads.length > 0 && (
+                          <div className="space-y-3">
+                            <SubHeading icon={Star}>Co-Leads</SubHeading>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                              {coLeads.map((m) => <MemberCard key={m.id} onSelect={select} member={m} size="medium" title={`${POSITION_LABELS.co_lead}, ${domain.label}`} accent={DOMAIN_ACCENT[domain.id]} />)}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                     {regular.length > 0 && (
                       <div className="space-y-3">
