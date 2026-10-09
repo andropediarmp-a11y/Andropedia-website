@@ -14,7 +14,7 @@ export interface DialItem {
 const SIZE = 320;
 const C = SIZE / 2;
 const HOLE_RADIUS = 116; // distance of each finger hole from the centre
-const HOLE_R = 21;
+const HOLE_R = 19;
 
 const circle = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
 
@@ -110,7 +110,7 @@ export function RotaryDial({ items, onSelect, onDragChange }: { items: DialItem[
       role="group"
       aria-label="Rotary dial menu. The page links below do the same thing."
       className="relative mx-auto touch-none select-none overflow-hidden"
-      style={{ width: "min(92vw, 380px)", aspectRatio: "2 / 1" }}
+      style={{ width: "min(94vw, 430px)", aspectRatio: "2 / 1" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={finish}
@@ -156,7 +156,7 @@ export function RotaryDial({ items, onSelect, onDragChange }: { items: DialItem[
           {holes.map((h, i) => (
             <g key={h.item.name}>
               <circle cx={h.x} cy={h.y} r={HOLE_R} fill="none" stroke={h.item.accent.a1} strokeWidth={hole === i ? 3 : 1.6} opacity={hole === i ? 1 : 0.7} />
-              <circle data-hole={i} cx={h.x} cy={h.y} r={HOLE_R + 6} fill="transparent" style={{ cursor: phase === "dialing" ? "default" : phase === "idle" ? "grab" : "grabbing" }} />
+              <circle data-hole={i} cx={h.x} cy={h.y} r={HOLE_R + 3} fill="transparent" style={{ cursor: phase === "dialing" ? "default" : phase === "idle" ? "grab" : "grabbing" }} />
             </g>
           ))}
         </svg>

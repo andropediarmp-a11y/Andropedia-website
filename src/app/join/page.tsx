@@ -5,7 +5,8 @@ import { ACCENTS, accentVars } from "@/content/accents";
 
 const WHY_ACCENTS = [ACCENTS.blue, ACCENTS.pink, ACCENTS.teal];
 import { JoinForm } from "@/components/recruitment/JoinForm";
-import { SelectionStage } from "@/components/recruitment/SelectionStage";
+import { Eligibility } from "@/components/recruitment/Eligibility";
+import { RecruitmentTrain } from "@/components/recruitment/RecruitmentTrain";
 import { StatusLookup } from "@/components/recruitment/StatusLookup";
 import { FAQS, RECRUITMENT_CYCLE, WHY_JOIN } from "@/content/recruitment";
 
@@ -60,6 +61,13 @@ export default function JoinPage() {
           </a>
         </header>
 
+        <Eligibility />
+
+        {/* full-bleed train ride, with the reasons to join underneath it */}
+        <div className="relative left-1/2 w-screen -translate-x-1/2">
+          <RecruitmentTrain />
+        </div>
+
         <section className="grid grid-cols-1 md:grid-cols-3 gap-5" aria-labelledby="why-heading">
           <h2 id="why-heading" className="sr-only">Why join Andropedia</h2>
           {WHY_JOIN.map((item, i) => {
@@ -76,7 +84,6 @@ export default function JoinPage() {
           })}
         </section>
 
-        <SelectionStage />
 
         <section id="apply" className="scroll-mt-24" aria-label="Application">
           <JoinForm />

@@ -276,7 +276,7 @@ function DomainsContent() {
             </div>
 
             <Link
-              href="/join"
+              href="/join#how-selection-works"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all shrink-0"
             >
               <span>Apply for {activeTab}</span>

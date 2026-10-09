@@ -455,7 +455,7 @@ function ApplicationForm({ initialDraft }: { initialDraft: Draft | null }) {
       firstRender.current = false;
       return;
     }
-    headingRef.current?.focus();
+    headingRef.current?.focus({ preventScroll: true });
   }, [step]);
 
   const clearError = (key: string) => setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));

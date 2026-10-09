@@ -27,6 +27,7 @@ const ITEMS: MenuItem[] = [
   { name: "Events", href: "/events", accent: ACCENTS.purple },
   { name: "Projects", href: "/projects", accent: ACCENTS.pink },
   { name: "Team", href: "/team", accent: ACCENTS.amber },
+  { name: "Join now", href: "/join#how-selection-works", accent: ACCENTS.indigo },
 ];
 
 export function Navbar() {
@@ -138,7 +139,7 @@ export function Navbar() {
         </div>
 
         {/* ---------- right: recruitment ---------- */}
-        <Link href="/join" className="btn-glass pointer-events-auto" data-cursor-text="Apply">
+        <Link href="/join#how-selection-works" className="btn-glass pointer-events-auto" data-cursor-text="Apply">
           <span className="hidden sm:inline">Recruitment 2026 is open</span>
           <span className="sm:hidden">Recruitment open</span>
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -188,7 +189,7 @@ export function Navbar() {
               <p className="mt-2 text-center text-[11px] leading-4 text-white/45">Hold a number, pull it round to the stop, then let go.</p>
 
               {/* the same pages as plain links: for keyboards, screen readers and anyone who prefers to just click */}
-              <ul className="mx-auto mt-2 grid w-[min(92vw,380px)] grid-cols-3 gap-x-1 gap-y-0.5 rounded-2xl border border-white/10 bg-black/60 p-2 backdrop-blur-xl">
+              <ul className="mx-auto mt-2 grid w-[min(94vw,430px)] grid-cols-3 gap-x-1 gap-y-0.5 rounded-2xl border border-white/10 bg-black/60 p-2 backdrop-blur-xl">
                 {items.map((item, i) => (
                   <li key={item.name}>
                     <Link

@@ -3,22 +3,22 @@ import { advance, FINGER_STOP, holeAngle, pointerAngle, polar, reachedStop, requ
 
 describe("dial geometry", () => {
   it("each hole is exactly its required turn away from the finger stop", () => {
-    for (let i = 0; i < 6; i++) expect((holeAngle(i) + requiredRotation(i)) % 360).toBeCloseTo(FINGER_STOP, 6);
+    for (let i = 0; i < 7; i++) expect((holeAngle(i) + requiredRotation(i)) % 360).toBeCloseTo(FINGER_STOP, 6);
   });
   it("hole 1 needs the smallest turn and the last hole the biggest", () => {
-    const turns = [0, 1, 2, 3, 4, 5].map(requiredRotation);
+    const turns = [0, 1, 2, 3, 4, 5, 6].map(requiredRotation);
     expect(turns).toEqual([...turns].sort((a, b) => a - b));
     expect(turns[0]).toBe(28);
-    expect(turns[5]).toBe(158);
+    expect(turns[6]).toBe(160);
   });
   it("every hole, and its whole pull to the stop, stays in the visible lower half", () => {
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       expect(holeAngle(i)).toBeGreaterThan(90); // right of 3 o'clock is the hidden half
       expect(holeAngle(i) + requiredRotation(i)).toBeLessThanOrEqual(270);
     }
   });
-  it("reads 1 to 6 from left to right along the bottom", () => {
-    const xs = [0, 1, 2, 3, 4, 5].map((i) => polar(0, 0, 100, holeAngle(i)).x);
+  it("reads 1 to 7 from left to right along the bottom", () => {
+    const xs = [0, 1, 2, 3, 4, 5, 6].map((i) => polar(0, 0, 100, holeAngle(i)).x);
     expect(xs).toEqual([...xs].sort((a, b) => a - b));
   });
   it("polar and pointerAngle agree with each other", () => {

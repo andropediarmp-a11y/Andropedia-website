@@ -3,14 +3,14 @@
 // On a real rotary phone you put a finger in a hole, turn the dial clockwise until the hole reaches the finger
 // stop, then let go and the dial spins back. The menu shows only the lower half of the dial, hanging from the top
 // edge of the screen: the finger stop is at the left end, and the holes sit counter-clockwise of it, so along the
-// bottom they read 1 to 6 from left to right. Every hole stays in the visible half for its whole pull. The first
+// bottom they read 1 to 7 from left to right. Every hole stays in the visible half for its whole pull. The first
 // hole needs the smallest turn, the last the biggest.
 
 /** Where the finger stop is: the left end of the visible half (270 would be exactly 9 o'clock). */
 export const FINGER_STOP = 258;
 /** How far hole 1 has to turn to reach the stop, and how much more each next hole needs. */
 export const FIRST_HOLE_TURN = 28;
-export const HOLE_STEP = 26;
+export const HOLE_STEP = 22;
 
 const wrap = (deg: number) => ((deg % 360) + 360) % 360;
 

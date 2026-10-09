@@ -39,7 +39,7 @@ export function DomainsSection() {
         </Stagger>
 
         <Reveal className="flex flex-col items-center gap-3 pt-2 text-center">
-          <Link href="/join" className="btn-glow" data-cursor-text="Join">
+          <Link href="/join#how-selection-works" className="btn-glow" data-cursor-text="Join">
             Join now <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Link>
           <p className="text-[13px] leading-5 text-white/50">Recruitment 2026 is open. Pick your domain and apply.</p>

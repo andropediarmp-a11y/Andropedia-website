@@ -9,8 +9,8 @@ import { BlurOrb, GridLines } from "@/components/design/Backdrop";
 import { DISPLAY_TYPE, Marquee } from "@/components/design/Marquee";
 
 // Landing hero. A photographic human hand (left) and robotic arm (right) reach toward each other and
-// touch at the fingertips in front of a glowing gradient ring. The headline sits BEHIND them, partly
-// hidden. Scrolling down pulls the hands apart, the headline clears and sharpens, and the intro
+// touch at the fingertips in front of a glowing gradient ring. The hands are the focus; a small ANDROPEDIA
+// headline sits BEHIND them and is hidden while they touch. Scrolling down pulls the hands apart, the headline is revealed between them, and the intro
 // copy and buttons fade in. The page then continues into the domain marquee.
 //
 // Assets (public/hero/): hand.png and robot.png, 1376x768, each shot on a PURE BLACK background and
@@ -66,10 +66,10 @@ export function HandRobotHero() {
   const sparkScale = useTransform(p, [0, 0.2], [1, 2.4]);
   const sparkOpacity = useTransform(p, [0, 0.18], [1, 0]);
 
-  // Headline: present from the start (behind the hands), sharpens and settles as they part.
-  const headScale = useTransform(p, [0, 0.6], [1.06, 1]);
-  const headBlur = useTransform(p, [0, 0.45], ["blur(3px)", "blur(0px)"]);
-  const headDim = useTransform(p, [0, 0.45], [0.8, 1]);
+  // Headline: small and centred behind the hands. It is hidden while they touch and is revealed as they part.
+  const headScale = useTransform(p, [0.1, 0.6], [0.92, 1]);
+  const headBlur = useTransform(p, [0.1, 0.5], ["blur(6px)", "blur(0px)"]);
+  const headDim = useTransform(p, [0.12, 0.55], [0, 1]);
   // Intro copy + buttons appear once there is room.
   const subOpacity = useTransform(p, [0.35, 0.62], [0, 1]);
   const subY = useTransform(p, [0.35, 0.62], [28, 0]);
@@ -80,7 +80,7 @@ export function HandRobotHero() {
   return (
     <>
       <section ref={sectionRef} aria-label="Andropedia introduction" className={`relative bg-black ${reduce ? "" : "h-[260svh]"}`}>
-        <div className={`relative isolate h-svh min-h-[640px] overflow-hidden [--hr-w:150vw] sm:[--hr-w:72vw] [--hr-h:calc(var(--hr-w)*0.558)] ${reduce ? "" : "sticky top-0"}`}>
+        <div className={`relative isolate h-svh min-h-[640px] overflow-hidden [--hr-w:150vw] sm:[--hr-w:84vw] [--hr-h:calc(var(--hr-w)*0.558)] ${reduce ? "" : "sticky top-0"}`}>
           <GridLines variant="hero" />
           <BlurOrb variant="hero" size={1054} opacity={0.4} position={{ left: "50%", top: "50%" }} />
 
@@ -103,8 +103,8 @@ export function HandRobotHero() {
           {/* (Outer div centres it; the inner motion.div owns the transform so the two never fight.) */}
           <div className="absolute inset-x-0 top-1/2 z-0 -translate-y-1/2 px-5">
             <motion.div style={{ scale: headScale, filter: headBlur, opacity: headDim }} className="flex flex-col items-center gap-3 text-center sm:gap-4">
-              <h1 className={`${DISPLAY_TYPE} text-fade text-[clamp(64px,17vw,230px)] tracking-[0.02em]`}>Andropedia</h1>
-              <p className="text-[clamp(15px,2.4vw,28px)] font-medium leading-tight tracking-[-0.5px] sm:tracking-[-1px]">
+              <h1 className={`${DISPLAY_TYPE} text-fade text-[clamp(34px,7.5vw,104px)] tracking-[0.04em]`}>Andropedia</h1>
+              <p className="text-[clamp(13px,1.8vw,22px)] font-medium leading-tight tracking-[-0.5px] sm:tracking-[-1px]">
                 <span className="text-fade">Pioneering Technology.</span> <span className="text-aurora">Building Creators.</span>
               </p>
             </motion.div>
@@ -150,7 +150,7 @@ export function HandRobotHero() {
               creativity converge through weekly sprints and live member evaluations.
             </p>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
-              <Link href="/join" className="btn-glow" data-cursor-text="Join">
+              <Link href="/join#how-selection-works" className="btn-glow" data-cursor-text="Join">
                 Join now <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
