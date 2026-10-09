@@ -11,7 +11,7 @@ const CARD_ACCENTS = [ACCENTS.blue, ACCENTS.purple, ACCENTS.teal];
 // "Changelog" frame from the design: a two-tone statement, then flat dark cards.
 export function Highlights() {
   return (
-    <section id="highlights" className="relative isolate overflow-x-clip bg-black px-5 py-24 sm:px-10 lg:px-[90px]">
+    <section id="highlights" className="relative isolate overflow-x-clip bg-black px-5 py-16 sm:px-10 sm:py-20 lg:px-[90px]">
       <BlurOrb variant="log" size={800} opacity={0.4} position={{ left: "50%", top: "60%" }} />
 
       <div className="relative mx-auto max-w-[1260px] space-y-14">

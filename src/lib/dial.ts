@@ -3,22 +3,26 @@
 // On a real rotary phone you put a finger in a hole, turn the dial clockwise until the hole reaches the finger
 // stop, then let go and the dial spins back. The menu shows only the lower half of the dial, hanging from the top
 // edge of the screen: the finger stop is at the left end, and the holes sit counter-clockwise of it, so along the
-// bottom they read 1 to 7 from left to right. Every hole stays in the visible half for its whole pull. The first
+// bottom they read 1 to 4 from left to right. Every hole stays in the visible half for its whole pull. The first
 // hole needs the smallest turn, the last the biggest.
 
 /** Where the finger stop is: the left end of the visible half (270 would be exactly 9 o'clock). */
 export const FINGER_STOP = 258;
 /** How far hole 1 has to turn to reach the stop, and how much more each next hole needs. */
-export const FIRST_HOLE_TURN = 28;
-export const HOLE_STEP = 22;
+export const FIRST_HOLE_TURN = 32;
+export const HOLE_STEP = 34;
 
 const wrap = (deg: number) => ((deg % 360) + 360) % 360;
 
 /** Degrees a hole (0-based) must be turned clockwise to touch the finger stop. */
-export const requiredRotation = (index: number) => FIRST_HOLE_TURN + HOLE_STEP * index;
+export const requiredRotation = (index: number, count = 4) => {
+  const step = count <= 4 ? 34 : 22;
+  const first = count <= 4 ? 32 : 28;
+  return first + step * index;
+};
 
 /** Where a hole sits when the dial is at rest. */
-export const holeAngle = (index: number) => wrap(FINGER_STOP - requiredRotation(index));
+export const holeAngle = (index: number, count = 4) => wrap(FINGER_STOP - requiredRotation(index, count));
 
 /** Point on a circle of radius `r` around (cx, cy) at `angle`. */
 export const polar = (cx: number, cy: number, r: number, angle: number) => {

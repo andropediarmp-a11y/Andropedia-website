@@ -18,34 +18,34 @@ export interface HomeDomain {
 /** All six domains, including R&D. R&D is not recruited into directly (members are moved there later), so only the team honeycomb uses this list. */
 export const HEX_DOMAINS: HomeDomain[] = [
   {
-    id: "Technical", apiDomain: "Technical", title: "Technical", subtitle: "Algorithms & Core Systems", icon: Cpu,
-    description: "Competitive programming, distributed architectures, low-level systems in Rust/C++, and DSA olympiads.",
-    activities: ["Weekly Contest Sprints", "Lock-Free Systems", "ICPC & Hackathon Track"], stats: "15+ Medals Won",
+    id: "Technical", apiDomain: "Technical", title: "Technical", subtitle: "Because there's always more than one way to solve a problem.", icon: Cpu,
+    description: "Technology doesn't stand still, and neither does curiosity. The Technical domain is where ideas are explored, challenges are tackled, and different approaches are put to the test. It's all about thinking beyond the obvious, learning by doing, and finding smarter ways to turn ideas into solutions.",
+    activities: ["Exploring New Approaches", "Hands-on Problem Solving", "Building Smarter Solutions"], stats: "15+ Medals Won",
   },
   {
-    id: "Web", apiDomain: "Web", title: "Web Development", subtitle: "Full-Stack & Cloud Engines", icon: Globe,
-    description: "State-of-the-art Next.js App Router, real-time websockets, microservices, cloud deployments, and resilient APIs.",
-    activities: ["Production Web Apps", "Serverless & Edge APIs", "Micro-frontend Pipelines"], stats: "20+ Apps Deployed",
+    id: "Web", apiDomain: "Web", title: "Web Development", subtitle: "The best experiences don't happen by accident.", icon: Globe,
+    description: "Every great website has more going on than what meets the eye. From crafting smooth interfaces to building functional, interactive websites, this domain brings together design and code to create digital experiences that people actually enjoy using.",
+    activities: ["Smooth UI Crafting", "Interactive Web Experiences", "Design Meets Code"], stats: "20+ Apps Deployed",
   },
   {
-    id: "RD", apiDomain: "R&D", title: "R&D / AI Labs", subtitle: "Machine Intelligence & Research", icon: Code2,
-    description: "Exploration in Generative AI, lightweight Vision Transformers, ONNX edge inference, and decentralized protocols.",
-    activities: ["Applied LLM Fine-tuning", "Computer Vision Labs", "Paper Publications"], stats: "4 Papers Drafted",
+    id: "RD", apiDomain: "R&D", title: "Research & Development", subtitle: "Good ideas start conversations. Great plans make them happen.", icon: Code2,
+    description: "Every memorable event starts with a spark, but turning that spark into something real takes a solid plan. R&D takes ideas from brainstorming to detailed proposals, works through the logistics, and reviews and approves events before they move forward. It's where creative thinking meets careful planning and ambitious ideas get the structure they need.",
+    activities: ["Brainstorming to Proposals", "Event Planning & Logistics", "Review & Approval Process"], stats: "4 Papers Drafted",
   },
   {
-    id: "Design", apiDomain: "Design", title: "Design & UX", subtitle: "Aesthetics & Interactive Systems", icon: Palette,
-    description: "Dark-mode cyber design systems, micro-interactions, 3D asset generation, Figma token architectures, and usability audits.",
-    activities: ["Design Systems (Figma)", "Spatial 3D Design", "Micro-interaction Tuning"], stats: "100+ UI Components",
+    id: "Design", apiDomain: "Design", title: "Design", subtitle: "Making ideas impossible to scroll past.", icon: Palette,
+    description: "First impressions matter, and design makes them count. From striking posters and event creatives to branding and visual storytelling, this domain gives Andropedia its look and feel, turning ordinary ideas into visuals that grab attention and stick in people's minds.",
+    activities: ["Posters & Event Creatives", "Branding & Visual Identity", "Visual Storytelling"], stats: "100+ UI Components",
   },
   {
-    id: "Media", apiDomain: "Media", title: "Media & VFX", subtitle: "Visual Storytelling & Motion", icon: Video,
-    description: "Cinematic trailers, motion graphics, video podcast engineering, event coverage, and creative brand identity.",
-    activities: ["After Effects & 3D VFX", "Documentaries & Recaps", "Audio/Video Engineering"], stats: "50k+ Video Views",
+    id: "Media", apiDomain: "Media", title: "Media", subtitle: "The moments pass. The stories stay.", icon: Video,
+    description: "The event might end, but the memories don't have to. Through photography, videography, and creative content, Media captures the energy and behind-the-scenes moments that make Andropedia special. From documenting events to creating reels and posts for our Instagram page, the domain brings the club's experiences online and keeps our community connected beyond every event.",
+    activities: ["Photography & Videography", "Reels & Social Media Content", "Event Documentation"], stats: "50k+ Video Views",
   },
   {
-    id: "PR", apiDomain: "PR", title: "Public Relations", subtitle: "Outreach & Corporate Alliances", icon: Megaphone,
-    description: "Forging industry sponsorships, organizing campus hackathons, community evangelism, and national partnerships.",
-    activities: ["Industry Tech Talks", "Hackathon Sponsorships", "Campus Ambassador Grid"], stats: "$15k+ Grants Raised",
+    id: "PR", apiDomain: "PR", title: "Public Relations", subtitle: "Opening doors, one connection at a time.", icon: Megaphone,
+    description: "Great ideas deserve to travel far. From building partnerships and reaching out to new communities to getting people excited about club events, PR keeps Andropedia connected, visible, and growing. It's where conversations turn into collaborations and introductions become opportunities.",
+    activities: ["Building Partnerships", "Community Outreach", "Collaborations & Opportunities"], stats: "$15k+ Grants Raised",
   },
 ];
 

@@ -87,7 +87,7 @@ export function CustomCursor() {
       <div
         ref={dotRef}
         className={`fixed top-0 left-0 w-2 h-2 rounded-full transition-transform duration-75 ease-out ${
-          isHovered ? "bg-cyan-400 scale-150" : "bg-emerald-400"
+          isHovered ? "bg-[#00d4ff] scale-150" : "bg-[#0066ff]"
         } ${isClicking ? "scale-75" : ""}`}
         style={{ willChange: "transform" }}
       />
@@ -95,15 +95,15 @@ export function CustomCursor() {
       {/* Outer Ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 rounded-full border border-emerald-400/40 flex items-center justify-center transition-[width,height,background-color,border-color] duration-200 ease-out backdrop-blur-[1px] ${
+        className={`fixed top-0 left-0 rounded-full border border-[#0066ff]/50 flex items-center justify-center transition-[width,height,background-color,border-color] duration-200 ease-out backdrop-blur-[1px] ${
           isHovered
-            ? "w-14 h-14 bg-emerald-500/10 border-cyan-400/80 scale-110"
+            ? "w-14 h-14 bg-[#0066ff]/15 border-[#00d4ff]/80 scale-110 shadow-[0_0_15px_rgba(0,102,255,0.4)]"
             : "w-8 h-8 bg-transparent"
-        } ${isClicking ? "scale-90 bg-emerald-500/20" : ""}`}
+        } ${isClicking ? "scale-90 bg-[#0066ff]/25" : ""}`}
         style={{ willChange: "transform" }}
       >
         {cursorText && (
-          <span className="text-[9px] font-mono tracking-wider font-semibold text-emerald-300 uppercase px-1">
+          <span className="text-[9px] font-mono tracking-wider font-semibold text-[#38bdf8] uppercase px-1">
             {cursorText}
           </span>
         )}

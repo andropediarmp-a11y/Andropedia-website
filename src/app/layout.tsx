@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Anton } from "next/font/google";
+import { Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { CustomCursor } from "@/components/ui/CustomCursor";
@@ -9,19 +9,18 @@ import { Footer } from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { siteUrl } from "@/lib/site";
 
-// Figtree stands in for Graphik (a paid font) - weights 400/500/600/700.
-const figtree = Figtree({
-  variable: "--font-figtree",
+// Clean sans-serif for body text, headings, and subheadings
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-// Heavy condensed display face for the oversized headlines (the domain ribbon on the home page).
-const anton = Anton({
-  variable: "--font-display",
+// Stylized technical font for hero headings and technical accents
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "700"],
   display: "swap",
 });
 
@@ -57,14 +56,21 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${figtree.variable} ${anton.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${spaceMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-black text-white font-sans selection:bg-emerald-400/30">
+      <body className="relative min-h-full flex flex-col bg-black text-white font-sans selection:bg-[#0066ff]/40 selection:text-white">
+        {/* Light highlighted blue gradient across the whole website */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgba(0,102,255,0.16),transparent_70%),radial-gradient(ellipse_70%_45%_at_50%_105%,rgba(0,82,204,0.12),transparent_70%)]"
+        />
         <MotionProvider>
           <AuthProvider>
             <CustomCursor />
             <Navbar />
-            <MainShell>{children}</MainShell>
+            <div className="relative z-10 flex flex-1 flex-col">
+              <MainShell>{children}</MainShell>
+            </div>
             <Footer />
           </AuthProvider>
         </MotionProvider>

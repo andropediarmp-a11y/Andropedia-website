@@ -11,13 +11,14 @@
     --foreground: #ffffff;
     --foreground-secondary: rgba(255, 255, 255, 0.7);
     --foreground-tertiary: rgba(255, 255, 255, 0.5);
-    --container-bg: rgba(0, 0, 0, 0.6);
-    --container-border: rgba(255, 255, 255, 0.1);
-    --blue: #3395ff;
-    --indigo: #7978de;
-    --purple: #af52de;
-    --teal: #59c0d2;
-    --glow-blue: #2737cf;
+    --container-bg: rgba(0, 0, 0, 0.75);
+    --container-border: rgba(0, 102, 255, 0.2);
+    --blue: #0066ff;
+    --blue-bright: #3388ff;
+    --blue-glow: #0066ff;
+    --blue-dark: #001a66;
+    --blue-deep: #000d33;
+    --glow-blue: #0066ff;
   }
 
   * {
@@ -31,17 +32,32 @@
   }
 
   body {
-    background: var(--background);
+    background-color: #000000;
+    background-image:
+      radial-gradient(ellipse 80% 55% at 50% -8%, rgba(0, 102, 255, 0.16) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 45% at 50% 105%, rgba(0, 82, 204, 0.12) 0%, transparent 70%);
+    background-attachment: fixed;
     color: var(--foreground);
-    font-family: var(--font-figtree), Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif;
     font-size: 16px;
     line-height: 24px;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Headings & key UI elements use the signature technical landing page font (Space Mono) */
+  h1, h2, h3, h4, h5, h6,
+  .font-heading,
+  .hero-title,
+  .chip,
+  .chip-accent,
+  .btn-glow,
+  .btn-glass {
+    font-family: var(--font-space-mono), "Space Mono", monospace;
+  }
+
   ::selection {
-    background: rgba(175, 82, 222, 0.4);
+    background: rgba(0, 102, 255, 0.4);
     color: #ffffff;
   }
 }
@@ -49,16 +65,29 @@
 /* ---- Scrollbar ---- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #000; }
-::-webkit-scrollbar-thumb { background: #1c1c22; border-radius: 9999px; border: 2px solid #000; }
-::-webkit-scrollbar-thumb:hover { background: #2b2b34; }
+::-webkit-scrollbar-thumb { background: #001a4d; border-radius: 9999px; border: 2px solid #000; }
+::-webkit-scrollbar-thumb:hover { background: #003399; }
 
 /* ============================================================================
    Components
    ============================================================================ */
 @layer components {
-  /* Headings: bright white easing into the brand colours (blue -> violet -> pink) instead of fading to grey. */
+  /* Main hero title: stark white at top transitioning to bright electric blue (#0066ff) at bottom */
+  .hero-title {
+    font-family: var(--font-space-mono), "Space Mono", monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    background-image: linear-gradient(180deg, #ffffff 0%, #0066ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 0 35px rgba(0, 102, 255, 0.4));
+  }
+
+  /* Headings: stark white easing into bright electric blue */
   .text-fade {
-    background-image: linear-gradient(95deg, #ffffff 0%, #dbe9ff 24%, #8cbfff 52%, #b49bff 78%, #ff9ad5 100%);
+    background-image: linear-gradient(180deg, #ffffff 0%, #8cbfff 50%, #0066ff 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -66,30 +95,30 @@
   }
   /* Shorter, calmer version for compact titles. */
   .text-fade-strong {
-    background-image: linear-gradient(95deg, #ffffff 10%, #cfe3ff 45%, #a9b8ff 100%);
+    background-image: linear-gradient(180deg, #ffffff 10%, #70aeff 55%, #0066ff 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
-  /* Card titles: white into the card's own accent colour (set --a2 on the card; blue by default). */
+  /* Card titles: white into the card's accent colour (blue by default). */
   .text-fade-card {
-    background-image: linear-gradient(105deg, #ffffff 0%, var(--a2, #9ccaff) 100%);
+    background-image: linear-gradient(180deg, #ffffff 0%, var(--a2, #8cbfff) 55%, var(--a1, #0066ff) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
   .text-blue-fade {
-    background-image: linear-gradient(120deg, #8cbfff 0%, #3395ff 45%, #7978de 100%);
+    background-image: linear-gradient(180deg, #ffffff 0%, #3388ff 45%, #0066ff 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
-  /* The signature highlight: teal -> blue -> purple -> pink. Use on one or two key words. */
+  /* The signature highlight: stark white into electric cyan and bright electric blue (no pink or purple) */
   .text-aurora {
-    background-image: linear-gradient(100deg, #5eead4 0%, #3395ff 32%, #af52de 68%, #ff6fb1 100%);
+    background-image: linear-gradient(100deg, #ffffff 0%, #38bdf8 35%, #0066ff 70%, #0044cc 100%);
     background-size: 160% 100%;
     -webkit-background-clip: text;
     background-clip: text;
@@ -97,57 +126,59 @@
     color: transparent;
     animation: auroraShift 9s ease-in-out infinite alternate;
   }
-  /* White into one accent colour (needs --a1 / --a2 from accentVars()). */
+  /* White into electric blue accent */
   .text-accent {
-    background-image: linear-gradient(105deg, #ffffff -12%, var(--a2, #8cbfff) 32%, var(--a1, #3395ff) 88%);
+    background-image: linear-gradient(180deg, #ffffff 0%, var(--a2, #8cbfff) 40%, var(--a1, #0066ff) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
   /* Plain coloured text for small labels and numbers. */
-  .text-a1 { color: var(--a1, #3395ff); }
+  .text-a1 { color: var(--a1, #0066ff); }
   .text-a2 { color: var(--a2, #8cbfff); }
 
-  /* Glass card: frosted panel with a soft top highlight and a large inner glow (Features / Changelog cards). */
+  /* Glass card: frosted pure black panel with subtle electric blue border and neon highlight */
   .glass-card {
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(0, 102, 255, 0.2);
     border-radius: 40px;
     background-image:
-      radial-gradient(ellipse 70% 22% at 50% -4%, rgba(255, 255, 255, 0.1), transparent 70%),
-      linear-gradient(180deg, rgba(46, 51, 90, 0) 0%, rgba(28, 27, 51, 0.1) 100%);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+      radial-gradient(ellipse 70% 22% at 50% -4%, rgba(0, 102, 255, 0.12), transparent 70%),
+      linear-gradient(180deg, rgba(0, 20, 50, 0.4) 0%, rgba(0, 10, 25, 0.8) 100%);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     box-shadow:
-      inset 0 0 100px rgba(204, 215, 255, 0.15),
-      0 5px 10px rgba(0, 0, 0, 0.05),
-      0 15px 30px rgba(0, 0, 0, 0.05),
-      0 30px 60px rgba(0, 0, 0, 0.1);
-    transition: border-color 0.3s ease, transform 0.3s ease;
+      inset 0 0 60px rgba(0, 102, 255, 0.08),
+      0 5px 10px rgba(0, 0, 0, 0.5),
+      0 15px 30px rgba(0, 0, 0, 0.6),
+      0 30px 60px rgba(0, 0, 0, 0.8);
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   }
   a.glass-card:hover, button.glass-card:hover, .glass-card.is-interactive:hover {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(0, 102, 255, 0.5);
+    box-shadow: inset 0 0 80px rgba(0, 102, 255, 0.15), 0 0 25px rgba(0, 102, 255, 0.25);
     transform: translateY(-2px);
   }
-  .glass-card-sm { border-radius: 20px; border-color: rgba(255, 255, 255, 0.1); }
+  .glass-card-sm { border-radius: 20px; border-color: rgba(0, 102, 255, 0.2); }
 
-  /* Flat dark card (Changelog bento): near-black with a faint top glow. */
+  /* Flat dark card: pure black with electric blue top glow. */
   .dark-card {
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 102, 255, 0.18);
     border-radius: 20px;
-    background-image: radial-gradient(ellipse 60% 14% at 50% 0%, rgba(255, 255, 255, 0.09), transparent 70%);
+    background-color: #000000;
+    background-image: radial-gradient(ellipse 60% 14% at 50% 0%, rgba(0, 102, 255, 0.15), transparent 70%);
     overflow: hidden;
   }
 
   /* Nested glass tile (inputs, ticket cards, stat tiles). */
   .glass-inner {
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(0, 102, 255, 0.25);
     border-radius: 20px;
     background-image:
-      radial-gradient(ellipse 60% 18% at 50% -6%, rgba(255, 255, 255, 0.16), transparent 70%),
-      linear-gradient(180deg, rgba(46, 51, 90, 0.1) 0%, rgba(28, 27, 51, 0.02) 100%);
+      radial-gradient(ellipse 60% 18% at 50% -6%, rgba(0, 102, 255, 0.16), transparent 70%),
+      linear-gradient(180deg, rgba(0, 26, 77, 0.25) 0%, rgba(0, 10, 25, 0.5) 100%);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
   }
@@ -155,13 +186,13 @@
   /* Back-compat names used across existing pages. */
   .glass-panel {
     background-image:
-      radial-gradient(ellipse 70% 22% at 50% -4%, rgba(255, 255, 255, 0.08), transparent 70%),
-      linear-gradient(180deg, rgba(46, 51, 90, 0) 0%, rgba(28, 27, 51, 0.12) 100%);
-    background-color: rgba(0, 0, 0, 0.35);
+      radial-gradient(ellipse 70% 22% at 50% -4%, rgba(0, 102, 255, 0.1), transparent 70%),
+      linear-gradient(180deg, rgba(0, 20, 50, 0.3) 0%, rgba(0, 10, 25, 0.7) 100%);
+    background-color: rgba(0, 0, 0, 0.7);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 0 60px rgba(204, 215, 255, 0.08), 0 15px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 102, 255, 0.2);
+    box-shadow: inset 0 0 60px rgba(0, 102, 255, 0.08), 0 15px 30px rgba(0, 0, 0, 0.6);
   }
   .glass-panel-elevated { @apply glass-panel; }
 
@@ -194,7 +225,7 @@
   }
   .btn-glass:hover { background: rgba(255, 255, 255, 0.08); }
 
-  /* Blue glow button: the main call to action. */
+  /* Electric blue glow button: the main call to action ("JOIN NOW"). */
   .btn-glow {
     position: relative;
     display: inline-flex;
@@ -203,23 +234,25 @@
     gap: 12px;
     padding: 12px 30px;
     border-radius: 10px;
-    border: 1px solid var(--glow-blue);
-    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 40.9%, #402788 133%);
+    border: 1px solid #0066ff;
+    background-image: linear-gradient(180deg, #0044cc 0%, #001a66 100%);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     color: #ffffff;
+    font-family: var(--font-inter), sans-serif;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 20px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     white-space: nowrap;
-    box-shadow: 0 10px 40px rgba(63, 74, 175, 0.5), inset 0 10px 30px rgba(73, 123, 255, 0.7);
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
   }
   .btn-glow:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 50px rgba(63, 74, 175, 0.7), inset 0 10px 34px rgba(73, 123, 255, 0.85);
+    border-color: #3388ff;
+    box-shadow: 0 0 25px rgba(0, 102, 255, 0.7), 0 0 50px rgba(0, 102, 255, 0.35);
   }
 
   /* Ghost button: outline only (card actions). */
@@ -307,26 +340,26 @@
 /* Back-compat gradient helpers (older pages). */
 .text-gradient-emerald,
 .text-gradient-violet {
-  background-image: linear-gradient(120deg, #8cbfff 0%, #3395ff 45%, #7978de 100%);
+  background-image: linear-gradient(180deg, #ffffff 0%, #3388ff 45%, #0066ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 .text-gradient-gold {
-  background-image: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  background-image: linear-gradient(180deg, #ffffff 0%, #3388ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.glow-emerald, .glow-cyan, .glow-violet { box-shadow: 0 0 40px -8px rgba(63, 74, 175, 0.55); }
+.glow-emerald, .glow-cyan, .glow-violet { box-shadow: 0 0 35px rgba(0, 102, 255, 0.45); }
 .grid-pattern {
   background-size: 40px 40px;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 102, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 102, 255, 0.05) 1px, transparent 1px);
 }
 .radial-glow {
-  background: radial-gradient(circle at 50% 0%, rgba(51, 149, 255, 0.14) 0%, rgba(121, 120, 222, 0.05) 40%, transparent 70%);
+  background: radial-gradient(circle at 50% 0%, rgba(0, 102, 255, 0.22) 0%, rgba(0, 30, 90, 0.1) 40%, transparent 70%);
 }
 
 @keyframes pulseGlow {

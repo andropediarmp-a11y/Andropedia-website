@@ -33,7 +33,7 @@ export function RotaryDial({ items, onSelect, onDragChange }: { items: DialItem[
   const [hole, setHole] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
 
-  const holes = items.map((item, i) => ({ item, angle: holeAngle(i), ...polar(C, C, HOLE_RADIUS, holeAngle(i)) }));
+  const holes = items.map((item, i) => ({ item, angle: holeAngle(i, items.length), ...polar(C, C, HOLE_RADIUS, holeAngle(i, items.length)) }));
   const discPath = [circle(C, C, 148), circle(C, C, 60), ...holes.map((h) => circle(h.x, h.y, HOLE_R))].join("");
 
   const holeAt = (target: EventTarget | null) => {
@@ -50,7 +50,7 @@ export function RotaryDial({ items, onSelect, onDragChange }: { items: DialItem[
     const k = holeAt(e.target);
     if (k === null || locked.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    const required = requiredRotation(k);
+    const required = requiredRotation(k, items.length);
     turn.stop();
     drag.current = { hole: k, last: angleOf(e), turn: Math.min(turn.get(), required), required };
     setHole(k);

@@ -8,7 +8,7 @@ export function AndropediaMark({ className = "", glow = true, style }: { classNa
       viewBox="180 90 760 710"
       fill="none"
       className={className}
-      style={{ ...(glow ? { filter: "drop-shadow(0 0 18px rgba(69,102,240,0.65)) drop-shadow(0 0 48px rgba(69,102,240,0.35))" } : {}), ...style }}
+      style={{ ...(glow ? { filter: "drop-shadow(0 0 18px rgba(0,102,255,0.75)) drop-shadow(0 0 45px rgba(0,102,255,0.4))" } : {}), ...style }}
       aria-hidden="true"
       focusable="false"
     >

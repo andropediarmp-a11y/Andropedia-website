@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { BlurOrb, TitleLines } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { RevealLines, Stagger, StaggerItem } from "@/components/design/scroll";
@@ -8,12 +6,9 @@ import { DomainCard } from "./DomainCard";
 import { DomainsWheel } from "./DomainsWheel";
 
 // "Features" frame from the design: a small line, a big fading title, then the six domains.
-// Large screens get a pinned wheel (DomainsWheel) that swings through the five domains as you scroll; phones and visitors who
-// prefer reduced motion get the plain grid of cards. Both are in the page, CSS shows the right one, so the
-// layout never jumps when the page hydrates.
 export function DomainsSection() {
   return (
-    <section id="domains" className="relative isolate overflow-x-clip bg-black px-5 py-24 sm:px-10">
+    <section id="domains" className="relative isolate overflow-x-clip bg-black px-5 py-16 sm:px-10 sm:py-20">
       <BlurOrb variant="features" size={800} opacity={0.5} position={{ left: "50%", top: "42%" }} />
 
       <div className="relative mx-auto max-w-[1100px] space-y-14">
@@ -37,13 +32,6 @@ export function DomainsSection() {
             </StaggerItem>
           ))}
         </Stagger>
-
-        <Reveal className="flex flex-col items-center gap-3 pt-2 text-center">
-          <Link href="/join#how-selection-works" className="btn-glow" data-cursor-text="Join">
-            Join now <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-          <p className="text-[13px] leading-5 text-white/50">Recruitment 2026 is open. Pick your domain and apply.</p>
-        </Reveal>
       </div>
     </section>
   );
