@@ -64,6 +64,21 @@ model User {
   tasks           Task[]         @relation("UserTasks")
   evaluationsDone Evaluation[]   @relation("AdminEvaluations")
   sessions        Session[]
+  passwordResets  PasswordReset[]
+}
+
+// One-time "forgot password" links. Only the SHA-256 of the emailed token is stored.
+model PasswordReset {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Week {

@@ -56,7 +56,7 @@ function MemberCard({ member, size, title, className = "", accent, onSelect }: {
   return (
     <motion.div
       {...interactive}
-      className={`group glass-card glass-card-sm is-interactive relative flex flex-col items-center text-center cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60 ${large ? "p-8 w-full sm:w-80" : "p-6"} ${className}`}
+      className={`group glass-card glass-card-sm is-interactive relative flex flex-col items-center text-center cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60 ${large ? "p-10 w-full sm:w-[24rem]" : "p-6"} ${className}`}
       data-cursor-text="View profile"
       style={accent ? accentVars(accent) : undefined}
     >
@@ -64,9 +64,9 @@ function MemberCard({ member, size, title, className = "", accent, onSelect }: {
       <span aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ background: "radial-gradient(60% 50% at 50% 0%, var(--a1-soft, rgba(255,255,255,0.12)), transparent 70%)" }} />
       <Avatar
         member={member}
-        className={`${large ? "w-28 h-28 text-3xl" : "w-20 h-20 text-xl"} rounded-2xl border border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
+        className={`${large ? "w-36 h-36 text-4xl" : "w-20 h-20 text-xl"} rounded-2xl border border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
       />
-      <h3 className={`${large ? "text-xl" : "text-lg"} font-bold text-white mt-4`}>{member.name}</h3>
+      <h3 className={`${large ? "text-2xl" : "text-lg"} font-bold text-white mt-5`}>{member.name}</h3>
       {title && <p className="text-a2 mt-1 text-[13px] font-medium leading-5">{title}</p>}
       {member.bio && <p className="text-xs text-slate-400 leading-relaxed mt-3 line-clamp-3">{member.bio}</p>}
       <div className="mt-4"><Socials member={member} /></div>
@@ -192,7 +192,7 @@ export default function TeamPage() {
               {groups.chiefs.length > 0 && (
                 <div className="space-y-4">
                   <SubHeading icon={Crown}>Chiefs</SubHeading>
-                  <div className="flex flex-wrap justify-center gap-5">
+                  <div className="mx-auto flex max-w-[38rem] flex-wrap justify-center gap-5">
                     {groups.chiefs.map((m) => (
                       <MemberCard key={m.id} onSelect={select} member={m} size="medium" title={`Chief, ${domainLabel(m.domain)}`} className="w-full sm:w-72" accent={DOMAIN_ACCENT[m.domain]} />
                     ))}

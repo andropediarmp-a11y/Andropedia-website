@@ -23,6 +23,9 @@ const H = 560;
 const TILE_W = 175;
 const TILE_H = 151;
 
+/** Headline count shown on the home page. Set by hand: it does not follow the member list. */
+const ACTIVE_MEMBERS = 79;
+
 // Seven hexagons in a honeycomb: Core in the centre, the six domains around it (R&D included: members move there after joining).
 const CORE_TILE = { x: 309, y: 233 };
 const DOMAIN_TILES = [
@@ -354,8 +357,8 @@ export function TeamHex() {
             </Reveal>
 
             <Reveal delay={0.1} className="flex items-baseline gap-4">
-              <span className="text-aurora font-mono text-[56px] font-black leading-none tracking-[-3px] sm:text-[68px] lg:text-[76px]" aria-label={members ? `${members.length} active members` : "Active members"}>
-                {members ? <CountUp value={String(members.length)} duration={1.8} /> : "—"}
+              <span className="text-aurora font-mono text-[56px] font-black leading-none tracking-[-3px] sm:text-[68px] lg:text-[76px]" aria-label={`${ACTIVE_MEMBERS} active members`}>
+                <CountUp value={String(ACTIVE_MEMBERS)} duration={1.8} />
               </span>
               <div className="space-y-0.5">
                 <p className="font-mono text-[15px] font-bold uppercase tracking-wider text-white sm:text-[17px]">Active Members</p>
@@ -400,7 +403,7 @@ export function TeamHex() {
                 </Stagger>
               )}
               {groups.chiefs.length > 0 && (
-                <Stagger as="ul" className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3" stagger={0.07}>
+                <Stagger as="ul" className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2" stagger={0.07}>
                   {groups.chiefs.map((m) => <PersonTile key={m.id} member={m} title={`Chief, ${domainLabel(m.domain)}`} accent={DOMAIN_ACCENT[m.domain]} {...tileProps} />)}
                 </Stagger>
               )}

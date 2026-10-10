@@ -47,11 +47,15 @@ export function Navbar() {
     setPinned(false);
   }, []);
 
-  const enter = () => {
+  // Hover is for mice only. A touch screen fakes mouse events after a tap, which would open the menu
+  // and swap the handle out before its click lands.
+  const enter = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
     clearTimeout(leaveTimer.current);
     setHovered(true);
   };
-  const leave = () => {
+  const leave = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
     clearTimeout(leaveTimer.current);
     leaveTimer.current = setTimeout(() => {
       if (!dragging.current) setHovered(false);
@@ -98,7 +102,7 @@ export function Navbar() {
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       <div className="flex items-start justify-between px-4 pt-3 sm:px-6 sm:pt-4">
         {/* ---------- left: logo only, touching/clicking returns to home page ---------- */}
-        <div ref={cardRef} className="pointer-events-auto relative flex items-center" onMouseEnter={enter} onMouseLeave={leave}>
+        <div ref={cardRef} className="pointer-events-auto relative flex items-center" onPointerEnter={enter} onPointerLeave={leave}>
           <Link
             href="/"
             onClick={(e) => {
@@ -125,7 +129,7 @@ export function Navbar() {
       </div>
 
       {/* ---------- centre: the half dial, with a slim handle that peeks out when it is closed ---------- */}
-      <div ref={dialRef} className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2" onMouseEnter={enter} onMouseLeave={leave}>
+      <div ref={dialRef} className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2" onPointerEnter={enter} onPointerLeave={leave}>
         {!open && (
           <button
             type="button"

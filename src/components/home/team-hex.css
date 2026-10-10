@@ -147,7 +147,7 @@
     linear-gradient(180deg, rgba(46, 51, 90, 0.12), rgba(28, 27, 51, 0.2));
   transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s, box-shadow 0.4s, opacity 0.3s;
 }
-.th-tile.big { min-height: 300px; }
+.th-tile.big { min-height: 350px; padding-top: 28px; }
 .th-halo {
   position: absolute;
   inset: 0;
@@ -180,7 +180,7 @@
   background: conic-gradient(from 200deg, var(--a1), transparent 40%, var(--a2), var(--a1));
   transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.th-tile.big .th-photo { width: 116px; height: 116px; }
+.th-tile.big .th-photo { width: 144px; height: 144px; }
 .th-photo-in {
   width: 100%;
   height: 100%;
@@ -206,7 +206,7 @@
 .th-body { position: relative; transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .th-meta { margin-top: 14px; }
 .th-meta h3 { margin: 0; font-size: 18px; font-weight: 600; line-height: 24px; color: #fff; }
-.th-tile.big .th-meta h3 { font-size: 21px; }
+.th-tile.big .th-meta h3 { font-size: 25px; line-height: 30px; }
 .th-role { margin: 2px 0 0; font-size: 13px; font-weight: 600; color: var(--a1); }
 .th-peek {
   position: absolute;

@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   Sparkles,
   LogOut,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -33,6 +34,7 @@ export function PortalNav() {
     { name: "Leaderboard", href: "/portal/leaderboard", icon: Trophy, highlight: true },
     ...(isLead ? [{ name: "Evaluations", href: "/portal/evaluations", icon: CheckSquare }] : []),
     ...(isAdmin ? [{ name: "Admin Panel", href: "/portal/admin", icon: ShieldAlert }] : []),
+    { name: "Password", href: "/portal/account", icon: KeyRound },
   ];
 
   return (
