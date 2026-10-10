@@ -23,9 +23,9 @@ export function DomainsSection() {
           </RevealLines>
         </div>
 
-        <DomainsWheel className="hidden lg:motion-safe:block" />
+        <DomainsWheel className="hidden motion-safe:block" />
 
-        <Stagger as="ul" className="grid gap-6 md:grid-cols-2 lg:grid-cols-6 lg:motion-safe:hidden" stagger={0.09}>
+        <Stagger as="ul" className="grid gap-6 md:grid-cols-2 lg:grid-cols-6 motion-safe:hidden" stagger={0.09}>
           {HOME_DOMAINS.map((d, i) => (
             <StaggerItem as="li" key={d.id} className={`h-full lg:col-span-2 ${i === 3 ? "lg:col-start-2" : ""}`}>
               <DomainCard d={d} />

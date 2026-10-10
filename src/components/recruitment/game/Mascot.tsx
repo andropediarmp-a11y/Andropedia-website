@@ -10,26 +10,30 @@ const BOB: Record<Mood, { y?: number[]; x?: number[]; rotate?: number[] }> = {
   oops: { x: [0, -4, 4, -3, 3, 0] },
 };
 
-/** Andy, the club robot. Small inline SVG that takes its colour from --a1. */
-export function Mascot({ mood, size = 64 }: { mood: Mood; size?: number }) {
-  const eyes =
+/** Andy, the club robot. A small blocky inline SVG in the site's blue; three moods. */
+export function Mascot({ mood, size = 44 }: { mood: Mood; size?: number }) {
+  const face =
     mood === "cheer" ? (
       <>
-        <path d="M21 31 q4 -6 8 0" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M35 31 q4 -6 8 0" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M13 26l4-6 4 6" fill="none" stroke="#fff" strokeWidth="3" />
+        <path d="M27 26l4-6 4 6" fill="none" stroke="#fff" strokeWidth="3" />
+        <path d="M16 31h16l-3 6H19z" fill="#fff" />
       </>
     ) : mood === "oops" ? (
-      <path d="M22 28 l6 6 M28 28 l-6 6 M36 28 l6 6 M42 28 l-6 6" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+      <>
+        <path d="M14 19l6 7M20 19l-6 7M28 19l6 7M34 19l-6 7" stroke="#fff" strokeWidth="3" fill="none" />
+        <path d="M17 36l3-3 4 3 4-3 3 3" stroke="#fff" strokeWidth="3" fill="none" />
+      </>
     ) : (
       <>
-        <circle cx="25" cy="31" r="3.4" fill="#fff" />
-        <circle cx="39" cy="31" r="3.4" fill="#fff" />
+        <rect x="14" y="20" width="6" height="6" fill="#fff" />
+        <rect x="28" y="20" width="6" height="6" fill="#fff" />
+        <path d="M17 33h14" stroke="#fff" strokeWidth="3" />
       </>
     );
-  const mouth = mood === "cheer" ? "M24 41 q8 9 16 0 z" : mood === "oops" ? "M25 44 q3 -4 7 0 t7 0" : "M26 41 q6 5 12 0";
   return (
     <motion.svg
-      viewBox="0 0 64 64"
+      viewBox="0 0 48 48"
       width={size}
       height={size}
       aria-hidden="true"
@@ -39,21 +43,11 @@ export function Mascot({ mood, size = 64 }: { mood: Mood; size?: number }) {
       animate={BOB[mood]}
       transition={mood === "hi" ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" } : { duration: 0.6, ease: "easeOut" }}
     >
-      <line x1="32" y1="9" x2="32" y2="16" stroke="var(--a1, #3395ff)" strokeWidth="2.4" strokeLinecap="round" />
-      <circle cx="32" cy="7" r="3.4" fill="var(--a2, #8cbfff)" style={{ filter: "drop-shadow(0 0 4px var(--a1, #3395ff))" }} />
-      <rect x="12" y="16" width="40" height="34" rx="12" fill="#0b0d1a" stroke="var(--a1, #3395ff)" strokeWidth="2" />
-      <rect x="16" y="20" width="32" height="26" rx="9" fill="rgba(255,255,255,0.05)" />
-      <rect x="6" y="28" width="5" height="10" rx="2.5" fill="var(--a1, #3395ff)" opacity="0.7" />
-      <rect x="53" y="28" width="5" height="10" rx="2.5" fill="var(--a1, #3395ff)" opacity="0.7" />
-      {eyes}
-      <path d={mouth} fill={mood === "cheer" ? "#fff" : "none"} stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      {mood !== "oops" && (
-        <>
-          <circle cx="19" cy="38" r="2.4" fill="var(--a1, #3395ff)" opacity="0.45" />
-          <circle cx="45" cy="38" r="2.4" fill="var(--a1, #3395ff)" opacity="0.45" />
-        </>
-      )}
-      <rect x="22" y="52" width="20" height="8" rx="4" fill="#0b0d1a" stroke="var(--a1, #3395ff)" strokeWidth="2" />
+      <rect x="22" y="2" width="4" height="8" fill="#3388ff" />
+      <rect x="6" y="10" width="36" height="30" rx="3" fill="#000d33" stroke="#3388ff" strokeWidth="3" />
+      <rect x="2" y="20" width="4" height="10" fill="#3388ff" />
+      <rect x="42" y="20" width="4" height="10" fill="#3388ff" />
+      {face}
     </motion.svg>
   );
 }
@@ -61,15 +55,10 @@ export function Mascot({ mood, size = 64 }: { mood: Mood; size?: number }) {
 /** Andy plus a speech bubble. The bubble is a polite live region, so changes are announced. */
 export function AndySays({ mood, message }: { mood: Mood; message: string }) {
   return (
-    <div className="flex items-center gap-3 sm:gap-4">
-      <Mascot mood={mood} size={56} />
-      <div className={`glass-inner relative !rounded-2xl px-4 py-3 ${mood === "oops" ? "!border-rose-400/50" : ""}`} role="status">
-        <span
-          aria-hidden="true"
-          className="absolute -left-[7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b border-l bg-[#0c0e1c]"
-          style={{ borderColor: mood === "oops" ? "rgb(251 113 133 / 0.5)" : "rgba(255,255,255,0.2)" }}
-        />
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-a1">Andy says</p>
+    <div className="flex items-center gap-3 lg:max-w-[620px] lg:gap-3.5">
+      <Mascot mood={mood} size={44} />
+      <div className={`pb-say ${mood === "oops" ? "oops" : ""}`} role="status">
+        <b>Andy says</b>
         <AnimatePresence mode="wait" initial={false}>
           <motion.p
             key={message}
@@ -77,7 +66,6 @@ export function AndySays({ mood, message }: { mood: Mood; message: string }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="text-base leading-6 text-white/80"
           >
             {message}
           </motion.p>

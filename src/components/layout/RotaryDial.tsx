@@ -110,12 +110,13 @@ export function RotaryDial({ items, onSelect, onDragChange }: { items: DialItem[
       role="group"
       aria-label="Rotary dial menu. The page links below do the same thing."
       className="relative mx-auto touch-none select-none overflow-hidden"
-      style={{ width: "min(94vw, 430px)", aspectRatio: "2 / 1" }}
+      style={{ width: "min(94vw, 430px)", aspectRatio: "2 / 1", WebkitTouchCallout: "none", WebkitUserSelect: "none", WebkitTapHighlightColor: "transparent" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={finish}
       onPointerCancel={finish}
       onPointerLeave={() => !drag.current && setHole(null)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div className="absolute left-0 top-0 aspect-square w-full -translate-y-1/2">
       {/* the fixed plate with the numbers, seen through the holes */}

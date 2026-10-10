@@ -4,11 +4,12 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Check, Lock, Trophy } from "lucide-react";
 import { LEVELS } from "./config";
 
-// Tile centres along the track, in percent of the board. Alternating heights make the wave.
+// Tile centres along the track: x in percent of the width, y in px of the 96px-tall track. Alternating heights make the wave.
 const XS = [10, 30, 50, 70, 90];
-const YS = [32, 68, 32, 68, 32];
+const YS = [44, 76, 44, 76, 44];
+const PAWN_LIFT = 54;
 
-/** Smooth S-curve between two tiles, in the 100x100 box the track is drawn in. */
+/** Smooth S-curve between two tiles, in the 100x96 box the track is drawn in. */
 const segment = (i: number) => {
   const mid = (XS[i] + XS[i + 1]) / 2;
   return `M${XS[i]} ${YS[i]} C${mid} ${YS[i]} ${mid} ${YS[i + 1]} ${XS[i + 1]} ${YS[i + 1]}`;
@@ -32,8 +33,8 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
 
   return (
     <div>
-      <div className="relative h-[104px] sm:h-[128px]">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" focusable="false">
+      <div className="pb-track">
+        <svg viewBox="0 0 100 96" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" focusable="false">
           {XS.slice(0, -1).map((_, i) => {
             const done = finished || i < reached;
             return (
@@ -42,11 +43,10 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
                 d={segment(i)}
                 fill="none"
                 vectorEffect="non-scaling-stroke"
-                strokeWidth={done ? 3.5 : 3}
+                strokeWidth={3}
                 strokeLinecap="round"
                 strokeDasharray="0.1 9"
-                stroke={done ? "var(--a1, #3395ff)" : "rgba(255,255,255,0.25)"}
-                style={done ? { filter: "drop-shadow(0 0 4px var(--a1, #3395ff))" } : undefined}
+                stroke={done ? "var(--blue-bright, #3388ff)" : "rgba(255,255,255,0.3)"}
               />
             );
           })}
@@ -57,7 +57,6 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
             const isCurrent = !finished && i === current;
             const cleared = finished || i < reached;
             const locked = !finished && i > reached;
-            const Icon = level.icon;
             const state = isCurrent ? "current" : cleared ? "cleared" : locked ? "locked" : "available";
             const clickable = !finished && !isCurrent && i <= reached && !!onSelect;
             return (
@@ -67,21 +66,15 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
                   disabled={!clickable}
                   onClick={() => onSelect?.(i)}
                   aria-label={`Level ${i + 1}: ${level.label}, ${state}`}
-                  style={{ left: `${XS[i]}%`, top: `${YS[i]}%` }}
-                  className={`absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 sm:h-12 sm:w-12 ${
-                    isCurrent
-                      ? "glass-inner !rounded-xl !border-[var(--a1)] text-white shadow-[0_0_26px_var(--a1-soft)]"
-                      : cleared
-                        ? "border-[var(--a1-line)] bg-[var(--a1-soft)] text-a1 enabled:cursor-pointer enabled:hover:border-[var(--a1)]"
-                        : "border-white/10 bg-black/60 text-slate-500"
-                  } ${locked ? "cursor-not-allowed" : ""}`}
+                  style={{ left: `${XS[i]}%`, top: YS[i] }}
+                  className={`pb-tile ${isCurrent ? "cur" : cleared ? "done" : "lock"}`}
                 >
                   {cleared && !isCurrent ? (
-                    <Check className="h-5 w-5" aria-hidden="true" />
+                    <Check className="h-[18px] w-[18px]" strokeWidth={3} aria-hidden="true" />
                   ) : locked ? (
                     <Lock className="h-4 w-4" aria-hidden="true" />
                   ) : (
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <span aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
                   )}
                 </button>
               </li>
@@ -91,8 +84,8 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
 
         {finished ? (
           <motion.div
-            className="pointer-events-none absolute flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-[var(--a1)] text-black"
-            style={{ left: `${XS[4]}%`, top: `calc(${YS[4]}% - 44px)` }}
+            className="pb-pawn"
+            style={{ left: `${XS[4]}%`, top: YS[4] - PAWN_LIFT }}
             initial={reduce ? false : { scale: 0 }}
             animate={{ scale: 1 }}
             aria-hidden="true"
@@ -101,15 +94,14 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
           </motion.div>
         ) : (
           <motion.div
-            className="pointer-events-none absolute -translate-x-1/2"
+            className="pb-pawn"
             initial={false}
-            animate={{ left: `${XS[current]}%`, top: `calc(${YS[current]}% - 44px)` }}
+            animate={{ left: `${XS[current]}%`, top: YS[current] - PAWN_LIFT }}
             transition={pawnTransition}
             aria-hidden="true"
           >
             <motion.span
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--a1)] text-sm font-bold uppercase text-black shadow-[0_0_16px_var(--a1)]"
-              animate={{ y: [0, -7, 0] }}
+              animate={reduce ? undefined : { y: [0, -5, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
             >
               {initial}
@@ -118,14 +110,10 @@ export function GameBoard({ current, reached, onSelect, initial, finished = fals
         )}
       </div>
 
-      <div className="grid grid-cols-5" aria-hidden="true">
+      <div className="pb-lbls" aria-hidden="true">
         {LEVELS.map((level, i) => (
-          <span
-            key={level.label}
-            className={`text-center font-mono text-[10px] uppercase tracking-wider sm:text-xs ${!finished && i === current ? "text-a1" : "text-slate-400"}`}
-          >
-            <span className="sm:hidden">{level.short}</span>
-            <span className="hidden sm:inline">{level.label}</span>
+          <span key={level.label} className={!finished && i === current ? "on" : undefined}>
+            {level.short}
           </span>
         ))}
       </div>

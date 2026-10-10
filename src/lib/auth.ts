@@ -73,6 +73,12 @@ export async function destroyCurrentSession(): Promise<void> {
   if (token) await prisma.session.deleteMany({ where: { tokenHash: sha256(token) } });
 }
 
+/** Signs the user out everywhere except the browser making this request. */
+export async function revokeOtherSessions(userId: string): Promise<void> {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  await prisma.session.deleteMany({ where: { userId, ...(token ? { tokenHash: { not: sha256(token) } } : {}) } });
+}
+
 // ------------------------------------------------------------- route guard
 
 type AuthResult = { ok: true; user: User } | { ok: false; response: NextResponse };

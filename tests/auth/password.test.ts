@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, normalizeRegisterNo, verifyPassword } from "@/lib/password";
+import { hashChosenPassword, hashPassword, normalizeRegisterNo, verifyPassword } from "@/lib/password";
 
 describe("password hashing", () => {
   it("verifies the right password, in any case and spacing", () => {
@@ -17,6 +17,12 @@ describe("password hashing", () => {
   });
   it("rejects missing or malformed stored values", () => {
     for (const bad of [null, undefined, "", "plain", "scrypt$only", "bcrypt$a$b"]) expect(verifyPassword("x", bad)).toBe(false);
+  });
+  it("treats a chosen password exactly as typed", () => {
+    const stored = hashChosenPassword("Blue Sky 42");
+    expect(verifyPassword("Blue Sky 42", stored)).toBe(true);
+    expect(verifyPassword("blue sky 42", stored)).toBe(false);
+    expect(verifyPassword("BlueSky42", stored)).toBe(false);
   });
   it("normalises register numbers", () => {
     expect(normalizeRegisterNo(" ra 2511 026020025 ")).toBe("RA2511026020025");

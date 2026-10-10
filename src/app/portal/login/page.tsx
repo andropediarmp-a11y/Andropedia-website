@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, BarChart3, Lock, ShieldCheck } from "lucide-react";
 import { getPortalDestinationForUser, useAuth } from "@/lib/auth-context";
@@ -103,7 +104,12 @@ export default function LoginPage() {
                 maxLength={60}
                 required
               />
-              <p className="text-[12px] leading-4 text-white/40">Your password is your register number, unless an admin told you otherwise.</p>
+              <p className="text-[12px] leading-4 text-white/40">
+                First time? Your password is your register number.{" "}
+                <Link href="/portal/forgot-password" className="text-emerald-300 hover:underline">
+                  Forgot password?
+                </Link>
+              </p>
             </div>
 
             <button type="submit" disabled={loading} className="btn-glow w-full disabled:opacity-60">

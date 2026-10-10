@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { BlurOrb } from "@/components/design/Backdrop";
 import { Reveal } from "@/components/design/Reveal";
 import { CountUp } from "@/components/design/scroll";
@@ -278,6 +280,15 @@ export async function SprintSnapshot() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* ── Recruitment call to action ── */}
+          <div className="relative z-10 mt-8 flex flex-col items-center gap-3 text-center sm:mt-10">
+            <p className="text-[13px] text-white/60 sm:text-[14px]">Want your name on this board? Recruitment is open.</p>
+            <Link href="/join" className="btn-glow" data-cursor-text="Join">
+              Join now
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </Reveal>

@@ -4,10 +4,10 @@ import { useRef } from "react";
 import { useState } from "react";
 import { AnimatePresence, cubicBezier, motion, useMotionValueEvent, useTransform, type MotionValue } from "framer-motion";
 import { AndropediaMark } from "@/components/design/AndropediaMark";
-import { useActiveStep } from "@/components/design/scroll";
+import { usePinned, useStageProgress } from "@/components/design/scroll";
 import { DOMAIN_ACCENT } from "@/content/accents";
 import { HOME_DOMAINS } from "@/content/home";
-import { scrollTopForStep, wheelKeyframes } from "@/lib/scroll-steps";
+import { scrollTopForStep, stepForProgress, wheelKeyframes } from "@/lib/scroll-steps";
 import { DomainCard } from "./DomainCard";
 
 // How much page the wheel takes while pinned, in screen heights. Lower SCREENS_PER_DOMAIN for a quicker wheel.
@@ -63,7 +63,7 @@ function Node({ index, ring, active, onJump }: { index: number; ring: MotionValu
         </button>
         <span
           aria-hidden="true"
-          className={`pointer-events-none absolute left-1/2 top-[72px] -translate-x-1/2 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.16em] transition-colors duration-500 ${active ? "text-white" : "text-white/40"}`}
+          className={`pointer-events-none absolute left-1/2 top-[72px] hidden -translate-x-1/2 whitespace-nowrap lg:block font-mono text-[11px] uppercase tracking-[0.16em] transition-colors duration-500 ${active ? "text-white" : "text-white/40"}`}
         >
           {String(index + 1).padStart(2, "0")} {d.apiDomain === "PR" ? "PR" : d.title.split(" ")[0]}
         </span>
@@ -73,14 +73,19 @@ function Node({ index, ring, active, onJump }: { index: number; ring: MotionValu
 }
 
 /**
- * Large screens only (the parent hides this on phones and for reduced motion, where the plain card grid shows).
+ * Every screen size except reduced motion (the parent shows the plain card grid there). On phones the wheel sits above the card.
  * The Andropedia mark is the hub of a wheel with one node per domain. As you scroll, the wheel swings counter-clockwise
  * a notch at a time, brings the next domain round to the right, and pops its description up as a card.
  */
 export function DomainsWheel({ className = "" }: { className?: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const { active, progress } = useActiveStep(wrapRef, COUNT);
-  const current = Math.max(active, 0); // -1 (before hydration) shows the first domain
+  const large = usePinned(); // phones get the same wheel, stacked, with a smaller card
+  const progress = useStageProgress(wrapRef);
+  const [current, setCurrent] = useState(0);
+  useMotionValueEvent(progress, "change", (v) => {
+    const next = stepForProgress(v, COUNT);
+    setCurrent((c) => (c === next ? c : next));
+  });
   const ring = useTransform(progress, KEYFRAMES.input, KEYFRAMES.output, { ease: EASE });
   const dust = useTransform(ring, (v) => v * 0.35); // the dotted rim drifts slower than the nodes, for depth
   const accent = DOMAIN_ACCENT[HOME_DOMAINS[current].apiDomain];
@@ -104,7 +109,7 @@ export function DomainsWheel({ className = "" }: { className?: string }) {
 
   return (
     <div ref={wrapRef} className={`relative ${className}`} style={{ height: `${STAGE_SCREENS * 100}svh` }}>
-      <div className="sticky top-0 flex h-svh items-center" style={{ ["--wheel" as string]: "min(66svh, 42vw, 540px)" }}>
+      <div className="sticky top-0 flex h-svh items-center max-lg:pt-14 [--wheel:min(30svh,56vw)] lg:[--wheel:min(66svh,42vw,540px)]">
         {/* faint dot grid, as in the logo artwork */}
         <div
           aria-hidden="true"
@@ -112,9 +117,9 @@ export function DomainsWheel({ className = "" }: { className?: string }) {
           style={{ backgroundImage: "radial-gradient(rgba(110,130,255,0.35) 1px, transparent 1.6px)", backgroundSize: "38px 38px" }}
         />
 
-        <div className="relative grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-[clamp(56px,7vw,110px)]">
+        <div className="relative grid w-full grid-cols-1 items-center gap-y-7 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-x-[clamp(56px,7vw,110px)] lg:gap-y-0">
           {/* ---------- the wheel ---------- */}
-          <div className="relative ml-8" style={{ width: "var(--wheel)", height: "var(--wheel)" }}>
+          <div className="relative mx-auto lg:ml-8 lg:mr-0" style={{ width: "var(--wheel)", height: "var(--wheel)" }}>
             <motion.svg aria-hidden="true" viewBox="0 0 100 100" className="absolute inset-0 h-full w-full will-change-transform" style={{ rotate: dust }} fill="none">
               <circle cx="50" cy="50" r="49.4" stroke="rgba(110,130,255,0.35)" strokeWidth="0.25" strokeDasharray="0.3 1.6" strokeLinecap="round" />
               <circle cx="50" cy="50" r="44" stroke="rgba(110,130,255,0.22)" strokeWidth="0.18" />
@@ -157,7 +162,7 @@ export function DomainsWheel({ className = "" }: { className?: string }) {
           </div>
 
           {/* ---------- the pop-up card ---------- */}
-          <div className="relative min-h-[420px]">
+          <div className="relative lg:min-h-[420px]">
             <div className="mb-4 font-mono text-[12px] tabular-nums text-white/45" aria-live="polite">
               <span className="text-[26px] font-medium text-white">{String(current + 1).padStart(2, "0")}</span> / {String(COUNT).padStart(2, "0")}
               <span className="ml-3 uppercase tracking-[0.18em]">{HOME_DOMAINS[current].apiDomain === "PR" ? "PR" : HOME_DOMAINS[current].title.split(" ")[0]}</span>
@@ -171,7 +176,7 @@ export function DomainsWheel({ className = "" }: { className?: string }) {
                 transition={{ type: "spring", stiffness: 300, damping: 26, mass: 0.7 }}
                 style={{ transformOrigin: "0% 50%", willChange: "transform, opacity" }}
               >
-                <DomainCard d={HOME_DOMAINS[current]} featured />
+                <DomainCard d={HOME_DOMAINS[current]} featured={large} />
               </motion.div>
             </AnimatePresence>
           </div>
